@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
  * @since 2023-06-26
  */
 @SuppressWarnings({"unused"})
-public interface RxRedisJacksonTemplateFactory {
+public interface R2edisJacksonTemplateFactory {
 
     ObjectMapper getMapper();
 

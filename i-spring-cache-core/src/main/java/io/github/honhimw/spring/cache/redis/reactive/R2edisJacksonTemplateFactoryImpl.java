@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @SuppressWarnings({"unused", "unchecked"})
-public class RxRedisJacksonTemplateFactoryImpl implements RxRedisJacksonTemplateFactory {
+public class R2edisJacksonTemplateFactoryImpl implements R2edisJacksonTemplateFactory {
 
     private final ReactiveRedisConnectionFactory redisConnectionFactory;
 
@@ -35,7 +35,7 @@ public class RxRedisJacksonTemplateFactoryImpl implements RxRedisJacksonTemplate
 
     private volatile ReactiveStringRedisTemplate stringReactiveRedisTemplate;
 
-    public RxRedisJacksonTemplateFactoryImpl(ReactiveRedisConnectionFactory redisConnectionFactory, RedisSerializer<String> keySerializer, ObjectMapper objectMapper) {
+    public R2edisJacksonTemplateFactoryImpl(ReactiveRedisConnectionFactory redisConnectionFactory, RedisSerializer<String> keySerializer, ObjectMapper objectMapper) {
         this.redisConnectionFactory = redisConnectionFactory;
         this.keySerializer = keySerializer;
         this.REDIS_OBJECT_MAPPER = objectMapper;

@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
  */
 
 @Slf4j
-public abstract class RxKeyspaceEventMessageListener implements InitializingBean, DisposableBean {
+public abstract class ReactiveKeyspaceEventMessageListener implements InitializingBean, DisposableBean {
 
     private static final Topic TOPIC_ALL_KEYEVENTS = new PatternTopic("__keyevent@*");
 
@@ -26,7 +26,7 @@ public abstract class RxKeyspaceEventMessageListener implements InitializingBean
 
     private Disposable subscribe;
 
-    public RxKeyspaceEventMessageListener(ReactiveRedisTemplate<String, String> redisTemplate) {
+    public ReactiveKeyspaceEventMessageListener(ReactiveRedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

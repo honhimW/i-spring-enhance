@@ -3,9 +3,9 @@ package io.github.honhimw.spring.cache.redis;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.cache.ICacheProperties;
-import io.github.honhimw.spring.cache.redis.reactive.RxRedisJacksonTemplateFactory;
-import io.github.honhimw.spring.cache.redis.reactive.RxRedisJacksonTemplateFactoryImpl;
-import io.github.honhimw.spring.cache.redis.reactive.RxRedisUtils;
+import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactory;
+import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactoryImpl;
+import io.github.honhimw.spring.cache.redis.reactive.R2edisUtils;
 import io.github.honhimw.spring.util.JsonUtils;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
@@ -133,21 +133,21 @@ public class IRedisConfiguration {
     public class ReactiveRedisConfig {
 
         @Bean
-        @ConditionalOnMissingBean(RxRedisJacksonTemplateFactory.class)
-        RxRedisJacksonTemplateFactory rxRedisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
-            return new RxRedisJacksonTemplateFactoryImpl(reactiveRedisConnectionFactory, redisKeySerializer(), redisObjectMapper());
+        @ConditionalOnMissingBean(R2edisJacksonTemplateFactory.class)
+        R2edisJacksonTemplateFactory rxRedisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
+            return new R2edisJacksonTemplateFactoryImpl(reactiveRedisConnectionFactory, redisKeySerializer(), redisObjectMapper());
         }
 
         @Bean
         @ConditionalOnMissingBean(name = "rxJacksonValueRedisTemplate")
-        ReactiveRedisTemplate<String, Object> rxJacksonValueRedisTemplate(RxRedisJacksonTemplateFactory rxRedisJacksonTemplateFactory) {
-            return rxRedisJacksonTemplateFactory.forType(Object.class);
+        ReactiveRedisTemplate<String, Object> rxJacksonValueRedisTemplate(R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory) {
+            return r2edisJacksonTemplateFactory.forType(Object.class);
         }
 
         @Bean
-        @ConditionalOnMissingBean(RxRedisUtils.class)
-        RxRedisUtils rxRedisUtils() {
-            return new RxRedisUtils();
+        @ConditionalOnMissingBean(R2edisUtils.class)
+        R2edisUtils rxRedisUtils() {
+            return new R2edisUtils();
         }
 
     }

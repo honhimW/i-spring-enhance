@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
  */
 
 @Slf4j
-public class RedisEventListener extends RxKeyspaceEventMessageListener implements ApplicationEventPublisherAware {
+public class RedisEventListener extends ReactiveKeyspaceEventMessageListener implements ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher publisher;
 

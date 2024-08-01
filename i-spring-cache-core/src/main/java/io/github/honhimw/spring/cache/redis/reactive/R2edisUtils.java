@@ -23,9 +23,9 @@ import java.time.Duration;
  */
 
 @SuppressWarnings({"unused"})
-public class RxRedisUtils implements ApplicationContextAware {
+public class R2edisUtils implements ApplicationContextAware {
 
-    private static RxRedisJacksonTemplateFactory rxRedisJacksonTemplateFactory;
+    private static R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory;
 
     private static ReactiveRedisTemplate<String, String> readRedisTemplate;
     private static ReactiveRedisTemplate<String, Object> writeRedisTemplate;
@@ -35,19 +35,19 @@ public class RxRedisUtils implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        rxRedisJacksonTemplateFactory = applicationContext.getBean(RxRedisJacksonTemplateFactory.class);
-        readRedisTemplate = rxRedisJacksonTemplateFactory.string();
-        writeRedisTemplate = rxRedisJacksonTemplateFactory.forType(Object.class);
-        MAPPER = rxRedisJacksonTemplateFactory.getMapper();
+        r2edisJacksonTemplateFactory = applicationContext.getBean(R2edisJacksonTemplateFactory.class);
+        readRedisTemplate = r2edisJacksonTemplateFactory.string();
+        writeRedisTemplate = r2edisJacksonTemplateFactory.forType(Object.class);
+        MAPPER = r2edisJacksonTemplateFactory.getMapper();
         DEFAULT_TTL = applicationContext.getEnvironment().getProperty("spring.cache.redis.time-to-live", Duration.class, Duration.ofDays(1));
     }
 
     public static RedisSerializer<String> keySerializer() {
-        return rxRedisJacksonTemplateFactory.keySerializer();
+        return r2edisJacksonTemplateFactory.keySerializer();
     }
 
     public static <V> ReactiveRedisTemplate<String, V> getTemplate(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type);
+        return r2edisJacksonTemplateFactory.forType(type);
     }
 
     public static ReactiveRedisTemplate<String, String> readRedisTemplate() {
@@ -167,42 +167,42 @@ public class RxRedisUtils implements ApplicationContextAware {
      * Redis 字符串类型
      */
     public static <V> ReactiveValueOperations<String, V> string(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForValue();
+        return r2edisJacksonTemplateFactory.forType(type).opsForValue();
     }
 
     /**
      * Redis Hash类型
      */
     public static <V> ReactiveHashOperations<String, String, V> map(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForHash();
+        return r2edisJacksonTemplateFactory.forType(type).opsForHash();
     }
 
     /**
      * Redis 列表类型
      */
     public static <V> ReactiveListOperations<String, V> list(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForList();
+        return r2edisJacksonTemplateFactory.forType(type).opsForList();
     }
 
     /**
      * Redis 集合类型
      */
     public static <V> ReactiveSetOperations<String, V> set(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForSet();
+        return r2edisJacksonTemplateFactory.forType(type).opsForSet();
     }
 
     /**
      * Redis 有序集合类型
      */
     public static <V> ReactiveZSetOperations<String, V> sortedSet(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForZSet();
+        return r2edisJacksonTemplateFactory.forType(type).opsForZSet();
     }
 
     /**
      * Redis Stream API
      */
     public static <V> ReactiveStreamOperations<String, String, V> stream(Class<V> type) {
-        return rxRedisJacksonTemplateFactory.forType(type).opsForStream();
+        return r2edisJacksonTemplateFactory.forType(type).opsForStream();
     }
 
     @Nullable
