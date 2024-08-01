@@ -43,7 +43,7 @@ public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler im
         log(ex);
         ServerHttpResponse response = exchange.getResponse();
         response.getHeaders().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        Result<Void> fail = exceptionWrappers.handle(ex, (exceptionWrapper, throwable) -> {
+        Object fail = exceptionWrappers.handle(ex, (exceptionWrapper, throwable) -> {
             response.setRawStatusCode(exceptionWrapper.httpCode(throwable));
             return exceptionWrapper.wrap(throwable);
         });

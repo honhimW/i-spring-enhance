@@ -14,7 +14,7 @@ Http raw data logging by delegating the very IOStream of Request/Response. Only 
 ```java
 /**
  * @see io.github.honhimw.spring.web.common.ExceptionWrapper
- * Declare a bean that can be s
+ * Declare a bean that can be scan
  */
 @Component
 public class SomeExceptionWrapper implements ExceptionWrapper {
@@ -27,11 +27,10 @@ public class SomeExceptionWrapper implements ExceptionWrapper {
     }
     @Nonnull
     @Override
-    public CommonResult<Void> wrap(@Nonnull Throwable e) {
-        CommonResult<Void> result = new CommonResult<>();
-        result.setMsg(e.getMessage());
-        result.setCode(ResultCodeEnum.FAIL.getCode());
-        result.setErrCode(ResultCodeEnum.FAIL.getCode());
+    public Object wrap(@Nonnull Throwable e) {
+        Result<Void> result = Result.empty();
+        result.code("500");
+        result.msg(e.getMessage());
         return result;
     }
 }

@@ -51,7 +51,7 @@ public class ExceptionWrappers {
         return ew;
     }
 
-    public Result<Void> handle(Throwable e) {
+    public Object handle(Throwable e) {
         ExceptionWrapper ew;
         Throwable t = e;
         int deepth = 0;

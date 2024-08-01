@@ -32,7 +32,7 @@ public interface ExceptionWrapper extends Ordered {
      * @return the wrapped result should contain exception information
      */
     @Nonnull
-    Result<Void> wrap(@Nonnull Throwable e);
+    Object wrap(@Nonnull Throwable e);
 
     /**
      * Only the supported exception by current ExceptionWrapper would be invoke,
