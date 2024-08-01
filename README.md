@@ -84,7 +84,7 @@ An interface that defines cache data  that refreshable by specific-event.
 
 ### Redis extendsion
 
-- RedisUtils/RxRedisUtils: Provide a Generic supported usage(Multi-RedisTemplate);
+- RedisUtils/R2edisUtils: Provide a Generic supported usage(Multi-RedisTemplate);
 - RedisKeySpaceEvent: support cluster-mode redisEvent;
 - RedisTTLCache: An implementation of TTLCache using RedisTemplate;
 
