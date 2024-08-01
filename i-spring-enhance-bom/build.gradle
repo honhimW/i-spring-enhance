@@ -1,0 +1,65 @@
+plugins {
+    id 'java-platform'
+}
+
+apply plugin: 'java-platform'
+apply plugin: 'maven-publish'
+
+version = rootProject.version
+
+def springBootVersion = '3.3.2'
+def springCloudVersion = '2023.0.3'
+def springDocVersion = '2.6.0'
+def commonLangVersion = '3.15.0'
+def commonCollectionsVersion = '4.4'
+def mapStructVersion = '1.5.5.Final'
+def lombokMapstructBindingVersion = '0.2.0'
+def findBugsVersion = '3.0.1'
+
+javaPlatform {
+    allowDependencies()
+}
+
+dependencies {
+    api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+    api platform("org.springdoc:springdoc-openapi:${springDocVersion}")
+    constraints {
+        add('api', project(':i-spring-web-config-core'))
+        add('api', project(':i-spring-web-config-starter'))
+        add('api', project(':i-spring-extend'))
+        add('api', project(':i-spring-auto-configure'))
+        add('api', project(':i-spring-boot-project'))
+        add('api', project(':i-spring-cache-core'))
+        add('api', project(':i-spring-cache-starter'))
+
+        add('api', "org.apache.commons:commons-lang3:${commonLangVersion}")
+        add('api', "org.apache.commons:commons-collections4:${commonCollectionsVersion}")
+        add('api', "org.mapstruct:mapstruct:${mapStructVersion}")
+        add('api', "org.mapstruct:mapstruct-processor:${mapStructVersion}")
+        add('api', "org.mapstruct:mapstruct-jdk8:${mapStructVersion}")
+        add('api', "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}")
+        add('api', "com.google.code.findbugs:annotations:${findBugsVersion}")
+    }
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.javaPlatform
+            groupId = parent.group
+            artifactId = project.name
+            version = parent.version
+            pom {
+                packaging = 'pom'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name 'build-dir'
+            url = uri("${layout.buildDirectory}/publishing-repository")
+        }
+    }
+}

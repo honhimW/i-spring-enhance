@@ -1,0 +1,6 @@
+apply from: rootProject.file('buildSrc/shared.gradle')
+
+dependencies {
+    api(project(':i-spring-boot-project'))
+    api(project(':i-spring-web-config-core'))
+}

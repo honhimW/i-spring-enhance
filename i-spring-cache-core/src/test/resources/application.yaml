@@ -1,0 +1,19 @@
+spring:
+  data:
+    redis:
+      database: 0
+      cluster:
+        nodes: 10.37.1.133:6001,10.37.1.133:6002,10.37.1.133:6003,10.37.1.133:6004,10.37.1.133:6005,10.37.1.133:6006
+      password: 123456
+      timeout: 5000
+  cache:
+    redis:
+      time-to-live: 20s
+      key-prefix:
+i:
+  spring:
+    cache:
+      refresh-on-event: org.springframework.context.ApplicationEvent
+logging:
+  level:
+    io.github.honhimw.spring.cache.redis.io.github.honhimw.spring.cache.redis.RedisEventListenerWrapper: debug

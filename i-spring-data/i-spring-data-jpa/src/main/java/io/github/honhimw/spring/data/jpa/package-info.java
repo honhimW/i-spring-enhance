@@ -1,0 +1,1 @@
+package io.github.honhimw.spring.data.jpa;

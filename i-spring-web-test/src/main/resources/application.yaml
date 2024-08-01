@@ -1,0 +1,24 @@
+spring:
+  main:
+    web-application-type: reactive
+  config:
+    import: redis.yaml
+  messages:
+    basename: i18n/test
+    use-code-as-default-message: true
+logging:
+  level:
+    root: info
+    io.github.honhimw.spring.web.mvc.io.github.honhimw.spring.web.mvc.MvcHttpLogFilter: debug
+    io.github.honhimw.spring.web.reactive.io.github.honhimw.spring.web.reactive.ReactiveHttpLogHandler: debug
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /swagger-api
+  swagger-ui:
+    path: /swagger-ui
+  webjars:
+    prefix: ""

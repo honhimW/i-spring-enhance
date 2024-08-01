@@ -1,0 +1,19 @@
+apply from: rootProject.file('buildSrc/shared.gradle')
+
+dependencies {
+    api(project(':i-spring-extend'))
+    compileOnly('org.springframework.boot:spring-boot-starter-cache')
+    compileOnly('org.springframework.boot:spring-boot-starter-data-redis')
+    compileOnly('javax.cache:cache-api')
+    compileOnly('com.github.ben-manes.caffeine:caffeine')
+
+    testImplementation(project(':i-spring-extend'))
+    testImplementation('org.projectlombok:lombok')
+    testImplementation 'org.springframework.boot:spring-boot-starter-websocket'
+    testImplementation('org.springframework.boot:spring-boot-starter-web')
+    testImplementation('org.springframework.boot:spring-boot-starter-data-redis')
+    testImplementation(platform('org.junit:junit-bom:5.9.1'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testImplementation('org.slf4j:slf4j-simple')
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}

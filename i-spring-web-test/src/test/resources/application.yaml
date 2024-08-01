@@ -1,0 +1,8 @@
+spring:
+  messages:
+    basename: i18n/result
+    use-code-as-default-message: true
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true

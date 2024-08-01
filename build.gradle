@@ -1,0 +1,17 @@
+plugins {
+    id 'idea'
+}
+
+group = 'io.github.honhimw'
+version = '3.3.2.0-SNAPSHOT'
+
+tasks.register('onekeyDeploy') {
+    dependsOn ':i-spring-enhance-bom:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-auto-configure:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-extend:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-boot-project:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-web-config-core:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-web-config-starter:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-cache-core:publishLibraryPublicationToMavenLocal'
+    dependsOn ':i-spring-cache-starter:publishLibraryPublicationToMavenLocal'
+}

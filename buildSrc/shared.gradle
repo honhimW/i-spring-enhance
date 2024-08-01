@@ -1,0 +1,106 @@
+import static java.nio.charset.StandardCharsets.UTF_8
+
+apply plugin: 'idea'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+apply plugin: 'distribution'
+
+version = rootProject.version
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.register('sourcesJar', Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    options.encoding(UTF_8.name())
+    options.forkOptions.jvmArgs += ['-Duser.language=en', '-Duser.country=NO']
+    inputs.files(tasks.withType(ProcessResources))
+    options.compilerArgs << "-Xlint:deprecation"
+//    options.compilerArgs << "-Werror" << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += ['-Duser.language=en', '-Duser.country=NO']
+    useJUnitPlatform()
+}
+
+if (rootProject.file('buildSrc/maven-repository.gradle').exists()) {
+    apply from: rootProject.file('buildSrc/maven-repository.gradle')
+} else {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+dependencies {
+    implementation platform(project(':i-spring-enhance-bom'))
+    annotationProcessor platform(project(':i-spring-enhance-bom'))
+    testAnnotationProcessor platform(project(':i-spring-enhance-bom'))
+
+    compileOnly 'com.google.code.findbugs:annotations'
+    compileOnly 'org.springframework.boot:spring-boot'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    compileOnly 'org.projectlombok:lombok'
+    compileOnly 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencies {
+    testImplementation 'ch.qos.logback:logback-classic'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testAnnotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+publishing {
+    publications {
+        create('library', MavenPublication) {
+            groupId = parent.group
+            artifactId = project.name
+            version = parent.version
+            pom {
+                packaging = 'jar'
+            }
+            from components.java
+            artifact sourcesJar
+        }
+    }
+
+    repositories {
+        maven {
+            name 'build-dir'
+            url = uri("${layout.buildDirectory}/publishing-repository")
+        }
+    }
+}
+
+jar {
+    enabled(true)
+    archiveClassifier = ''
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += ['-Duser.language=en', '-Duser.country=NO']
+    useJUnitPlatform()
+}

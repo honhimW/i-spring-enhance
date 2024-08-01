@@ -1,0 +1,47 @@
+package io.github.honhimw.spring.web.reactive;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import io.github.honhimw.spring.util.JacksonFilterUtils;
+import io.github.honhimw.spring.web.common.WebConstants;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMessage;
+import org.springframework.web.server.ServerWebExchange;
+
+import jakarta.annotation.Nonnull;
+import java.util.Optional;
+
+/**
+ * @author hon_him
+ * @since 2023-05-17
+ */
+
+public class FetcherJackson2Encoder extends WebFluxJackson2Encoder {
+
+    @Nonnull
+    @Override
+    protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
+        return Optional.ofNullable(ExchangeHolder.getExchange())
+            .map(ServerWebExchange::getRequest)
+            .map(HttpMessage::getHeaders)
+            .flatMap(httpHeaders -> include(generator, httpHeaders).or(() -> exclude(generator, httpHeaders)))
+            .orElse(generator);
+    }
+
+    protected Optional<JsonGenerator> include(JsonGenerator generator, HttpHeaders headers) {
+        return Optional.ofNullable(headers)
+            .map(r -> r.getFirst(WebConstants.FETCH_ONLY_INCLUDE))
+            .filter(StringUtils::isNotBlank)
+            .map(s -> StringUtils.split(s, ';'))
+            .map(paths -> JacksonFilterUtils.includeFilter(generator, paths));
+    }
+
+    protected Optional<JsonGenerator> exclude(JsonGenerator generator, HttpHeaders headers) {
+        return Optional.ofNullable(headers)
+            .map(r -> r.getFirst(WebConstants.FETCH_NON_EXCLUDE))
+            .filter(StringUtils::isNotBlank)
+            .map(s -> StringUtils.split(s, ';'))
+            .map(paths -> JacksonFilterUtils.excludeFilter(generator, paths));
+    }
+
+}
