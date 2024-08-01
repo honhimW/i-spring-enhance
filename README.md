@@ -4,7 +4,9 @@
 
 ### Http delegating log
 
-Http raw data logging by delegating the very IOStream of Request/Response. Only work on the data is read/written(e.g. HttpBody haven't be used by the server, the server may not read the data from the IOStream thus the data will not be logged).
+Http raw data logging by delegating the very IOStream of Request/Response. Only work on the data is read/written(e.g.
+HttpBody haven't be used by the server, the server may not read the data from the IOStream thus the data will not be
+logged).
 
 - MVC: io.github.honhimw.spring.web.mvc.MvcHttpLogFilter
 - Webflux: io.github.honhimw.spring.web.reactive.ReactiveHttpLogHandler
@@ -21,10 +23,11 @@ public class SomeExceptionWrapper implements ExceptionWrapper {
     @Override
     public boolean support(@Nonnull Throwable e) {
         return e instanceof A_Exception
-            || e instanceof B_Exception
-            || (StringUtils.startsWith(e.getClass().getPackage().getName(), "org.example.exce"))
+               || e instanceof B_Exception
+               || (StringUtils.startsWith(e.getClass().getPackage().getName(), "org.example.exce"))
             ;
     }
+
     @Nonnull
     @Override
     public Object wrap(@Nonnull Throwable e) {
@@ -44,6 +47,7 @@ Fetch only selected properties, make the result message more simple.
 POST http://localhost:80/hello/world/page
 FETCHER-ONLY-INCLUDE: /code;/data/*/content;/msg;/data/1/id
 ```
+
 ```json
 {
   "code": 0,
@@ -60,10 +64,34 @@ FETCHER-ONLY-INCLUDE: /code;/data/*/content;/msg;/data/1/id
 }
 ```
 
+Or fetch only non excluded properties.
+
+```http request
+POST http://localhost:80/hello/world/page
+FETCH-NON-EXCLUDE: /code;/data/*;
+```
+
+```json
+{
+  "msg": "success",
+  "data": [
+  ]
+}
+```
+
 ### TextParam/FormDataParam resolver
 
-- TextParam: Aggregate those text-type param(e.g. RquestParameter/form-data-url-encoded/Json/pathVariable) to an single entity.
+- TextParam: Aggregate those text-type param(e.g. RquestParameter/form-data-url-encoded/Json/pathVariable) to an single
+  entity.
 - FormDataParam: form-data/multipart is included.
+
+> JacksonNodeReactiveCustomizer:
+> * CsvJacksonNodeReactiveCustomizer(with `@CsvField`, application/csv)
+> * YamlJacksonNodeReactiveCustomizer(application/yaml)
+>
+> JacksonNodeCustomizer
+> * CsvJacksonNodeCustomizer(with `@CsvField`, application/csv)
+> * YamlJacksonNodeCustomizer(application/yaml)
 
 ### Validation
 
@@ -79,7 +107,7 @@ An interface that extends Map<K, V> defines a way to set a separate Time-To-Live
 
 ### RefreshableCache
 
-An interface that defines cache data  that refreshable by specific-event.
+An interface that defines cache data that refreshable by specific-event.
 
 ### Redis extendsion
 
@@ -90,3 +118,15 @@ An interface that defines cache data  that refreshable by specific-event.
 ### Memory
 
 - InMemoryTTLCache: An implementation of TTLCache using ConcurrentHashMap and ScheduledExecutorService;
+
+## Reactor Thread Local Accessor HttpHandler/WebHandler
+
+Inject context parameters into thread local in reactive(project reactor)
+
+```groovy
+// required
+implementation 'io.micrometer:context-propagation:1.1.1'
+```
+
+- AbstractThreadLocalHttpHandler
+- AbstractThreadLocalWebFilter
