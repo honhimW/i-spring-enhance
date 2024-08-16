@@ -83,7 +83,7 @@ FETCH-NON-EXCLUDE: /code;/data/*;
 
 - TextParam: Aggregate those text-type param(e.g. RquestParameter/form-data-url-encoded/Json/pathVariable) to an single
   entity.
-- FormDataParam: form-data/multipart is included.
+- FormDataParam: `multipart/form-data` is included.
 
 > JacksonNodeReactiveCustomizer:
 > * CsvJacksonNodeReactiveCustomizer(with `@CsvField`, application/csv)
@@ -92,6 +92,33 @@ FETCH-NON-EXCLUDE: /code;/data/*;
 > JacksonNodeCustomizer
 > * CsvJacksonNodeCustomizer(with `@CsvField`, application/csv)
 > * YamlJacksonNodeCustomizer(application/yaml)
+
+### PartParam/FileReturn resolver and result handler
+
+- PartParam: accept a named part of `multipart/form-data` part, currently support CSV resolve.
+- FileReturn: return handler that set the `Content-Disposition` header with a default filename, and specific a file content charset(bom if unicode).
+
+> Json response properties fetcher also supported.
+
+**Usage**
+```java
+@Controller
+@EnableCsvConverter     // Enable CSV Converter Features
+@SpringBootApplication
+public class WebApp {
+  public static void main(String[] args) { SpringApplication.run(WebApp.class, args); }
+
+  @RequestMapping(value = "/concat", produces = {"text/csv"})
+  @FileReturn(value = "csvTran.csv", encoding = FileReturn.Encoding.UTF_8_BOM)
+  public List<Entity> conCSV(@PartParam("file") List<Entity> list, @PartParam("file2") List<Entity> list2) {
+//    DispositionHelper.attachment("ct.csv"); you may override the filename by setting 'Content-Disposition' manually
+    List<Entity> concat = new ArrayList<>();
+    concat.addAll(list);
+    concat.addAll(list2);
+    return concat;
+  }
+}
+```
 
 ### Validation
 
@@ -130,3 +157,27 @@ implementation 'io.micrometer:context-propagation:1.1.1'
 
 - AbstractThreadLocalHttpHandler
 - AbstractThreadLocalWebFilter
+
+## Spring Cloud Configuration
+
+### Development Load Balancer
+
+A Better load balancer under development.
+- Avoid developers affecting each other by using the same host instance as preferred.
+- Use the test server for the default service instance, so that developers don’t have to run the dependent services themselves.
+
+```java
+@SpringBootApplication
+@EnableDevLoadBalancer({
+        @Config(profile = "develop", servers = {
+                @TestServer(serviceId = "geo-service", host = "geo-test.internal", port = 8080)
+        }),
+        @Config(profile = "test", servers = {
+                @TestServer(serviceId = "geo-service", host = "geo-uat.cloud", port = 443, secure = true),
+        }, preferHost = "geo-test.internal")
+})
+@EnableFeignClients
+public class WebApp {
+  public static void main(String[] args) { SpringApplication.run(WebApp.class, args); }
+}
+```
