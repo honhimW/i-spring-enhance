@@ -1,20 +1,18 @@
 package io.github.honhimw.spring.web.mvc;
 
 import io.github.honhimw.spring.web.common.HttpLog;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.core.Ordered;
-import org.springframework.http.MediaType;
-import org.springframework.util.MimeType;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
-
+import io.github.honhimw.spring.web.util.MimeTypeSupports;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.Ordered;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -65,7 +63,7 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         httpLog.set_serverCost(cost);
 
         // only raw-type request content will be recorded
-        if (isRawType(cachingRequest.getContentType())) {
+        if (MimeTypeSupports.isRawType(cachingRequest.getContentType())) {
             ByteArrayOutputStream rawRequestBody = httpLog.get_rawRequestBody();
             byte[] bytes = cachingRequest.getContentAsByteArray();
             rawRequestBody.writeBytes(bytes);
@@ -79,7 +77,7 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         cachingResponse.copyBodyToResponse();
 
         // only raw-type response content will be recorded
-        if (isRawType(cachingResponse.getContentType())) {
+        if (MimeTypeSupports.isRawType(cachingResponse.getContentType())) {
             ByteArrayOutputStream rawResponseBody = httpLog.get_rawResponseBody();
             rawResponseBody.write(bytes);
         }
@@ -118,22 +116,6 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE;
-    }
-
-    private boolean isRawType(String mimeType) {
-        if (StringUtils.isBlank(mimeType)) {
-            return false;
-        }
-        return isRawType(MimeType.valueOf(mimeType));
-    }
-
-    private boolean isRawType(MimeType mimeType) {
-        return MediaType.APPLICATION_JSON.isCompatibleWith(mimeType)
-            || MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(mimeType)
-            || MediaType.APPLICATION_XML.isCompatibleWith(mimeType)
-            || MediaType.TEXT_PLAIN.isCompatibleWith(mimeType)
-            || MediaType.TEXT_XML.isCompatibleWith(mimeType)
-            ;
     }
 
 }

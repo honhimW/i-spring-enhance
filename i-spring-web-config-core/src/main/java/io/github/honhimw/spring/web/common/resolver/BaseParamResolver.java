@@ -2,24 +2,22 @@ package io.github.honhimw.spring.web.common.resolver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.honhimw.spring.data.common.ValidatorUtils;
 import io.github.honhimw.spring.util.JsonUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.*;
-import jakarta.validation.bootstrap.GenericBootstrap;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
-import org.springframework.validation.beanvalidation.LocaleContextMessageInterpolator;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hon_him
@@ -30,21 +28,15 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected static final ObjectMapper OBJECT_MAPPER = JsonUtils.getObjectMapper();
+    protected final ObjectMapper OBJECT_MAPPER;
 
-    protected static final Validator validator;
-
-    static {
-        GenericBootstrap genericBootstrap = Validation.byDefaultProvider();
-        Configuration<?> configure = genericBootstrap.configure();
-        MessageInterpolator defaultMessageInterpolator = configure.getDefaultMessageInterpolator();
-        configure.messageInterpolator(new LocaleContextMessageInterpolator(defaultMessageInterpolator));
-        ValidatorFactory validatorFactory = configure.buildValidatorFactory();
-        validator = validatorFactory.getValidator();
-        validatorFactory.close();
+    protected BaseParamResolver() {
+        OBJECT_MAPPER = JsonUtils.getObjectMapper();
     }
 
-    private static final Class<?>[] GROUPS = new Class[0];
+    protected BaseParamResolver(ObjectMapper objectMapper) {
+        OBJECT_MAPPER = objectMapper;
+    }
 
     protected List<JacksonNodeCustomizer> jacksonNodeCustomizers = new ArrayList<>();
 
@@ -53,14 +45,7 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
     }
 
     protected void validate(Object arugment, String[] excludesArgs) {
-        Set<ConstraintViolation<Object>> validResult = validator.validate(arugment, GROUPS);
-        if (StringUtils.isNoneBlank(excludesArgs)) {
-            Set<String> ea = Arrays.stream(excludesArgs).collect(Collectors.toSet());
-            validResult = validResult.stream().filter(cv -> !ea.contains(cv.getPropertyPath().toString())).collect(Collectors.toSet());
-        }
-        if (!validResult.isEmpty()) {
-            throw new ConstraintViolationException(validResult);
-        }
+        ValidatorUtils.validate(arugment, excludesArgs);
     }
 
     protected void assertBaseType(Class<?> parameterType) {

@@ -1,12 +1,11 @@
 package io.github.honhimw.spring.web.mvc;
 
+import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import jakarta.annotation.Nonnull;
 
 import java.util.List;
 
@@ -19,8 +18,8 @@ public class MvcExtendConfig implements WebMvcConfigurer {
 
     @Override
     public void extendMessageConverters(@Nonnull List<HttpMessageConverter<?>> converters) {
-        converters.removeIf(AbstractJackson2HttpMessageConverter.class::isInstance);
-        converters.add(new FetcherJacksonConverter());
+        converters.removeIf(MappingJackson2HttpMessageConverter.class::isInstance);
+        converters.add(new MvcJackson2HttpMessageConverter());
     }
 
     @Override

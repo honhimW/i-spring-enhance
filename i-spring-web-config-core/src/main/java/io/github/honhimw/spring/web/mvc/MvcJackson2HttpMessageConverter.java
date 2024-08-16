@@ -15,7 +15,6 @@ import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.TypeUtils;
@@ -30,7 +29,7 @@ import java.util.TimeZone;
  * @since 2023-05-17
  */
 
-public class MvcJackson2HttpMessageConverter extends AbstractJackson2HttpMessageConverter {
+public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
 
     public MvcJackson2HttpMessageConverter() {
         this(JsonUtils.getObjectMapper()
@@ -64,8 +63,8 @@ public class MvcJackson2HttpMessageConverter extends AbstractJackson2HttpMessage
         JsonGenerator generator = objectMapper.getFactory().createGenerator(outputStream, encoding);
         generator = decorateGenerator(generator);
         try {
-            if (object instanceof Result<?> result) {
-                I18nUtils.i18n(result);
+            if (object instanceof Result<?> commonResult) {
+                I18nUtils.i18n(commonResult);
             }
             writePrefix(generator, object);
 
@@ -107,11 +106,6 @@ public class MvcJackson2HttpMessageConverter extends AbstractJackson2HttpMessage
         } finally {
             generator.close();
         }
-    }
-
-    @Nonnull
-    protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
-        return generator;
     }
 
 }

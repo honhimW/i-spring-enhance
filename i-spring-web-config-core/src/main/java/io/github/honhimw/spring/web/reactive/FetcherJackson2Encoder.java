@@ -1,14 +1,17 @@
 package io.github.honhimw.spring.web.reactive;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.util.JacksonFilterUtils;
 import io.github.honhimw.spring.web.common.WebConstants;
+import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMessage;
+import org.springframework.http.codec.json.AbstractJackson2Encoder;
+import org.springframework.util.MimeType;
 import org.springframework.web.server.ServerWebExchange;
 
-import jakarta.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -16,10 +19,13 @@ import java.util.Optional;
  * @since 2023-05-17
  */
 
-public class FetcherJackson2Encoder extends WebFluxJackson2Encoder {
+public class FetcherJackson2Encoder extends AbstractJackson2Encoder {
+
+    public FetcherJackson2Encoder(ObjectMapper mapper, MimeType... mimeTypes) {
+        super(mapper, mimeTypes);
+    }
 
     @Nonnull
-    @Override
     protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
         return Optional.ofNullable(ExchangeHolder.getExchange())
             .map(ServerWebExchange::getRequest)

@@ -1,14 +1,17 @@
 package io.github.honhimw.spring.web.mvc;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.util.JacksonFilterUtils;
 import io.github.honhimw.spring.web.common.WebConstants;
+import jakarta.annotation.Nonnull;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.annotation.Nonnull;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 /**
@@ -16,10 +19,13 @@ import java.util.Optional;
  * @since 2023-05-17
  */
 
-public class FetcherJacksonConverter extends MvcJackson2HttpMessageConverter {
+public class FetcherJacksonConverter extends AbstractJackson2HttpMessageConverter {
+
+    public FetcherJacksonConverter(ObjectMapper objectMapper, MediaType supportedMediaType) {
+        super(objectMapper, supportedMediaType);
+    }
 
     @Nonnull
-    @Override
     protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
         return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
             .filter(ServletRequestAttributes.class::isInstance)

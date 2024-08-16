@@ -1,7 +1,6 @@
 package io.github.honhimw.spring.web.reactive;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
@@ -14,6 +13,7 @@ import com.fasterxml.jackson.databind.ser.FilterProvider;
 import io.github.honhimw.spring.Result;
 import io.github.honhimw.spring.util.JsonUtils;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
+import jakarta.annotation.Nonnull;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.CodecException;
@@ -22,7 +22,6 @@ import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.json.AbstractJackson2Encoder;
 import org.springframework.http.codec.json.Jackson2CodecSupport;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.lang.Nullable;
@@ -31,9 +30,10 @@ import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import jakarta.annotation.Nonnull;
-
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -43,7 +43,7 @@ import java.util.TimeZone;
  * @since 2023-04-15
  */
 
-public class WebFluxJackson2Encoder extends AbstractJackson2Encoder {
+public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
 
     private static final ResolvableType STRING = ResolvableType.forClass(String.class);
 
@@ -87,14 +87,22 @@ public class WebFluxJackson2Encoder extends AbstractJackson2Encoder {
                     }
                     ObjectWriter writer = createObjectWriter(mapper, elementType, mimeType, null, hints);
                     ByteArrayBuilder byteBuilder = new ByteArrayBuilder(writer.getFactory()._getBufferRecycler());
-                    JsonEncoding encoding = getJsonEncoding(mimeType);
-                    JsonGenerator generator = decorateGenerator(mapper.getFactory().createGenerator(byteBuilder, encoding));
-                    SequenceWriter sequenceWriter = writer.writeValues(generator);
+                    Charset charset = getCharset(mimeType);
+                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(byteBuilder, charset);
+                    JsonGenerator generator = decorateGenerator(mapper.getFactory().createGenerator(outputStreamWriter));
+
 
                     return Flux.from(inputStream)
                         .doOnNext(this::i18n)
-                        .map(value -> encodeStreamingValue(value, bufferFactory, hints, sequenceWriter, byteBuilder,
-                            separator))
+                        .<DataBuffer>handle((value, sink) -> {
+                            try {
+                                SequenceWriter sequenceWriter = customizeWriter(writer, elementType, value).writeValues(generator);
+                                sink.next(encodeStreamingValue(value, bufferFactory, hints, sequenceWriter, byteBuilder,
+                                    separator));
+                            } catch (IOException e) {
+                                sink.error(new RuntimeException(e));
+                            }
+                        })
                         .doAfterTerminate(() -> {
                             try {
                                 byteBuilder.release();
@@ -141,12 +149,14 @@ public class WebFluxJackson2Encoder extends AbstractJackson2Encoder {
 
         ByteArrayBuilder byteBuilder = new ByteArrayBuilder(writer.getFactory()._getBufferRecycler());
         try {
-            JsonEncoding encoding = getJsonEncoding(mimeType);
+            Charset charset = getCharset(mimeType);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(byteBuilder, charset);
 
-            JsonGenerator generator = mapper.getFactory().createGenerator(byteBuilder, encoding);
+            JsonGenerator generator = mapper.getFactory().createGenerator(outputStreamWriter);
             generator = decorateGenerator(generator);
             try {
                 i18n(value);
+                writer = customizeWriter(writer, valueType, value);
                 writer.writeValue(generator, value);
                 generator.flush();
             } catch (InvalidDefinitionException ex) {
@@ -181,6 +191,11 @@ public class WebFluxJackson2Encoder extends AbstractJackson2Encoder {
             writer = writer.forType(javaType);
         }
         return customizeWriter(writer, mimeType, valueType, hints);
+    }
+
+    @Nonnull
+    protected ObjectWriter customizeWriter(@Nonnull ObjectWriter writer, ResolvableType type, Object object) {
+        return writer;
     }
 
     @Nonnull
@@ -225,14 +240,19 @@ public class WebFluxJackson2Encoder extends AbstractJackson2Encoder {
     }
 
     private void i18n(Object value) {
-        if (value instanceof Result<?> result) {
-            I18nUtils.i18n(result);
+        if (value instanceof Result<?> commonResult) {
+            I18nUtils.i18n(commonResult);
         }
     }
 
     @Nonnull
-    protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
-        return generator;
+    protected Charset getCharset(@Nullable MimeType contentType) {
+        if (contentType != null && contentType.getCharset() != null) {
+            return contentType.getCharset();
+        }
+        else {
+            return StandardCharsets.UTF_8;
+        }
     }
 
 }

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.spring.util.GZipUtils;
-import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -53,8 +52,7 @@ public class YamlJacksonNodeCustomizer implements JacksonNodeCustomizer {
         Validate.validState(parameterAnnotation != null, "argument resolver annotation should not be null.");
 
         try {
-            ServletInputStream inputStream = servletRequest.getInputStream();
-            byte[] bytes = inputStream.readAllBytes();
+            byte[] bytes = servletRequest.getInputStream().readAllBytes();
             bytes = tryDecompressGzip(parameterAnnotation, servletRequest, bytes);
             Charset charset = Optional.of(servletRequest.getCharacterEncoding())
                 .map(Charset::forName)

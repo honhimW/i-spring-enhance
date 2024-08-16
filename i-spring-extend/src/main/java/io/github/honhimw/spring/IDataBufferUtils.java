@@ -7,7 +7,7 @@ import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class IDataBufferUtils {
     private IDataBufferUtils() {
     }
 
-    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = new DefaultDataBufferFactory();
+    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = DefaultDataBufferFactory.sharedInstance;
 
     public static Mono<DataBuffer> wrap2Mono(String data) {
         return Mono.just(wrap(DEFAULT_DATA_BUFFER_FACTORY, data));
@@ -45,21 +45,8 @@ public class IDataBufferUtils {
         return dataBufferFactory.wrap(data);
     }
 
-    public static DataBuffer reduce(DataBuffer db1, DataBuffer db2) {
-        return reduce(DEFAULT_DATA_BUFFER_FACTORY, db1, db2);
-    }
-
-    public static DataBuffer reduce(DataBufferFactory dataBufferFactory, DataBuffer db1, DataBuffer db2) {
-        return dataBufferFactory.join(List.of(db1, db2));
-    }
-
     public static Mono<byte[]> fluxData2Bytes(Flux<DataBuffer> dataBuffer) {
-        return fluxData2Bytes(DEFAULT_DATA_BUFFER_FACTORY, dataBuffer);
-    }
-
-    public static Mono<byte[]> fluxData2Bytes(DataBufferFactory dataBufferFactory, Flux<DataBuffer> dataBuffer) {
-        return dataBuffer
-            .reduce((df1, df2) -> reduce(dataBufferFactory, df1, df2))
+        return DataBufferUtils.join(dataBuffer)
             .map(IDataBufferUtils::dataBuffer2Bytes);
     }
 
@@ -68,20 +55,13 @@ public class IDataBufferUtils {
     }
 
     public static byte[] dataBuffer2Bytes(DataBuffer dataBuffer, boolean release) {
-        int len = dataBuffer.readableByteCount();
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(len);
+        InputStream inputStream = dataBuffer.asInputStream(release);
         try {
-            dataBuffer.toByteBuffer(byteBuffer);
-            byte[] bs = new byte[byteBuffer.remaining()];
-            byteBuffer.get(bs, 0, bs.length);
-            return bs;
+            byte[] bytes = inputStream.readAllBytes();
+            inputStream.close();
+            return bytes;
         } catch (Exception e) {
             throw new WrappedException(e);
-        } finally {
-            byteBuffer.clear();
-            if (release) {
-                DataBufferUtils.release(dataBuffer);
-            }
         }
     }
 

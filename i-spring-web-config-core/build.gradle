@@ -4,6 +4,7 @@ dependencies {
     api(project(':i-spring-extend'))
     compileOnly('org.springframework.boot:spring-boot-starter-web')
     compileOnly('org.springframework.boot:spring-boot-starter-webflux')
+    compileOnly('org.springframework.boot:spring-boot-starter-security')
     compileOnly(project(':i-spring-data:i-spring-data-common'))
     compileOnly(project(':i-spring-data:i-spring-data-jpa'))
     compileOnly 'jakarta.validation:jakarta.validation-api'

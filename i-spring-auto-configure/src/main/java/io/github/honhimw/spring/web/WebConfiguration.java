@@ -8,7 +8,6 @@ import io.github.honhimw.spring.web.mvc.MvcExtendConfig;
 import io.github.honhimw.spring.web.mvc.MvcHealthyCheckEndpointFilter;
 import io.github.honhimw.spring.web.mvc.MvcHttpLogFilter;
 import io.github.honhimw.spring.web.reactive.*;
-import io.github.honhimw.spring.web.reactive.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -63,13 +62,13 @@ abstract class WebConfiguration {
     @ComponentScan(basePackages = "io.github.honhimw.spring.web.mvc")
     static class IMvcConfiguration {
 
-        @Bean
-        @ConditionalOnMissingBean(MvcExtendConfig.class)
+        @Bean("mvcExtendConfig")
+        @ConditionalOnMissingBean(name = "mvcExtendConfig")
         WebMvcConfigurer mvcExtendConfig() {
             return new MvcExtendConfig();
         }
 
-        @Bean
+        @Bean("fallbackHandlerExceptionResolver")
         @ConditionalOnMissingBean(name = "fallbackHandlerExceptionResolver")
         HandlerExceptionResolver fallbackHandlerExceptionResolver(HttpMessageConverters converters, ExceptionWrappers wrappers, IWebProperties iWebProperties) {
             Boolean fallbackHandlerPrintStacktrace = iWebProperties.getFallbackHandlerPrintStacktrace();
@@ -78,13 +77,13 @@ abstract class WebConfiguration {
             return fallbackHandlerExceptionResolver;
         }
 
-        @Bean
+        @Bean("mvcHttpLogFilter")
         @ConditionalOnMissingBean(name = "mvcHttpLogFilter")
         MvcHttpLogFilter mvcHttpLogFilter() {
             return new MvcHttpLogFilter();
         }
 
-        @Bean
+        @Bean("mvcHealthyCheckEndpointFilter")
         @ConditionalOnMissingBean(MvcHealthyCheckEndpointFilter.class)
         @ConditionalOnProperty(name = "i.spring.web.healthy-check-point", havingValue = "true", matchIfMissing = true)
         MvcHealthyCheckEndpointFilter mvcHealthyCheckEndpointFilter() {
@@ -107,7 +106,7 @@ abstract class WebConfiguration {
         @Bean("webFluxJackson2Encoder")
         @ConditionalOnMissingBean(name = "webFluxJackson2Encoder")
         AbstractJackson2Encoder webFluxJackson2Encoder() {
-            return new FetcherJackson2Encoder();
+            return new WebFluxJackson2Encoder();
         }
 
         @Bean("reactiveExtendConfig")
@@ -147,10 +146,10 @@ abstract class WebConfiguration {
             return new ReactiveHealthyCheckEndpointFilter();
         }
 
-        @Bean("autoInitializeListener")
-        @ConditionalOnMissingBean(name = "autoInitializeListener")
-        AutoInitializeListener autoInitializeListener() {
-            return new AutoInitializeListener()
+        @Bean("autoInitializer")
+        @ConditionalOnMissingBean(name = "autoInitializer")
+        AutoInitializer autoInitializer() {
+            return new AutoInitializer()
                 .addTask("Reactor Thread Local Accessor Config", ReactorThreadLocalConfig::initialize);
         }
     }

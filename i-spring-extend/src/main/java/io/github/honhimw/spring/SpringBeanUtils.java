@@ -1,12 +1,13 @@
 package io.github.honhimw.spring;
 
+import jakarta.annotation.Nonnull;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.EnvironmentCapable;
+import org.springframework.util.ClassUtils;
 
-import jakarta.annotation.Nonnull;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,14 +18,8 @@ import java.util.Optional;
 @SuppressWarnings({"unused", "unchecked"})
 public class SpringBeanUtils implements ApplicationContextAware {
 
-    /**
-     * 当前IOC
-     */
     private static ApplicationContext _context;
 
-    /**
-     * 设置当前上下文环境，此方法由spring自动装配
-     */
     @Override
     public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
         SpringBeanUtils._context = context;
@@ -73,6 +68,31 @@ public class SpringBeanUtils implements ApplicationContextAware {
             .map(EnvironmentCapable::getEnvironment)
             .map(environment -> environment.getProperty(key))
             .orElse(null);
+    }
+
+    public static boolean isWeb() {
+        return isWebMvc() || isWebFlux();
+    }
+
+    public static boolean isWebMvc() {
+        return matchContextType("org.springframework.web.context.WebApplicationContext");
+    }
+
+    public static boolean isWebFlux() {
+        return matchContextType("org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext");
+    }
+
+    private static boolean matchContextType(String className) {
+        boolean present = ClassUtils.isPresent(className, ClassUtils.getDefaultClassLoader());
+        if (present) {
+            try {
+                Class<?> type = ClassUtils.forName(className, ClassUtils.getDefaultClassLoader());
+                return type.isAssignableFrom(_context.getClass());
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+
+        return false;
     }
 
 }

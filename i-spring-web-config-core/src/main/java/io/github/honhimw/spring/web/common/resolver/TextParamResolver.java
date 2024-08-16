@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.spring.util.GZipUtils;
-import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
@@ -17,8 +17,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.HandlerMapping;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -71,8 +69,7 @@ public class TextParamResolver extends BaseParamResolver {
         injectUriParam(paramNode, uriTemplateVars);
 
         if (MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(servletRequest.getContentType()))) {
-            ServletInputStream inputStream = servletRequest.getInputStream();
-            byte[] byteArray = inputStream.readAllBytes();
+            byte[] byteArray = servletRequest.getInputStream().readAllBytes();
             if (parameterAnnotation.gzip() && StringUtils.equals(servletRequest.getHeader(HttpHeaders.CONTENT_ENCODING), "gzip")) {
                 byteArray = GZipUtils.decompress(byteArray);
             }
