@@ -1,17 +1,68 @@
-plugins {
-    id 'idea'
-}
 
 group = 'io.github.honhimw'
-version = '3.3.2.0-SNAPSHOT'
+version = '3.3.6.0-SNAPSHOT'
 
-tasks.register('onekeyDeploy') {
-    dependsOn ':i-spring-enhance-bom:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-auto-configure:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-extend:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-boot-project:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-web-config-core:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-web-config-starter:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-cache-core:publishLibraryPublicationToMavenLocal'
-    dependsOn ':i-spring-cache-starter:publishLibraryPublicationToMavenLocal'
+allprojects {
+    configurations {
+        using {
+            visible false
+            canBeResolved false
+            canBeConsumed false
+            canBeDeclared true
+        }
+    }
+    afterEvaluate {
+        plugins.withType(JavaPlugin).every {
+            configurations {
+                compileClasspath { extendsFrom using }
+                runtimeClasspath { extendsFrom using }
+                annotationProcessor { extendsFrom using }
+                testCompileClasspath { extendsFrom using }
+                testRuntimeClasspath { extendsFrom using }
+                testAnnotationProcessor { extendsFrom using }
+            }
+        }
+        plugins.withType(JavaLibraryPlugin).every {
+            configurations {
+                compileOnly { extendsFrom annotationProcessor }
+                testCompileOnly { extendsFrom testAnnotationProcessor }
+            }
+        }
+    }
+}
+
+def modules = subprojects.findAll {
+    it.buildFile.exists()
+}
+
+def bom = project(':i-spring-enhance-bom')
+def libraries = modules - bom - project(':i-spring-web-test')
+
+configure(libraries) {
+    apply from: rootProject.file('buildSrc/library.gradle')
+    dependencies {
+        using platform(bom)
+    }
+    jar {
+        enabled(true)
+        archiveClassifier = ''
+    }
+}
+
+tasks.register('deployAll') {
+    group 'deploy'
+    dependsOn ':i-common-utilities:publishToMavenLocal'
+    dependsOn ':i-core:publishToMavenLocal'
+    dependsOn ':i-spring-enhance-bom:publishToMavenLocal'
+    dependsOn ':i-spring-auto-configure:publishToMavenLocal'
+    dependsOn ':i-spring-extend:publishToMavenLocal'
+    dependsOn ':i-spring-boot-project:publishToMavenLocal'
+    dependsOn ':i-spring-web-config-core:publishToMavenLocal'
+    dependsOn ':i-spring-web-config-starter:publishToMavenLocal'
+    dependsOn ':i-spring-cache-core:publishToMavenLocal'
+    dependsOn ':i-spring-cache-starter:publishToMavenLocal'
+
+    dependsOn ':i-spring-data-ddd:i-spring-ddd-common:publishToMavenLocal'
+    dependsOn ':i-spring-data-ddd:i-spring-ddd-jpa:publishToMavenLocal'
+    dependsOn ':i-spring-data-ddd:i-spring-ddd-starter:publishToMavenLocal'
 }

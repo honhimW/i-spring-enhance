@@ -23,7 +23,7 @@ public class ServletExceptionWrapper extends SingleExceptionWrapper<ServletExcep
     }
 
     @Override
-    protected int unifyCode(@Nonnull ServletException e) {
+    protected int _httpCode(@Nonnull ServletException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 }

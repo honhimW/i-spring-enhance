@@ -1,6 +1,7 @@
 package io.github.honhimw.spring.web.mvc;
 
 import io.github.honhimw.spring.web.common.AbstractFallbackHandler;
+import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,11 +27,11 @@ public class FallbackHandlerExceptionResolver extends AbstractFallbackHandler im
 
     private final HttpMessageConverters httpMessageConverters;
 
-    private final ExceptionWrappers exceptionWrappers;
-
-    public FallbackHandlerExceptionResolver(HttpMessageConverters httpMessageConverters, ExceptionWrappers exceptionWrappers) {
+    public FallbackHandlerExceptionResolver(HttpMessageConverters httpMessageConverters,
+                                            ExceptionWrappers exceptionWrappers,
+                                            ExceptionWrapper.MessageFormatter messageFormatter) {
+        super(exceptionWrappers, messageFormatter);
         this.httpMessageConverters = httpMessageConverters;
-        this.exceptionWrappers = exceptionWrappers;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -38,10 +39,10 @@ public class FallbackHandlerExceptionResolver extends AbstractFallbackHandler im
     public ModelAndView resolveException(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, Object handler, @Nonnull Exception ex) {
         log(ex);
         try {
-            Object result = exceptionWrappers.handle(ex, (exceptionWrapper, throwable) -> {
-                response.setStatus(exceptionWrapper.httpCode(throwable));
-                return exceptionWrapper.wrap(throwable);
-            });
+            ExceptionWrapper wrapper = exceptionWrappers.getWrapper(ex);
+            int status = wrapper.httpCode(ex);
+            response.setStatus(status);
+            Object result = handle(wrapper, ex, status);
             List<HttpMessageConverter<?>> converters = httpMessageConverters.getConverters();
             for (HttpMessageConverter converter : converters) {
                 if (converter.canWrite(result.getClass(), MediaType.APPLICATION_JSON)) {

@@ -20,11 +20,11 @@ public class JsonParserExceptionWrapper extends SingleExceptionWrapper<JsonParse
     @Nonnull
     @Override
     protected String _wrap(@Nonnull JsonParseException e) {
-        return "JSON转换异常";
+        return "JSON Parse Error";
     }
 
     @Override
-    protected int unifyCode(@Nonnull JsonParseException e) {
+    protected int _httpCode(@Nonnull JsonParseException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

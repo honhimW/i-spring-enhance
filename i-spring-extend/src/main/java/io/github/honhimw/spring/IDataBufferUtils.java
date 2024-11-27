@@ -1,5 +1,6 @@
 package io.github.honhimw.spring;
 
+import io.github.honhimw.core.WrappedException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -7,9 +8,8 @@ import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * Remember to check release the buffer after use.
@@ -27,7 +27,7 @@ public class IDataBufferUtils {
     private IDataBufferUtils() {
     }
 
-    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = DefaultDataBufferFactory.sharedInstance;
+    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = new DefaultDataBufferFactory();
 
     public static Mono<DataBuffer> wrap2Mono(String data) {
         return Mono.just(wrap(DEFAULT_DATA_BUFFER_FACTORY, data));
@@ -55,13 +55,20 @@ public class IDataBufferUtils {
     }
 
     public static byte[] dataBuffer2Bytes(DataBuffer dataBuffer, boolean release) {
-        InputStream inputStream = dataBuffer.asInputStream(release);
+        int len = dataBuffer.readableByteCount();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(len);
         try {
-            byte[] bytes = inputStream.readAllBytes();
-            inputStream.close();
-            return bytes;
+            dataBuffer.toByteBuffer(byteBuffer);
+            byte[] bs = new byte[byteBuffer.remaining()];
+            byteBuffer.get(bs, 0, bs.length);
+            return bs;
         } catch (Exception e) {
             throw new WrappedException(e);
+        } finally {
+            byteBuffer.clear();
+            if (release) {
+                DataBufferUtils.release(dataBuffer);
+            }
         }
     }
 

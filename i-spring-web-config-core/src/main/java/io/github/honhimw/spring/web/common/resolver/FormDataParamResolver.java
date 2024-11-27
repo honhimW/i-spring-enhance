@@ -21,9 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * {@link MediaType#MULTIPART_FORM_DATA_VALUE} 格式请求类型参数解析, 该类型同时支持binary(文件)和text(文本参数)
- * Controller接口参数使用{@link FormDataParam}注解,
- * 注解对象需实现{@link java.io.Serializable}且参数类型为{@link Number,Boolean,String,MultipartFile} 多个key, 只取第一个
+ * Accept {@link MediaType#MULTIPART_FORM_DATA_VALUE}, also supports binary(file) and text(string)
  *
  * @author hon_him
  * @since 2022-06-06
@@ -39,7 +37,7 @@ public class FormDataParamResolver extends BaseParamResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
         NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        // URI参数
+        // URI vars
         Map<String, String> uriTemplateVars = (Map<String, String>) webRequest.getAttribute(
             HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
         // parameter map

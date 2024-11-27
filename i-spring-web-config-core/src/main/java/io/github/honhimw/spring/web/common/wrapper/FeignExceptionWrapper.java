@@ -1,8 +1,8 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
+import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
 import feign.Feign;
 import feign.FeignException;
-import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,7 @@ public class FeignExceptionWrapper extends SingleExceptionWrapper<FeignException
     }
 
     @Override
-    protected int unifyCode(@Nonnull FeignException e) {
+    protected int _httpCode(@Nonnull FeignException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

@@ -2,7 +2,7 @@ package io.github.honhimw.spring.cache.redis;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.util.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
@@ -20,8 +20,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.util.TimeZone;
 
 /**
- * Webflux项目中许多时候需要使用reactive, redis对应的响应式模板{@link ReactiveRedisTemplate}
- *
  * @author hon_him
  * @since 2022-06-16
  */
@@ -33,7 +31,7 @@ public class RedisConfig {
     @Value("${uac.redis.authorization.prefix:uac:auth}")
     private String prefix;
 
-    private final ObjectMapper REDIS_OBJECT_MAPPER = JsonUtils.getObjectMapper().copy()
+    private final ObjectMapper REDIS_OBJECT_MAPPER = JsonUtils.mapper().copy()
         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
         .setTimeZone(TimeZone.getDefault());
 
@@ -65,7 +63,7 @@ public class RedisConfig {
 
     @Bean
     RedisJacksonTemplateFactory redisJacksonTemplateFactory(RedisConnectionFactory redisConnectionFactory) {
-        return new RedisJacksonTemplateFactoryImpl(redisConnectionFactory, new StringRedisSerializer(), JsonUtils.getObjectMapper());
+        return new RedisJacksonTemplateFactoryImpl(redisConnectionFactory, new StringRedisSerializer(), JsonUtils.mapper());
     }
 
     @Bean

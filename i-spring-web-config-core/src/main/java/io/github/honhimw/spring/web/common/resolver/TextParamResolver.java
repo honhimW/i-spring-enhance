@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.GZipUtils;
+import io.github.honhimw.util.GZipUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
@@ -22,16 +23,12 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
- * 常用参数类型包括
+ * Resolve common parameters
  *
  * @author hon_him
- * @see org.springframework.web.bind.annotation.RequestParam query参数
- * @see org.springframework.web.bind.annotation.PathVariable 路径参数
- * @see org.springframework.web.bind.annotation.RequestBody
- * 请求体application/json或{@link MediaType#APPLICATION_FORM_URLENCODED_VALUE}
- * @see org.springframework.web.servlet.mvc.method.annotation.ServletModelAttributeMethodProcessor 将这些参数统一封装到一个实体类里,
- * 在使用时应该避免参数名重复
- * @see org.springframework.web.bind.annotation.RequestBody 类型不支持二级泛型参数
+ * @see org.springframework.web.bind.annotation.RequestParam query
+ * @see org.springframework.web.bind.annotation.PathVariable url vars
+ * @see org.springframework.web.bind.annotation.RequestBody body application/json or {@link MediaType#APPLICATION_FORM_URLENCODED_VALUE}
  * @since 2022-06-06
  */
 @SuppressWarnings("unchecked")
@@ -49,7 +46,7 @@ public class TextParamResolver extends BaseParamResolver {
         TextParam parameterAnnotation = parameter.getParameterAnnotation(TextParam.class);
         Assert.notNull(parameterAnnotation, "argument resolver annotation should not be null.");
 
-        // URI参数
+        // URI vars
         Map<String, String> uriTemplateVars = (Map<String, String>) webRequest.getAttribute(
             HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
         // parameter map
@@ -57,7 +54,7 @@ public class TextParamResolver extends BaseParamResolver {
 
         HttpServletRequest servletRequest = webRequest.getNativeRequest(HttpServletRequest.class);
 
-        Assert.notNull(servletRequest, "请求类型错误");
+        Assert.notNull(servletRequest, "servlet request should not be null.");
         Charset charset = Charset.forName(servletRequest.getCharacterEncoding());
 
         Class<?> parameterType = parameter.getParameterType();
@@ -69,7 +66,7 @@ public class TextParamResolver extends BaseParamResolver {
         injectUriParam(paramNode, uriTemplateVars);
 
         if (MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(servletRequest.getContentType()))) {
-            byte[] byteArray = servletRequest.getInputStream().readAllBytes();
+            byte[] byteArray = IOUtils.toByteArray(servletRequest.getInputStream());
             if (parameterAnnotation.gzip() && StringUtils.equals(servletRequest.getHeader(HttpHeaders.CONTENT_ENCODING), "gzip")) {
                 byteArray = GZipUtils.decompress(byteArray);
             }

@@ -7,13 +7,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.GZipUtils;
+import io.github.honhimw.util.GZipUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import reactor.core.publisher.Mono;
 
@@ -52,7 +52,7 @@ public class YamlJacksonNodeReactiveCustomizer implements JacksonNodeReactiveCus
             return Mono.empty();
         }
         TextParam parameterAnnotation = parameter.getParameterAnnotation(TextParam.class);
-        Validate.validState(parameterAnnotation != null, "argument resolver annotation should not be null.");
+        Assert.state(parameterAnnotation != null, "argument resolver annotation should not be null.");
 
         return IDataBufferUtils.fluxData2Bytes(request.getBody())
             .map(bytes -> tryDecompressGzip(parameterAnnotation, request, bytes))

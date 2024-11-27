@@ -1,22 +1,11 @@
-apply from: rootProject.file('buildSrc/shared.gradle')
-
 description 'Classes only'
 
 dependencies {
-    api('org.apache.commons:commons-lang3')
-    api('org.apache.commons:commons-collections4')
-    api('com.fasterxml.jackson.core:jackson-databind')
-    api('com.fasterxml.jackson.core:jackson-core')
-    api('com.fasterxml.jackson.core:jackson-annotations')
-    api('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
-    api('com.fasterxml.jackson.datatype:jackson-datatype-jdk8')
-    compileOnly('jakarta.validation:jakarta.validation-api')
-    compileOnly('org.springframework.statemachine:spring-statemachine-core:3.2.0')
-    compileOnly('com.lmax:disruptor:4.0.0.RC1')
-    compileOnly('org.springframework.cloud:spring-cloud-loadbalancer')
-    compileOnly('org.apache.httpcomponents.client5:httpclient5:5.3.1')
-    compileOnly('io.projectreactor.netty:reactor-netty-http')
-
-
+    api(project(':i-core'))
+    api(project(':i-common-utilities'))
+    implementation 'org.slf4j:slf4j-api'
+    compileOnly 'jakarta.validation:jakarta.validation-api'
+    compileOnly 'org.springframework.statemachine:spring-statemachine-core:3.2.0'
+    compileOnly 'org.springframework.cloud:spring-cloud-loadbalancer'
     testImplementation('org.springframework.statemachine:spring-statemachine-core:3.2.0')
 }

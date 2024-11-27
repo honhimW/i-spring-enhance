@@ -8,14 +8,14 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.GZipUtils;
 import io.github.honhimw.spring.web.common.resolver.annotation.CsvField;
+import io.github.honhimw.util.GZipUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import reactor.core.publisher.Mono;
 
@@ -59,10 +59,10 @@ public class CsvJacksonNodeReactiveCustomizer implements JacksonNodeReactiveCust
         }
         TextParam parameterAnnotation = parameter.getParameterAnnotation(TextParam.class);
         CsvField csvField = parameter.getParameterAnnotation(CsvField.class);
-        Validate.validState(parameterAnnotation != null, "argument resolver annotation should not be null.");
-        Validate.validState(csvField != null, "csv field annotation should not be null.");
+        Assert.state(parameterAnnotation != null, "argument resolver annotation should not be null.");
+        Assert.state(csvField != null, "csv field annotation should not be null.");
         String fieldName = csvField.value();
-        Validate.validState(StringUtils.isNotBlank(fieldName), "csv field annotation should not be null.");
+        Assert.state(StringUtils.isNotBlank(fieldName), "csv field annotation should not be null.");
 
 
         return IDataBufferUtils.fluxData2Bytes(request.getBody())

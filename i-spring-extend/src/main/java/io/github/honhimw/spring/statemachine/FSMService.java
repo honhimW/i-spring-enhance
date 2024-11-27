@@ -19,29 +19,26 @@ import java.util.function.Function;
 public interface FSMService<S, E, D> {
 
     /**
-     * 通过数据库对象获取状态机实例
+     * Get new state machine instance from entity
      *
-     * @param d 数据库对象
-     * @return 状态机实例
+     * @param d data object
+     * @return state machine
      */
     StateMachine<S, E> getFSM(D d);
 
     /**
-     * 1.数据库对象转换为状态机实例;
-     * <p>
-     * 2.发送事件到状态机;
-     * <p>
-     * 3.根据执行结果{@link ResultType}回调hook, 以及返回执行结果;
+     * 1. Data object to state machine instance;
+     * 2. Send event to state machine;
+     * 3. Hook callback and return result;
      *
-     * @param d           数据库对象
-     * @param event       事件
-     * @param successHook 成功回调
-     * @param failHook    失败回调
-     * @param <EX>        失败时包装异常抛出
-     * @return 状态变更结果
+     * @param d           data object
+     * @param event       event
+     * @param successHook success hook
+     * @param failHook    fail hook
+     * @return result
      */
     default <EX extends Exception> Mono<Boolean> rSend(D d, E event, Consumer<D> successHook,
-                                                              Function<Exception, EX> failHook) {
+                                                       Function<Exception, EX> failHook) {
         StateMachine<S, E> fsm = getFSM(d);
         Flux<StateMachineEventResult<S, E>> stateMachineEventResultFlux = fsm.sendEvent(
             FSMUtils.eventMsg(event));
@@ -52,11 +49,11 @@ public interface FSMService<S, E, D> {
                 switch (resultType) {
                     case DENIED -> Optional.ofNullable(failHook)
                         .map(_function -> _function.apply(new IllegalStateException(
-                                String.format("状态[%s]拒绝响应事件[%s]", fsm.getState().getId(), event))))
+                            String.format("current state: [%s] reject handling event: [%s]", fsm.getState().getId(), event))))
                         .ifPresentOrElse(sink::error, () -> sink.next(false));
                     case DEFERRED -> Optional.ofNullable(failHook)
                         .map(_function -> _function.apply(new IllegalStateException(
-                            String.format("状态[%s]推迟响应事件[%s]", fsm.getState().getId(), event))))
+                            String.format("current state: [%s] deferred handling event: [%s]", fsm.getState().getId(), event))))
                         .ifPresentOrElse(sink::error, () -> sink.next(false));
                     case ACCEPTED -> {
                         Exception exception = FSMUtils.guardResult(result);
@@ -77,13 +74,13 @@ public interface FSMService<S, E, D> {
     }
 
     default <EX extends Exception> Mono<Boolean> rSend(D d, E e,
-                                                Function<Exception, EX> failHook) {
+                                                       Function<Exception, EX> failHook) {
         return rSend(d, e, d1 -> {
         }, failHook);
     }
 
     default <EX extends Exception> Mono<Boolean> rSend(D d, E e,
-                                                Consumer<D> successHook) {
+                                                       Consumer<D> successHook) {
         return rSend(d, e, successHook, IllegalStateException::new);
     }
 
@@ -93,18 +90,15 @@ public interface FSMService<S, E, D> {
     }
 
     /**
-     * 1.数据库对象转换为状态机实例;
-     * <p>
-     * 2.发送事件到状态机;
-     * <p>
-     * 3.根据执行结果{@link ResultType}回调hook, 以及返回执行结果;
+     * 1. Data object to state machine instance;
+     * 2. Send event to state machine;
+     * 3. Hook callback and return result;
      *
-     * @param d           数据库对象
-     * @param event       事件
-     * @param successHook 成功回调
-     * @param failHook    失败回调
-     * @param <EX>        失败时包装异常抛出
-     * @return 状态变更结果
+     * @param d           data object
+     * @param event       event
+     * @param successHook success hook
+     * @param failHook    fail hook
+     * @return result
      */
     default <EX extends Exception> boolean send(D d, E event, Consumer<D> successHook,
                                                 Function<Exception, EX> failHook) throws EX {
@@ -125,7 +119,7 @@ public interface FSMService<S, E, D> {
             case DENIED -> {
                 EX apply = failHook.apply(
                     new IllegalStateException(
-                        String.format("状态[%s]拒绝响应事件[%s]", fsm.getState().getId(), event)));
+                        String.format("current state: [%s] reject handling event: [%s]", fsm.getState().getId(), event)));
                 if (Objects.nonNull(apply)) {
                     throw apply;
                 }
@@ -134,7 +128,7 @@ public interface FSMService<S, E, D> {
             case DEFERRED -> {
                 EX apply = failHook.apply(
                     new IllegalStateException(
-                        String.format("状态[%s]推迟响应事件[%s]", fsm.getState().getId(), event)));
+                        String.format("current state: [%s] deferred handling event: [%s]", fsm.getState().getId(), event)));
                 if (Objects.nonNull(apply)) {
                     throw apply;
                 }

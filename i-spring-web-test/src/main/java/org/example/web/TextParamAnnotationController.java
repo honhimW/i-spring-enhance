@@ -1,6 +1,6 @@
 package org.example.web;
 
-import io.github.honhimw.spring.Result;
+import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.spring.web.common.resolver.annotation.CsvField;
 import lombok.Getter;
@@ -22,18 +22,18 @@ import java.util.Optional;
 public class TextParamAnnotationController {
 
     @RequestMapping("/test")
-    public Result<String> test(@TextParam TypeWithParameter<String, TypeWithParameter<Integer, Boolean>> name) {
+    public IResult<String> test(@TextParam TypeWithParameter<String, TypeWithParameter<Integer, Boolean>> name) {
         return Optional.ofNullable(name)
             .map(TypeWithParameter::getR)
             .map(TypeWithParameter::getT)
             .map(String::valueOf)
-            .map(Result::ok)
-            .orElseGet(Result::error);
+            .map(IResult::ok)
+            .orElse(IResult.err());
     }
 
     @RequestMapping("/csvRaw")
-    public Result<?> csvRaw(@TextParam @CsvField("r") TypeWithParameter<String, List<TypeWithParameter<String, Double>>> simpleType) {
-        return Result.ok(simpleType);
+    public IResult<?> csvRaw(@TextParam @CsvField("r") TypeWithParameter<String, List<TypeWithParameter<String, Double>>> simpleType) {
+        return IResult.ok(simpleType);
     }
 
     @Getter

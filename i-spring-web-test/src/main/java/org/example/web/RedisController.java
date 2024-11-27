@@ -1,10 +1,19 @@
 package org.example.web;
 
-import io.github.honhimw.spring.Result;
+import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.cache.redis.RedisUtils;
+import org.example.model.RedisJavaSerial;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.Map;
 
 /**
@@ -17,28 +26,78 @@ import java.util.Map;
 public class RedisController {
 
     @RequestMapping("/get")
-    public Result<String> get(@RequestParam("key") String key) {
+    public IResult<String> get(@RequestParam("key") String key) {
 
         String s = RedisUtils.get(key, String.class);
-        return Result.ok(s);
+        return IResult.ok(s);
     }
 
     @RequestMapping("/put")
-    public Result<Boolean> put(@RequestParam("key") String key, @RequestParam("value") String value) {
+    public IResult<Boolean> put(@RequestParam("key") String key, @RequestParam("value") String value) {
         Boolean put = RedisUtils.put(key, value);
-        return Result.ok(put);
+        return IResult.ok(put);
     }
 
     @RequestMapping("/putString")
-    public Result<Boolean> putString(@RequestParam("key") String key, @RequestParam("value") String value) {
+    public IResult<Boolean> putString(@RequestParam("key") String key, @RequestParam("value") String value) {
         Boolean put = RedisUtils.putAsString(key, Map.of(key, value));
-        return Result.ok(put);
+        return IResult.ok(put);
     }
 
     @RequestMapping("/getString")
-    public Result<Object> getString(@RequestParam("key") String key) {
+    public IResult<Object> getString(@RequestParam("key") String key) {
         Object o = RedisUtils.getStringAs(key, Map.class);
-        return Result.ok(o);
+        return IResult.ok(o);
     }
-    
+
+    @Autowired
+    private SimpleService simpleService;
+
+    @GetMapping("/cacheable")
+    public IResult<Void> cacheable(@RequestParam("key") String key, @RequestParam("value") String value) {
+        simpleService.put(key, value);
+        return IResult.ok();
+    }
+
+    @GetMapping("/getFromCacheable")
+    public IResult<String> getFromCacheable(@RequestParam("key") String key) {
+        return IResult.ok(simpleService.get(key));
+    }
+
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
+    @RequestMapping("/putJavaSerialized")
+    public IResult<Boolean> putJavaSerialized(@RequestParam("key") String key, @RequestParam("value") String value) {
+        RedisTemplate<String, RedisJavaSerial> redisTemplate = new RedisTemplate<>();
+        JdkSerializationRedisSerializer jdkSerializationRedisSerializer = new JdkSerializationRedisSerializer();
+        RedisSerializer<?> keySerializer = RedisUtils.writeRedisTemplate().getKeySerializer();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setKeySerializer(keySerializer);
+        redisTemplate.setValueSerializer(jdkSerializationRedisSerializer);
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(jdkSerializationRedisSerializer);
+        redisTemplate.afterPropertiesSet();
+
+        RedisJavaSerial _value = RedisJavaSerial.defaultObject();
+        _value.setString(value);
+        redisTemplate.opsForValue().set(key, _value);
+        return IResult.ok(true);
+    }
+
+    @RequestMapping("/getJavaSerialized")
+    public IResult<RedisJavaSerial> getJavaSerialized(@RequestParam("key") String key) {
+        RedisTemplate<String, RedisJavaSerial> redisTemplate = new RedisTemplate<>();
+        JdkSerializationRedisSerializer jdkSerializationRedisSerializer = new JdkSerializationRedisSerializer();
+        RedisSerializer<?> keySerializer = RedisUtils.writeRedisTemplate().getKeySerializer();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        redisTemplate.setKeySerializer(keySerializer);
+        redisTemplate.setValueSerializer(jdkSerializationRedisSerializer);
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(jdkSerializationRedisSerializer);
+        redisTemplate.afterPropertiesSet();
+
+        return IResult.ok(redisTemplate.opsForValue().get(key));
+    }
+
 }

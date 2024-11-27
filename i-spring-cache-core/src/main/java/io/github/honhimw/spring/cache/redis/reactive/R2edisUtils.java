@@ -3,6 +3,7 @@ package io.github.honhimw.spring.cache.redis.reactive;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -11,8 +12,6 @@ import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 import reactor.core.publisher.Mono;
-
-import jakarta.annotation.Nullable;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
@@ -164,35 +163,35 @@ public class R2edisUtils implements ApplicationContextAware {
     }
 
     /**
-     * Redis 字符串类型
+     * Redis String
      */
     public static <V> ReactiveValueOperations<String, V> string(Class<V> type) {
         return r2edisJacksonTemplateFactory.forType(type).opsForValue();
     }
 
     /**
-     * Redis Hash类型
+     * Redis Hash
      */
     public static <V> ReactiveHashOperations<String, String, V> map(Class<V> type) {
         return r2edisJacksonTemplateFactory.forType(type).opsForHash();
     }
 
     /**
-     * Redis 列表类型
+     * Redis List
      */
     public static <V> ReactiveListOperations<String, V> list(Class<V> type) {
         return r2edisJacksonTemplateFactory.forType(type).opsForList();
     }
 
     /**
-     * Redis 集合类型
+     * Redis Set
      */
     public static <V> ReactiveSetOperations<String, V> set(Class<V> type) {
         return r2edisJacksonTemplateFactory.forType(type).opsForSet();
     }
 
     /**
-     * Redis 有序集合类型
+     * Redis ZSet
      */
     public static <V> ReactiveZSetOperations<String, V> sortedSet(Class<V> type) {
         return r2edisJacksonTemplateFactory.forType(type).opsForZSet();

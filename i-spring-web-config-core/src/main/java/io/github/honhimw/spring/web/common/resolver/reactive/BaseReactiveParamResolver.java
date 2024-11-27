@@ -2,8 +2,8 @@ package io.github.honhimw.spring.web.common.resolver.reactive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.github.honhimw.spring.data.common.ValidatorUtils;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.spring.ValidatorUtils;
+import io.github.honhimw.util.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ public abstract class BaseReactiveParamResolver implements HandlerMethodArgument
     protected final ObjectMapper OBJECT_MAPPER;
 
     public BaseReactiveParamResolver() {
-        this.OBJECT_MAPPER = JsonUtils.getObjectMapper();
+        this.OBJECT_MAPPER = JsonUtils.mapper();
     }
 
     public BaseReactiveParamResolver(ObjectMapper OBJECT_MAPPER) {
@@ -51,7 +51,7 @@ public abstract class BaseReactiveParamResolver implements HandlerMethodArgument
     }
 
     protected void assertBaseType(Class<?> parameterType) {
-        Assert.isAssignable(Serializable.class, parameterType, "接口参数类型必须为Serializable的子类");
+        Assert.isAssignable(Serializable.class, parameterType, "ParameterType must be Serializable");
     }
 
     protected void injectUriParam(ObjectNode objectNode, Map<String, String> uriTemplate) {
@@ -85,18 +85,14 @@ public abstract class BaseReactiveParamResolver implements HandlerMethodArgument
     }
 
     protected Object readValue(MethodParameter parameter, ObjectNode node) {
-        Object target;
         try {
             Class<?> parameterType = parameter.getParameterType();
-            if (parameter.getGenericParameterType() instanceof ParameterizedType parameterizedType) {
-                target = OBJECT_MAPPER.readValue(node.traverse(), OBJECT_MAPPER.getTypeFactory().constructType(parameterizedType));
-            } else {
-                target = OBJECT_MAPPER.readValue(node.traverse(), parameterType);
+            if (CharSequence.class.isAssignableFrom(parameterType)) {
+                return node.toString();
             }
-            if (log.isDebugEnabled()) {
-                log.debug(OBJECT_MAPPER.writeValueAsString(node));
-            }
-            return target;
+            Type genericParameterType = parameter.getGenericParameterType();
+
+            return OBJECT_MAPPER.treeToValue(node, OBJECT_MAPPER.getTypeFactory().constructType(genericParameterType));
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }

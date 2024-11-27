@@ -1,8 +1,7 @@
 package io.github.honhimw.spring.web.common.i18n;
 
-import io.github.honhimw.spring.Result;
+import io.github.honhimw.core.IResult;
 import jakarta.annotation.Nonnull;
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
@@ -22,8 +21,11 @@ public class I18nUtils implements MessageSourceAware {
 
     private static final Pattern PATTERN = Pattern.compile("^\\{(?<code>(?!.*\\.\\.)[\\w\\-][\\w\\-.]*[\\w\\-])}$");
 
-    @Getter
     private static MessageSource messageSource;
+
+    public static MessageSource getMessageSource() {
+        return messageSource;
+    }
 
     public static String getMessage(String code) {
         return getMessage(code, Objects.requireNonNullElseGet(LocaleContextHolder.getLocale(), Locale::getDefault));
@@ -42,9 +44,9 @@ public class I18nUtils implements MessageSourceAware {
     }
 
     /**
-     * @see Result#msg() 格式为: "${xxx}"时替换内容
+     * @see IResult#msg() Replace message content by code in '${xxx}' format
      */
-    public static void i18n(Result<?> result) {
+    public static void i18n(IResult<?> result) {
         if (Objects.nonNull(messageSource)) {
             String msg = result.msg();
             if (StringUtils.isNotBlank(msg)) {

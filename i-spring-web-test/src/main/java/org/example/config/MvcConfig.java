@@ -1,8 +1,8 @@
 package org.example.config;
 
-import io.github.honhimw.spring.util.JsonUtils;
 import io.github.honhimw.spring.web.common.resolver.CsvJacksonNodeCustomizer;
 import io.github.honhimw.spring.web.mvc.MvcLoggingRebinderEndpointFilter;
+import io.github.honhimw.util.JsonUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +25,7 @@ public class MvcConfig {
 
     @Bean
     CsvJacksonNodeCustomizer csvJacksonNodeCustomizer() {
-        return new CsvJacksonNodeCustomizer(JsonUtils.getObjectMapper());
+        return new CsvJacksonNodeCustomizer(JsonUtils.mapper());
     }
 
 }

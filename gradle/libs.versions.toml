@@ -1,0 +1,68 @@
+[versions]
+spring-boot-dependencies = "3.3.6"
+spring-cloud-dependencies = "2023.0.3"
+spring-cloud-alibaba-dependencies = "2023.0.1.2"
+springdoc-openapi = "2.6.0"
+context-propagation = "1.1.2"
+guava = "33.3.1-jre"
+commons-lang3 = "3.17.0"
+commons-codec = "1.17.1"
+commons-collections4 = "4.4"
+commons-io = "2.17.0"
+vavr = "0.10.5"
+commons-net = "3.11.1"
+bcprov-jdk18on = "1.79"
+mapstruct = "1.6.3"
+lombok-mapstruct-binding = "0.2.0"
+
+[libraries.io-micrometer-context-propagation]
+module = "io.micrometer:context-propagation"
+version.ref = "context-propagation"
+
+[libraries.guava]
+module = "com.google.guava:guava"
+version.ref = "guava"
+
+[libraries.commons-lang3]
+module = "org.apache.commons:commons-lang3"
+version.ref = "commons-lang3"
+
+[libraries.commons-codec]
+module = "commons-codec:commons-codec"
+version.ref = "commons-codec"
+
+[libraries.commons-collections4]
+module = "org.apache.commons:commons-collections4"
+version.ref = "commons-collections4"
+
+[libraries.commons-io]
+module = "commons-io:commons-io"
+version.ref = "commons-io"
+
+[libraries.commons-net]
+module = "commons-net:commons-net"
+version.ref = "commons-net"
+
+[libraries.vavr]
+module = "io.vavr:vavr"
+version.ref = "vavr"
+
+[libraries.bcprov-jdk18on]
+module = "org.bouncycastle:bcprov-jdk18on"
+version.ref = "bcprov-jdk18on"
+
+[libraries.mapstruct-very]
+module = "org.mapstruct:mapstruct"
+version.ref = "mapstruct"
+
+[libraries.mapstruct-jdk8]
+module = "org.mapstruct:mapstruct-jdk8"
+version.ref = "mapstruct"
+
+[libraries.mapstruct-processor]
+module = "org.mapstruct:mapstruct-processor"
+version.ref = "mapstruct"
+
+[libraries.lombok-mapstruct-binding]
+module = "org.projectlombok:lombok-mapstruct-binding"
+version.ref = "lombok-mapstruct-binding"

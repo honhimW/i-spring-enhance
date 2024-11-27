@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.cloud.dev;
 
-import io.github.honhimw.spring.util.IpUtils;
+import io.github.honhimw.util.IpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.ObjectProvider;

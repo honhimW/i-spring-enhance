@@ -49,7 +49,7 @@ public @interface TextParam {
      *         )));
      * }</pre>
      *
-     * @see org.apache.http.HttpHeaders http request headers containing content-encoding: gzip
+     * http request headers containing content-encoding: gzip
      */
     boolean gzip() default false;
 

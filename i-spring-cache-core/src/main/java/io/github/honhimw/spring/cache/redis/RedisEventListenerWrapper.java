@@ -1,5 +1,6 @@
 package io.github.honhimw.spring.cache.redis;
 
+import jakarta.annotation.Nonnull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -14,15 +15,15 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 import org.springframework.util.Assert;
 
-import jakarta.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
- * 目前只能在非集群模式的Redis使用键空间Pub/Sub, 想要在集群中使用该功能, 需要如下步骤:
- * 1.先从集群中获取节点信息(Node);
- * 2.获取主节点(Master Node);
- * 3.以单机形式连接各个主节点并订阅;
+ * Currently, Lettuce does not support keyspace events in cluster mode.
+ * To implement keyspace events in cluster mode, we need to follow the following steps:
+ * 1. Get the node information from the cluster
+ * 2. Get the master node
+ * 3. Connect to each master node individually and subscribe.
  *
  * @author hon_him
  * @link <a href="https://github.com/spring-projects/spring-data-redis/issues/1111">Keyspace Events in Redis Cluster get lost</a>

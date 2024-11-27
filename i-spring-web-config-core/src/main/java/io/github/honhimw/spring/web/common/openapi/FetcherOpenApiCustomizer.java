@@ -21,13 +21,13 @@ public class FetcherOpenApiCustomizer implements GlobalOpenApiCustomizer {
         openApi.getPaths().forEach((name, pathItem) -> {
             HeaderParameter onlyInclude = new HeaderParameter();
             onlyInclude.name(WebConstants.FETCH_ONLY_INCLUDE);
-            onlyInclude.description("e.g. /code;/data/id -> {'code': 0, 'data': {'id': '1'}}");
+            onlyInclude.description("Only contain fields e.g. /code;/data/id -> {'code': 0, 'data': {'id': '1'}}");
             onlyInclude.required(false);
             onlyInclude.in("header");
             pathItem.addParametersItem(onlyInclude);
             HeaderParameter nonExclude = new HeaderParameter();
             nonExclude.name(WebConstants.FETCH_NON_EXCLUDE);
-            nonExclude.description("e.g. /code;/data/*/id -> {'msg': 'hi', 'data': [{'title': 'hello'} ...] ...}");
+            nonExclude.description("Exclude fields e.g. /code;/data/*/id -> {'msg': 'hi', 'data': [{'title': 'hello'} ...] ...}");
             nonExclude.required(false);
             nonExclude.in("header");
             pathItem.addParametersItem(nonExclude);

@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.common;
 
-import io.github.honhimw.spring.Result;
 import jakarta.annotation.Nonnull;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
@@ -15,7 +14,7 @@ import java.util.Optional;
 
 public interface ExceptionWrapper extends Ordered {
 
-    String UNKNOWN_ERROR = "UNKNOWN ERROR";
+    String UNKNOWN_ERROR = "Unknown Error";
 
     /**
      * Determine whether to execute
@@ -47,20 +46,6 @@ public interface ExceptionWrapper extends Ordered {
     }
 
     /**
-     * @see Result#code()
-     */
-    default String resultCode() {
-        return "500";
-    }
-
-    /**
-     * @see Result#code()
-     */
-    default String resultCode(Throwable e) {
-        return resultCode();
-    }
-
-    /**
      * HTTP status
      */
     default int httpCode() {
@@ -84,7 +69,7 @@ public interface ExceptionWrapper extends Ordered {
         return Ordered.LOWEST_PRECEDENCE;
     }
 
-    ExceptionWrapper DEFAULT = new ExceptionWrapper() {
+    ExceptionWrapper DEFAULT = new MessageExceptionWrapper() {
         @Override
         public boolean support(@Nonnull Throwable e) {
             return true;
@@ -92,11 +77,10 @@ public interface ExceptionWrapper extends Ordered {
 
         @Nonnull
         @Override
-        public Result<Void> wrap(@Nonnull Throwable e) {
-            String msg = Optional.ofNullable(MDC.get("traceId"))
+        public String wrap(@Nonnull Throwable e) {
+            return Optional.ofNullable(MDC.get("traceId"))
                 .map(traceId -> UNKNOWN_ERROR + ", TRACE: " + traceId)
                 .orElse(UNKNOWN_ERROR);
-            return Result.error(resultCode(), msg);
         }
 
         @Override
@@ -104,10 +88,32 @@ public interface ExceptionWrapper extends Ordered {
             return HttpStatus.INTERNAL_SERVER_ERROR.value();
         }
 
-        @Override
-        public String resultCode() {
-            return String.valueOf(httpCode());
-        }
     };
+
+    /**
+     * Marker interface
+     */
+    interface MessageExceptionWrapper extends ExceptionWrapper {
+        @Nonnull
+        @Override
+        default String wrap(@Nonnull Throwable e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Construct custom entity base on http code and message
+     * <pre>
+     * Example:
+     * {
+     *     "code": ${httpCode},
+     *     "msg": ${message}
+     * }
+     * </pre>
+     */
+    interface MessageFormatter {
+        @Nonnull
+        Object format(int httpCode, @Nonnull String message);
+    }
 
 }

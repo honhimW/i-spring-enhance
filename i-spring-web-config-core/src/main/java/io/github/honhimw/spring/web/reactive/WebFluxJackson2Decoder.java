@@ -2,7 +2,7 @@ package io.github.honhimw.spring.web.reactive;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.util.JsonUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
 import org.springframework.util.MimeType;
@@ -17,7 +17,7 @@ import java.util.TimeZone;
 public class WebFluxJackson2Decoder extends AbstractJackson2Decoder {
 
     public WebFluxJackson2Decoder() {
-        this(JsonUtils.getObjectMapper().copy()
+        this(JsonUtils.mapper().copy()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setTimeZone(TimeZone.getDefault())
             , MediaType.APPLICATION_JSON);

@@ -1,0 +1,4 @@
+dependencies {
+    api project(':i-spring-extend')
+    compileOnly 'org.springdoc:springdoc-openapi-starter-common'
+}

@@ -18,8 +18,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.toml.TomlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.spring.cache.redis.RedisMessageEvent;
-import io.github.honhimw.spring.util.JsonUtils;
 import io.github.honhimw.test.jacksonfilter.PointerFilteringGenerator;
+import io.github.honhimw.util.JsonUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +42,7 @@ public class MainRunner {
     @SneakyThrows
     void toml() {
         TomlMapper tomlMapper = new TomlMapper();
-        tomlMapper.setSerializerFactory(JsonUtils.getObjectMapper().getSerializerFactory());
+        tomlMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
 
         Person person = new Person("honhim", 18, true, Map.of(
             "hello", "world",
@@ -72,7 +72,7 @@ public class MainRunner {
     @SneakyThrows
     void yaml() {
         YAMLMapper yamlMapper = new YAMLMapper();
-        yamlMapper.setSerializerFactory(JsonUtils.getObjectMapper().getSerializerFactory());
+        yamlMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
 
         Person person = new Person("honhim", 18, true, Map.of(
             "hello", "world",
@@ -98,7 +98,7 @@ public class MainRunner {
     @SneakyThrows
     void csv() {
         CsvMapper csvMapper = new CsvMapper();
-        csvMapper.setSerializerFactory(JsonUtils.getObjectMapper().getSerializerFactory());
+        csvMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
         CsvSchema columns = csvMapper.schemaFor(ObjectNode.class).withHeader();
 
         Person person = new Person("honhim", 18, true, new HashMap());
@@ -155,7 +155,7 @@ public class MainRunner {
 
     @Test
     public void jacksonFilter() throws Exception {
-        ObjectMapper mapper = JsonUtils.getObjectMapper();
+        ObjectMapper mapper = JsonUtils.mapper();
         SimpleFilterProvider fp = new SimpleFilterProvider();
         SimpleBeanPropertyFilter defaultFilter = SimpleBeanPropertyFilter.serializeAllExcept();
         fp.addFilter("default", defaultFilter);
@@ -190,7 +190,7 @@ public class MainRunner {
     @Test
     public void tokenFilter() throws Exception {
         Entity entity = get();
-        ObjectMapper mapper = JsonUtils.getObjectMapper();
+        ObjectMapper mapper = JsonUtils.mapper();
         SegmentedStringWriter w = new SegmentedStringWriter(mapper.getFactory()._getBufferRecycler());
         JsonGenerator generator = mapper.createGenerator(w);
         PointerFilteringGenerator delegate = new PointerFilteringGenerator(

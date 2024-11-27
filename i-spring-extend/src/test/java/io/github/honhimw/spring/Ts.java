@@ -59,13 +59,11 @@ public class Ts extends SimpleFSMAdapter<Ts.S, Ts.E> {
     }
 
     public static void main(String[] args) throws Exception {
-        // 每一次send都重新创建状态机
         AtomicInteger i = new AtomicInteger(0);
         FSMService<S, E, AtomicInteger> fsmService = _i -> IFSMFactory.getStateMachine(S.values()[_i.get()], new Ts(_i));
         fsmService.send(i, E.E1);
         fsmService.send(i, E.E2);
 
-        // 同一个状态机多次接受事件
         StateMachine<S, E> fsm = fsmService.getFSM(i);
         fsm.sendEvent(FSMUtils.eventMsg(E.E1)).next().toFuture().get();
         fsm.sendEvent(FSMUtils.eventMsg(E.E2)).next().toFuture().get();

@@ -25,7 +25,7 @@ public class MethodArgumentNotValidExceptionWrapper extends SingleExceptionWrapp
     }
 
     @Override
-    protected int unifyCode(@Nonnull MethodArgumentNotValidException e) {
+    protected int _httpCode(@Nonnull MethodArgumentNotValidException e) {
         return e.getStatusCode().value();
     }
 }

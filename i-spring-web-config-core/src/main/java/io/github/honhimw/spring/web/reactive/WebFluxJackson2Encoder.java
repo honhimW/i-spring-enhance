@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
-import io.github.honhimw.spring.Result;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
+import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ResolvableType;
@@ -48,7 +48,7 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
     private static final ResolvableType STRING = ResolvableType.forClass(String.class);
 
     public WebFluxJackson2Encoder() {
-        this(JsonUtils.getObjectMapper().copy()
+        this(JsonUtils.mapper().copy()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setTimeZone(TimeZone.getDefault())
             , MediaType.APPLICATION_JSON);
@@ -240,8 +240,8 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
     }
 
     private void i18n(Object value) {
-        if (value instanceof Result<?> commonResult) {
-            I18nUtils.i18n(commonResult);
+        if (value instanceof IResult<?> Result) {
+            I18nUtils.i18n(Result);
         }
     }
 

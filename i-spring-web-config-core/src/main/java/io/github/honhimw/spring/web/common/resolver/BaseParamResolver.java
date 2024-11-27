@@ -2,8 +2,8 @@ package io.github.honhimw.spring.web.common.resolver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.github.honhimw.spring.data.common.ValidatorUtils;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.spring.ValidatorUtils;
+import io.github.honhimw.util.JsonUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -13,8 +13,9 @@ import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
     protected final ObjectMapper OBJECT_MAPPER;
 
     protected BaseParamResolver() {
-        OBJECT_MAPPER = JsonUtils.getObjectMapper();
+        OBJECT_MAPPER = JsonUtils.mapper();
     }
 
     protected BaseParamResolver(ObjectMapper objectMapper) {
@@ -49,7 +50,7 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
     }
 
     protected void assertBaseType(Class<?> parameterType) {
-        Assert.isAssignable(Serializable.class, parameterType, "接口参数类型实现Serializable接口");
+        Assert.isAssignable(Serializable.class, parameterType, "ParameterType must be Serializable");
     }
 
     protected void injectUriParam(ObjectNode objectNode, Map<String, String> uriTemplate) {
@@ -80,18 +81,18 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
         }
     }
 
-    protected Object readValue(MethodParameter parameter, ObjectNode node) throws Exception {
-        Object target;
-        Class<?> parameterType = parameter.getParameterType();
-        if (parameter.getGenericParameterType() instanceof ParameterizedType parameterizedType) {
-            target = OBJECT_MAPPER.readValue(node.traverse(), OBJECT_MAPPER.getTypeFactory().constructType(parameterizedType));
-        } else {
-            target = OBJECT_MAPPER.readValue(node.traverse(), parameterType);
+    protected Object readValue(MethodParameter parameter, ObjectNode node) {
+        try {
+            Class<?> parameterType = parameter.getParameterType();
+            if (CharSequence.class.isAssignableFrom(parameterType)) {
+                return node.toString();
+            }
+            Type genericParameterType = parameter.getGenericParameterType();
+
+            return OBJECT_MAPPER.treeToValue(node, OBJECT_MAPPER.getTypeFactory().constructType(genericParameterType));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
-        if (log.isDebugEnabled()) {
-            log.debug(OBJECT_MAPPER.writeValueAsString(node));
-        }
-        return target;
     }
 
 }

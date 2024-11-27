@@ -1,10 +1,11 @@
 package io.github.honhimw.spring.cache.memory;
 
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.util.Assert;
 
-import jakarta.annotation.Nonnull;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,6 +43,7 @@ public abstract class AbstractRefreshableCache implements RefreshableCache {
     @Override
     public final void cache(CacheContext ctx) {
         ApplicationEvent event = ctx.get(CacheContext.EVENT);
+        Assert.notNull(event, "event should not be null");
         if (log.isDebugEnabled()) {
             log.debug("[{}] current version: {}, trigger event: {}", this.getClass().getSimpleName(), version(), event.getClass().getSimpleName());
         }

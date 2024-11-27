@@ -1,0 +1,4 @@
+dependencies {
+    api(project(':i-spring-boot-project'))
+    api(project(':i-spring-data-ddd:i-spring-ddd-jpa'))
+}

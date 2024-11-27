@@ -1,12 +1,7 @@
 package io.github.honhimw.spring.web;
 
-import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 
 @Slf4j
-public class AutoInitializer implements ApplicationContextAware {
+public class AutoInitializer implements SmartInitializingSingleton {
 
     private final List<Map.Entry<String, Runnable>> tasks = new CopyOnWriteArrayList<>();
 
@@ -28,7 +23,7 @@ public class AutoInitializer implements ApplicationContextAware {
     }
 
     @Override
-    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+    public void afterSingletonsInstantiated() {
         if (!tasks.isEmpty()) {
             log.info("There are ({}) Auto-Initialize tasks.", tasks.size());
             for (Map.Entry<String, Runnable> task : tasks) {

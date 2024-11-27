@@ -23,7 +23,7 @@ public class ValidationExceptionWrapper extends SingleExceptionWrapper<Validatio
     }
 
     @Override
-    protected int unifyCode(@Nonnull ValidationException e) {
+    protected int _httpCode(@Nonnull ValidationException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 }

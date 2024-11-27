@@ -6,7 +6,7 @@ import io.github.honhimw.spring.cache.ICacheProperties;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactory;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactoryImpl;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisUtils;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,8 +30,6 @@ import reactor.core.publisher.Mono;
 import java.util.TimeZone;
 
 /**
- * Webflux项目中许多时候需要使用reactive, redis对应的响应式模板{@link ReactiveRedisTemplate}
- *
  * @author hon_him
  * @since 2022-06-16
  */
@@ -51,15 +49,15 @@ public class IRedisConfiguration {
         this.iCacheProperties = iCacheProperties;
     }
 
-    @Bean
+    @Bean(name = "redisObjectMapper")
     @ConditionalOnMissingBean(name = "redisObjectMapper")
     ObjectMapper redisObjectMapper() {
-        return JsonUtils.getObjectMapper().copy()
+        return JsonUtils.mapper().copy()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .setTimeZone(TimeZone.getDefault());
     }
 
-    @Bean
+    @Bean(name = "redisKeySerializer")
     @ConditionalOnMissingBean(name = "redisKeySerializer")
     StringRedisSerializer redisKeySerializer() {
         String prefix = environment.getProperty("spring.cache.redis.key-prefix", "");
@@ -81,31 +79,31 @@ public class IRedisConfiguration {
         };
     }
 
-    @Bean
+    @Bean(name = "redisValueSerializer")
     @ConditionalOnMissingBean(name = "redisValueSerializer")
     Jackson2JsonRedisSerializer<Object> redisValueSerializer() {
         return new Jackson2JsonRedisSerializer<>(redisObjectMapper(), Object.class);
     }
 
-    @Bean
+    @Bean(name = "redisJacksonTemplateFactory")
     @ConditionalOnMissingBean(RedisJacksonTemplateFactory.class)
     RedisJacksonTemplateFactory redisJacksonTemplateFactory(RedisConnectionFactory redisConnectionFactory) {
         return new RedisJacksonTemplateFactoryImpl(redisConnectionFactory, redisKeySerializer(), redisObjectMapper());
     }
 
-    @Bean
+    @Bean(name = "jacksonValueRedisTemplate")
     @ConditionalOnMissingBean(name = "jacksonValueRedisTemplate")
     public RedisTemplate<String, Object> jacksonValueRedisTemplate(RedisJacksonTemplateFactory redisJacksonTemplateFactory) {
         return redisJacksonTemplateFactory.forType(Object.class);
     }
 
-    @Bean
+    @Bean(name = "redisUtils")
     @ConditionalOnMissingBean(RedisUtils.class)
     RedisUtils redisUtils() {
         return new RedisUtils();
     }
 
-    @Bean
+    @Bean(name = "redisMessageListenerContainer")
     @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
     @ConditionalOnProperty(value = ICacheProperties.Redis.I_SPRING_CACHE_REDIS_ENABLED_EVENT, havingValue = "true")
     RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory redisConnectionFactory) {
@@ -114,7 +112,7 @@ public class IRedisConfiguration {
         return redisMessageListenerContainer;
     }
 
-    @Bean
+    @Bean(name = "redisEventListener")
     @ConditionalOnMissingBean(RedisEventListenerWrapper.class)
     @ConditionalOnProperty(value = ICacheProperties.Redis.I_SPRING_CACHE_REDIS_ENABLED_EVENT, havingValue = "true")
     RedisEventListenerWrapper redisEventListener(RedisMessageListenerContainer redisMessageListenerContainer) {
@@ -132,21 +130,21 @@ public class IRedisConfiguration {
     @ConditionalOnBean(ReactiveRedisConnectionFactory.class)
     public class ReactiveRedisConfig {
 
-        @Bean
+        @Bean(name = "r2edisJacksonTemplateFactory")
         @ConditionalOnMissingBean(R2edisJacksonTemplateFactory.class)
-        R2edisJacksonTemplateFactory rxRedisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
+        R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
             return new R2edisJacksonTemplateFactoryImpl(reactiveRedisConnectionFactory, redisKeySerializer(), redisObjectMapper());
         }
 
-        @Bean
-        @ConditionalOnMissingBean(name = "rxJacksonValueRedisTemplate")
-        ReactiveRedisTemplate<String, Object> rxJacksonValueRedisTemplate(R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory) {
+        @Bean(name = "r2JacksonValueRedisTemplate")
+        @ConditionalOnMissingBean(name = "r2JacksonValueRedisTemplate")
+        ReactiveRedisTemplate<String, Object> r2JacksonValueRedisTemplate(R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory) {
             return r2edisJacksonTemplateFactory.forType(Object.class);
         }
 
-        @Bean
+        @Bean(name = "r2edisUtils")
         @ConditionalOnMissingBean(R2edisUtils.class)
-        R2edisUtils rxRedisUtils() {
+        R2edisUtils r2edisUtils() {
             return new R2edisUtils();
         }
 

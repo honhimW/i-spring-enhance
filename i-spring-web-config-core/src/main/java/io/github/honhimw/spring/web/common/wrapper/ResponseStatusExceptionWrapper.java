@@ -23,7 +23,7 @@ public class ResponseStatusExceptionWrapper extends SingleExceptionWrapper<Respo
     }
 
     @Override
-    protected int unifyCode(@Nonnull ResponseStatusException e) {
+    protected int _httpCode(@Nonnull ResponseStatusException e) {
         return e.getStatusCode().value();
     }
 }

@@ -24,6 +24,8 @@ public class ICacheProperties implements Serializable {
 
     public static final String PREFIX = "i.spring.cache";
 
+    private Boolean enabled = true;
+
     /**
      * Refresh the in-memory cache when events are published.
      */

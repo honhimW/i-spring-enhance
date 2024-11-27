@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.reactive;
 
-import io.github.honhimw.spring.Result;
 import io.github.honhimw.spring.web.common.AbstractFallbackHandler;
+import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +26,13 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler implements ErrorWebExceptionHandler, Ordered {
 
-    private final ResolvableType RETURN_TYPE = ResolvableType.forType(Result.class);
-
     private final HttpMessageEncoder<Object> httpMessageEncoder;
 
-    private final ExceptionWrappers exceptionWrappers;
-
-    public FallbackErrorWebExceptionHandler(HttpMessageEncoder<Object> httpMessageEncoder, ExceptionWrappers exceptionWrappers) {
+    public FallbackErrorWebExceptionHandler(HttpMessageEncoder<Object> httpMessageEncoder,
+                                            ExceptionWrappers exceptionWrappers,
+                                            ExceptionWrapper.MessageFormatter messageFormatter) {
+        super(exceptionWrappers, messageFormatter);
         this.httpMessageEncoder = httpMessageEncoder;
-        this.exceptionWrappers = exceptionWrappers;
     }
 
     @Nonnull
@@ -43,12 +41,12 @@ public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler im
         log(ex);
         ServerHttpResponse response = exchange.getResponse();
         response.getHeaders().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        Object fail = exceptionWrappers.handle(ex, (exceptionWrapper, throwable) -> {
-            response.setRawStatusCode(exceptionWrapper.httpCode(throwable));
-            return exceptionWrapper.wrap(throwable);
-        });
+        ExceptionWrapper wrapper = exceptionWrappers.getWrapper(ex);
+        int status = wrapper.httpCode(ex);
+        response.setRawStatusCode(status);
+        Object fail = handle(wrapper, ex, status);
         DataBufferFactory dataBufferFactory = response.bufferFactory();
-        DataBuffer dataBuffer = httpMessageEncoder.encodeValue(fail, dataBufferFactory, RETURN_TYPE, MediaType.APPLICATION_JSON, null);
+        DataBuffer dataBuffer = httpMessageEncoder.encodeValue(fail, dataBufferFactory, ResolvableType.forType(fail.getClass()), MediaType.APPLICATION_JSON, null);
         return response
             .writeWith(Mono.just(dataBuffer))
             .then(Mono.defer(response::setComplete))
@@ -56,7 +54,7 @@ public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler im
     }
 
     /**
-     * @see WebFluxConfigurationSupport#responseStatusExceptionHandler() @Order(0)
+     * @see WebFluxConfigurationSupport#responseStatusExceptionHandler() @Order(0), has to work before it
      */
     @Override
     public int getOrder() {

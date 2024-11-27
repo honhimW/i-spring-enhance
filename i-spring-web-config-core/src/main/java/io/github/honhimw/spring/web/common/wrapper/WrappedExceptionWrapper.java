@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
-import io.github.honhimw.spring.WrappedException;
+import io.github.honhimw.core.WrappedException;
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class WrappedExceptionWrapper extends SingleExceptionWrapper<WrappedExcep
 
 
     @Override
-    protected int unifyCode(@Nonnull WrappedException e) {
+    protected int _httpCode(@Nonnull WrappedException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

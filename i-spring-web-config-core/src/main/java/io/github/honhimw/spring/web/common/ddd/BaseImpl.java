@@ -1,18 +1,16 @@
 package io.github.honhimw.spring.web.common.ddd;
 
-import io.github.honhimw.spring.Result;
-import io.github.honhimw.spring.data.common.*;
-import io.github.honhimw.spring.data.common.api.DefaultCRUD;
-import io.github.honhimw.spring.data.jpa.domain.AbstractAR;
-import io.github.honhimw.spring.data.jpa.domain.repository.SimpleRepository;
-import io.github.honhimw.spring.data.jpa.util.PageUtils;
+import io.github.honhimw.core.ConditionColumn;
+import io.github.honhimw.core.IResult;
+import io.github.honhimw.core.PageInfoVO;
+import io.github.honhimw.core.WrappedException;
+import io.github.honhimw.core.api.BaseMapper;
+import io.github.honhimw.core.api.DefaultCRUD;
+import io.github.honhimw.ddd.jpa.domain.AbstractAR;
+import io.github.honhimw.ddd.jpa.domain.repository.SimpleRepository;
+import io.github.honhimw.ddd.jpa.util.PageUtils;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.WrappedException;
-import io.github.honhimw.spring.model.BatchIdRequest;
-import io.github.honhimw.spring.model.IPageRequest;
-import io.github.honhimw.spring.model.IdRequest;
-import io.github.honhimw.spring.model.PageInfoVO;
-import io.github.honhimw.spring.util.Brook;
+import io.github.honhimw.util.tool.Brook;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +24,7 @@ import java.util.Set;
  * @since 2023-04-04
  */
 
-public abstract class BaseImpl<C, U extends IdRequest<ID>, ID, DO extends AbstractAR<DO, ID>, DTO> implements DefaultCRUD<C, U, ID, DTO> {
+public abstract class BaseImpl<C, U extends io.github.honhimw.core.IdRequest<ID>, ID, DO extends AbstractAR<DO, ID>, DTO> implements DefaultCRUD<C, U, ID, DTO> {
 
     protected abstract SimpleRepository<DO, ID> getRepository();
 
@@ -45,61 +43,61 @@ public abstract class BaseImpl<C, U extends IdRequest<ID>, ID, DO extends Abstra
     }
 
     @Override
-    public Result<DTO> create(@TextParam C create) {
+    public io.github.honhimw.core.IResult<DTO> create(@TextParam C create) {
         return Brook.with(create)
             .map(getMapper()::create2do)
             .exec(_do -> this.beforeCreate(create, _do))
             .exec(this::beforeSave)
             .map(getRepository()::save)
             .map(getMapper()::do2dto)
-            .map(Result::ok)
+            .map(io.github.honhimw.core.IResult::ok)
             .errElseThrow(WrappedException::new);
     }
 
     @Override
-    public Result<DTO> get(@TextParam IdRequest<ID> read) {
+    public io.github.honhimw.core.IResult<DTO> get(@TextParam io.github.honhimw.core.IdRequest<ID> read) {
         return Brook.with(read)
-            .map(IdRequest::getId)
+            .map(io.github.honhimw.core.IdRequest::getId)
             .flatOptional(getRepository()::findById)
             .map(getMapper()::do2dto)
-            .map(Result::ok)
+            .map(io.github.honhimw.core.IResult::ok)
             .errElseThrow(WrappedException::new);
     }
 
     @Override
-    public Result<Void> update(@TextParam U update) {
+    public IResult<Void> update(@TextParam U update) {
         return Brook.with(update)
             .map(r -> getRepository().update(r.getId(), _do -> {
                 this.beforeUpdate(r, _do);
                 getMapper().update2do(r, _do);
                 this.beforeSave(_do);
             }))
-            .map(_do -> Result.<Void>ok())
+            .map(_do -> io.github.honhimw.core.IResult.<Void>ok())
             .errElseThrow(WrappedException::new);
     }
 
     @Override
-    public Result<Void> delete(@TextParam IdRequest<ID> delete) {
+    public IResult<Void> delete(@TextParam io.github.honhimw.core.IdRequest<ID> delete) {
         return Brook.with(delete)
-            .map(IdRequest::getId)
+            .map(io.github.honhimw.core.IdRequest::getId)
             .exec(getRepository()::deleteById)
-            .map(_do -> Result.<Void>ok())
+            .map(_do -> io.github.honhimw.core.IResult.<Void>ok())
             .errElseThrow(WrappedException::new);
     }
 
     @Override
-    public Result<PageInfoVO<DTO>> list(@TextParam IPageRequest<DTO> iPageRequest) {
+    public IResult<PageInfoVO<DTO>> list(@TextParam io.github.honhimw.core.IPageRequest<DTO> iPageRequest) {
         return Brook.with(iPageRequest)
             .exec(request -> {
                 if (request.getCondition() instanceof Map<?, ?> map) {
-                    List<IPageRequest.ConditionColumn> conditions = request.getConditions();
-                    final List<IPageRequest.ConditionColumn> finalConditions;
+                    List<ConditionColumn> conditions = request.getConditions();
+                    final List<ConditionColumn> finalConditions;
                     if (CollectionUtils.isEmpty(conditions)) {
                         finalConditions = new ArrayList<>();
                     } else {
                         finalConditions = new ArrayList<>(conditions);
                     }
-                    map.forEach((key, value) -> finalConditions.add(IPageRequest.ConditionColumn.of(String.valueOf(key), value)));
+                    map.forEach((key, value) -> finalConditions.add(ConditionColumn.of(String.valueOf(key), value)));
                     request.setCondition(null);
                     request.setConditions(finalConditions);
                 }
@@ -107,27 +105,27 @@ public abstract class BaseImpl<C, U extends IdRequest<ID>, ID, DO extends Abstra
             .map(request -> PageUtils.convertRequest(request, getMapper()::dto2do))
             .map(request -> PageUtils.paging(getRepository(), request))
             .map(dos -> PageUtils.pageInfoVO(dos, getMapper()::do2dto))
-            .map(Result::ok)
+            .map(io.github.honhimw.core.IResult::ok)
             .errElseThrow(WrappedException::new);
     }
 
     @Override
-    public Result<List<DTO>> batchGet(@TextParam BatchIdRequest<ID> read) {
+    public io.github.honhimw.core.IResult<List<DTO>> batchGet(@TextParam io.github.honhimw.core.BatchIdRequest<ID> read) {
         return Brook.with(read)
-            .map(BatchIdRequest::getIds)
+            .map(io.github.honhimw.core.BatchIdRequest::getIds)
             .map(getRepository()::findAllById)
             .map(dos -> dos.stream().map(getMapper()::do2dto).toList())
-            .map(Result::ok)
+            .map(io.github.honhimw.core.IResult::ok)
             .errElseThrow(WrappedException::new);
     }
 
     @Transactional(rollbackFor = Throwable.class)
     @Override
-    public Result<Void> batchDelete(BatchIdRequest<ID> delete) {
+    public IResult<Void> batchDelete(io.github.honhimw.core.BatchIdRequest<ID> delete) {
         Set<ID> ids = delete.getIds();
         for (ID id : ids) {
-            delete(IdRequest.of(id));
+            delete(io.github.honhimw.core.IdRequest.of(id));
         }
-        return Result.ok();
+        return io.github.honhimw.core.IResult.ok();
     }
 }

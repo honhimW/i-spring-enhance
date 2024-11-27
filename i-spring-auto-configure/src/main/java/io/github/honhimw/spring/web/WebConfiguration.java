@@ -1,18 +1,19 @@
 package io.github.honhimw.spring.web;
 
+import io.github.honhimw.core.IResult;
+import io.github.honhimw.spring.extend.AsyncBlockingExecutionConfig;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
 import io.github.honhimw.spring.web.mvc.FallbackHandlerExceptionResolver;
-import io.github.honhimw.spring.web.mvc.MvcExtendConfig;
 import io.github.honhimw.spring.web.mvc.MvcHealthyCheckEndpointFilter;
 import io.github.honhimw.spring.web.mvc.MvcHttpLogFilter;
+import io.github.honhimw.spring.web.mvc.MvcTraceFilter;
 import io.github.honhimw.spring.web.reactive.*;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -21,12 +22,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
 import org.springframework.http.codec.json.AbstractJackson2Encoder;
+import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.HttpHandlerDecoratorFactory;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.List;
+import reactor.core.scheduler.Schedulers;
 
 import static org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.*;
 
@@ -42,9 +43,15 @@ abstract class WebConfiguration {
     @ComponentScan(basePackages = "io.github.honhimw.spring.web.common")
     static class IWebConfiguration {
 
-        @Bean("exceptionWrappers")
+        @Bean(value = "exceptionWrapperMessageFormatter")
+        @ConditionalOnMissingBean(value = ExceptionWrapper.MessageFormatter.class)
+        ExceptionWrapper.MessageFormatter exceptionWrapperMessageFormatter() {
+            return IResult::of;
+        }
+
+        @Bean(value = "exceptionWrappers")
         @ConditionalOnMissingBean(name = "exceptionWrappers")
-        ExceptionWrappers exceptionWrappers(List<ExceptionWrapper> exceptionWrappers) {
+        ExceptionWrappers exceptionWrappers(ObjectProvider<ExceptionWrapper> exceptionWrappers) {
             return new ExceptionWrappers(exceptionWrappers);
         }
 
@@ -70,9 +77,13 @@ abstract class WebConfiguration {
 
         @Bean("fallbackHandlerExceptionResolver")
         @ConditionalOnMissingBean(name = "fallbackHandlerExceptionResolver")
-        HandlerExceptionResolver fallbackHandlerExceptionResolver(HttpMessageConverters converters, ExceptionWrappers wrappers, IWebProperties iWebProperties) {
+        HandlerExceptionResolver fallbackHandlerExceptionResolver(
+            HttpMessageConverters converters,
+            ExceptionWrappers wrappers,
+            IWebProperties iWebProperties,
+            ExceptionWrapper.MessageFormatter messageFormatter) {
             Boolean fallbackHandlerPrintStacktrace = iWebProperties.getFallbackHandlerPrintStacktrace();
-            FallbackHandlerExceptionResolver fallbackHandlerExceptionResolver = new FallbackHandlerExceptionResolver(converters, wrappers);
+            FallbackHandlerExceptionResolver fallbackHandlerExceptionResolver = new FallbackHandlerExceptionResolver(converters, wrappers, messageFormatter);
             fallbackHandlerExceptionResolver.setPrintStacktrace(fallbackHandlerPrintStacktrace);
             return fallbackHandlerExceptionResolver;
         }
@@ -81,6 +92,17 @@ abstract class WebConfiguration {
         @ConditionalOnMissingBean(name = "mvcHttpLogFilter")
         MvcHttpLogFilter mvcHttpLogFilter() {
             return new MvcHttpLogFilter();
+        }
+
+        @Bean("mvcTraceFilter")
+        @ConditionalOnProperty(name = "i.spring.web.trace.enabled", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnMissingBean(name = "mvcTraceFilter")
+        MvcTraceFilter mvcTraceFilter(IWebProperties iWebProperties) {
+            return new MvcTraceFilter(
+                iWebProperties.getTrace().getLength(),
+                iWebProperties.getTrace().getTraceHeader(),
+                iWebProperties.getTrace().getTraceKey()
+            );
         }
 
         @Bean("mvcHealthyCheckEndpointFilter")
@@ -115,38 +137,76 @@ abstract class WebConfiguration {
             return new ReactiveExtendConfig(decoder, encoder);
         }
 
-        @Bean
+        @Bean("asyncBlockingExecutionConfig")
+        @ConditionalOnMissingBean(name = "asyncBlockingExecutionConfig")
+        @ConditionalOnJava(JavaVersion.TWENTY_ONE)
+        @ConditionalOnProperty(value = "spring.threads.virtual.enabled", havingValue = "true")
+        WebFluxConfigurer asyncBlockingExecutionConfig() {
+            return new AsyncBlockingExecutionConfig();
+        }
+
+        @Bean("fallbackErrorWebExceptionHandler")
         @ConditionalOnMissingBean(ErrorWebExceptionHandler.class)
         @ConditionalOnBean(AbstractJackson2Encoder.class)
-        ErrorWebExceptionHandler fallbackErrorWebExceptionHandler(AbstractJackson2Encoder jackson2HttpMessageEncoder, ExceptionWrappers wrappers, IWebProperties iWebProperties) {
+        ErrorWebExceptionHandler fallbackErrorWebExceptionHandler(
+            AbstractJackson2Encoder jackson2HttpMessageEncoder,
+            ExceptionWrappers wrappers,
+            IWebProperties iWebProperties,
+            ExceptionWrapper.MessageFormatter messageFormatter) {
             Boolean fallbackHandlerPrintStacktrace = iWebProperties.getFallbackHandlerPrintStacktrace();
-            FallbackErrorWebExceptionHandler fallbackErrorWebExceptionHandler = new FallbackErrorWebExceptionHandler(jackson2HttpMessageEncoder, wrappers);
+            FallbackErrorWebExceptionHandler fallbackErrorWebExceptionHandler = new FallbackErrorWebExceptionHandler(jackson2HttpMessageEncoder, wrappers, messageFormatter);
             fallbackErrorWebExceptionHandler.setPrintStacktrace(fallbackHandlerPrintStacktrace);
             return fallbackErrorWebExceptionHandler;
         }
 
-        @Bean("exchangeContextFilter")
+        @Bean(value = "exchangeContextFilter")
+        @ConditionalOnClass(io.micrometer.context.ThreadLocalAccessor.class)
         @ConditionalOnMissingBean(name = "exchangeContextFilter")
-        @ConditionalOnProperty(value = "web.exchange.context-holder", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnProperty(value = "i.spring.web.exchange.context-holder", havingValue = "true", matchIfMissing = true)
         ExchangeContextFilter exchangeContextFilter() {
             return new ExchangeContextFilter("I_EXCHANGE_CTX");
         }
 
-        @Order(ReactiveHttpLogHandler.DEFAULT_HTTP_LOG_HANDLER_ORDERED)
-        @Bean("reactiveHttpLogHandlerDecoratorFactory")
+        @Order(ReactiveHttpLogHandler.DEFAULT_HANDLER_ORDERED)
+        @Bean(value = "reactiveHttpLogHandlerDecoratorFactory")
         @ConditionalOnMissingBean(name = "reactiveHttpLogHandlerDecoratorFactory")
         HttpHandlerDecoratorFactory reactiveHttpLogHandlerDecoratorFactory() {
             return ReactiveHttpLogHandler::new;
         }
 
-        @Bean
+        @Order(ReactiveTraceHandler.DEFAULT_HANDLER_ORDERED)
+        @Bean(value = "reactiveTraceHandlerDecoratorFactory")
+        @ConditionalOnProperty(name = "i.spring.web.trace.enabled", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnMissingBean(name = "reactiveTraceHandlerDecoratorFactory")
+        HttpHandlerDecoratorFactory reactiveTraceHandlerDecoratorFactory(IWebProperties iWebProperties) {
+            return httpHandler -> new ReactiveTraceHandler(
+                httpHandler,
+                iWebProperties.getTrace().getReactorContextKey(),
+                iWebProperties.getTrace().getLength(),
+                iWebProperties.getTrace().getTraceHeader(),
+                iWebProperties.getTrace().getTraceKey()
+            );
+        }
+
+        @Order(ReactiveTraceHandler.DEFAULT_HANDLER_ORDERED + 1000)
+        @Bean(value = "reactiveSchedulerHandlerDecoratorFactory")
+        @ConditionalOnProperty(name = "i.spring.web.reactive.force-scheduler", havingValue = "true", matchIfMissing = true)
+        @ConditionalOnMissingBean(name = "reactiveSchedulerHandlerDecoratorFactory")
+        HttpHandlerDecoratorFactory reactiveSchedulerHandlerDecoratorFactory() {
+            return httpHandler ->
+                (HttpHandler) (request, response) ->
+                    httpHandler.handle(request, response).subscribeOn(Schedulers.boundedElastic());
+        }
+
+        @Bean(value = "reactiveHealthyCheckEndpointFilter")
         @ConditionalOnMissingBean(ReactiveHealthyCheckEndpointFilter.class)
         @ConditionalOnProperty(name = "i.spring.web.healthy-check-point", havingValue = "true", matchIfMissing = true)
         ReactiveHealthyCheckEndpointFilter reactiveHealthyCheckEndpointFilter() {
             return new ReactiveHealthyCheckEndpointFilter();
         }
 
-        @Bean("autoInitializer")
+        @Bean(value = "autoInitializer")
+        @ConditionalOnClass(io.micrometer.context.ThreadLocalAccessor.class)
         @ConditionalOnMissingBean(name = "autoInitializer")
         AutoInitializer autoInitializer() {
             return new AutoInitializer()

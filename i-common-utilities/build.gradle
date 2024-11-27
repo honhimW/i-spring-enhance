@@ -1,0 +1,19 @@
+dependencies {
+    api 'com.google.guava:guava'
+    api 'org.apache.commons:commons-lang3'
+    api 'org.apache.commons:commons-collections4'
+    api 'commons-codec:commons-codec'
+    api 'commons-io:commons-io'
+    api 'io.projectreactor.netty:reactor-netty-http'
+    api 'commons-net:commons-net'
+    api 'org.apache.httpcomponents.client5:httpclient5'
+    api 'com.fasterxml.jackson.core:jackson-annotations'
+    api 'com.fasterxml.jackson.core:jackson-core'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
+    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    compileOnly 'ch.qos.logback:logback-classic'
+    compileOnly 'org.apache.logging.log4j:log4j-core'
+    implementation 'org.bouncycastle:bcprov-jdk18on'
+}

@@ -1,5 +1,3 @@
-apply from: rootProject.file('buildSrc/shared.gradle')
-
 dependencies {
     api(project(':i-spring-extend'))
     api(project(':i-spring-auto-configure'))

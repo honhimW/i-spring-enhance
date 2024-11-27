@@ -1,12 +1,12 @@
 package io.github.honhimw.spring.web.annotation;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import io.github.honhimw.spring.util.JsonUtils;
 import io.github.honhimw.spring.web.common.resolver.CsvHttpMessageConverter;
 import io.github.honhimw.spring.web.common.resolver.CsvPartMessageConverterProcessor;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvJackson2Encoder;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveFileResultHandler;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveParamResolver;
+import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -45,7 +45,7 @@ class CsvConverterConfiguration {
         @Bean("mvcCsvConverterConfiguration")
         @ConditionalOnMissingBean(name = "mvcCsvConverterConfiguration")
         WebMvcConfigurer mvcCsvConverterConfiguration() {
-            CsvHttpMessageConverter converter = new CsvHttpMessageConverter(JsonUtils.getObjectMapper());
+            CsvHttpMessageConverter converter = new CsvHttpMessageConverter(JsonUtils.mapper());
             CsvPartMessageConverterProcessor csvPartMessageConverterProcessor = new CsvPartMessageConverterProcessor(List.of(converter));
             return new WebMvcConfigurer() {
                 @Override
@@ -71,7 +71,7 @@ class CsvConverterConfiguration {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
     static class ReactiveCsvConverterConfiguration {
 
-        private final CsvJackson2Encoder csvJackson2Encoder = new CsvJackson2Encoder(JsonUtils.getObjectMapper());
+        private final CsvJackson2Encoder csvJackson2Encoder = new CsvJackson2Encoder(JsonUtils.mapper());
 
         @Bean("csvReactiveFileResultHandler")
         @ConditionalOnMissingBean(name = "csvReactiveFileResultHandler")
@@ -86,7 +86,7 @@ class CsvConverterConfiguration {
             return new WebFluxConfigurer() {
                 @Override
                 public void configureArgumentResolvers(@Nonnull ArgumentResolverConfigurer configurer) {
-                    configurer.addCustomResolver(new CsvReactiveParamResolver(JsonUtils.getObjectMapper()));
+                    configurer.addCustomResolver(new CsvReactiveParamResolver(JsonUtils.mapper()));
                 }
 
                 @Override

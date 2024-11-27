@@ -7,9 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
-import io.github.honhimw.spring.Result;
-import io.github.honhimw.spring.util.JsonUtils;
+import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
+import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -32,7 +32,7 @@ import java.util.TimeZone;
 public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
 
     public MvcJackson2HttpMessageConverter() {
-        this(JsonUtils.getObjectMapper()
+        this(JsonUtils.mapper()
                 .copy()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .setTimeZone(TimeZone.getDefault())
@@ -63,8 +63,8 @@ public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
         JsonGenerator generator = objectMapper.getFactory().createGenerator(outputStream, encoding);
         generator = decorateGenerator(generator);
         try {
-            if (object instanceof Result<?> commonResult) {
-                I18nUtils.i18n(commonResult);
+            if (object instanceof IResult<?> Result) {
+                I18nUtils.i18n(Result);
             }
             writePrefix(generator, object);
 

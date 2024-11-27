@@ -1,12 +1,57 @@
-apply from: rootProject.file('buildSrc/shared.gradle')
+plugins {
+    id 'me.champeau.mrjar' version '0.1'
+}
+apply plugin: 'me.champeau.mrjar'
+
 
 dependencies {
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
     compileOnly project(':i-spring-extend')
     compileOnly project(':i-spring-web-config-core')
     compileOnly project(':i-spring-cache-core')
-    compileOnly project(':i-spring-data:i-spring-data-jpa')
+    compileOnly project(':i-spring-data-ddd:i-spring-ddd-jpa')
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
     compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'
+    compileOnly 'io.micrometer:context-propagation'
+
+//    java21CompileOnly 'org.springframework:spring-core'
 }
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    java21CompileOnly {
+        extendsFrom compileOnly
+    }
+}
+
+multiRelease {
+    targetVersions 17, 21
+}
+
+java21Test {
+    enabled false
+}
+
+compileJava21Java {
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+}
+//sourceSets {
+//    main {
+//        java {
+//            srcDirs = ['src/main/java']
+//        }
+//    }
+//}
+//
+//jar {
+//    into('META-INF/versions/21') {
+//        from compileJava21Java.destinationDirectory
+//    }
+//}

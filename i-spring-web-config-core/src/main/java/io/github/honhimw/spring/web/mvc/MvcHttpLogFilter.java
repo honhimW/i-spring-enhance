@@ -20,18 +20,20 @@ import java.net.URI;
 import java.util.*;
 
 /**
- * 日志输出过滤器,
+ * Http log filter
  *
  * @author hon_him
- * @since 2023-05-19
+ * @since 2024-11-20
  */
 
 @Slf4j
 public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
 
+    public static final int DEFAULT_FILTER_ORDERED = -1000;
+
     @Override
     protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain filterChain) throws ServletException, IOException {
-        // only work on TRACE/DEBUG/INFO level
+        // only work on TRACE/DEBUG/INFO
         if (!log.isInfoEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -41,16 +43,10 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         ContentCachingRequestWrapper cachingRequest = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper cachingResponse = new ContentCachingResponseWrapper(response);
 
-        // do filter
-        long pre = System.currentTimeMillis();
-        filterChain.doFilter(cachingRequest, cachingResponse);
-        long post = System.currentTimeMillis();
-        long cost = post - pre;
-
         // construct http-log entity
         HttpLog httpLog = new HttpLog();
         StringBuilder sb = new StringBuilder();
-        httpLog.set_statusCode(cachingResponse.getStatus());
+        httpLog.setStatus(cachingResponse.getStatus());
         sb.append(cachingRequest.getRequestURL());
         if (StringUtils.isNotBlank(cachingRequest.getQueryString())) {
             sb.append("?");
@@ -58,13 +54,23 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         }
         String string = sb.toString();
         URI uri = URI.create(string);
-        httpLog.set_uri(uri);
-        httpLog.set_method(cachingRequest.getMethod());
-        httpLog.set_serverCost(cost);
+        httpLog.setUri(uri);
+        httpLog.setMethod(cachingRequest.getMethod());
+        HttpLog.LogHolder logHolder = new HttpLog.LogHolder(httpLog);
+        cachingRequest.setAttribute(HttpLog.LogHolder.class.getName(), logHolder);
+
+        // do filter
+        long pre = System.currentTimeMillis();
+        filterChain.doFilter(cachingRequest, cachingResponse);
+        long post = System.currentTimeMillis();
+        long elapsed = post - pre;
+
+        httpLog = logHolder.get();
+        httpLog.setElapsed(elapsed);
 
         // only raw-type request content will be recorded
         if (MimeTypeSupports.isRawType(cachingRequest.getContentType())) {
-            ByteArrayOutputStream rawRequestBody = httpLog.get_rawRequestBody();
+            ByteArrayOutputStream rawRequestBody = httpLog.getRawRequestBody();
             byte[] bytes = cachingRequest.getContentAsByteArray();
             rawRequestBody.writeBytes(bytes);
         }
@@ -78,44 +84,40 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
 
         // only raw-type response content will be recorded
         if (MimeTypeSupports.isRawType(cachingResponse.getContentType())) {
-            ByteArrayOutputStream rawResponseBody = httpLog.get_rawResponseBody();
+            ByteArrayOutputStream rawResponseBody = httpLog.getRawResponseBody();
             rawResponseBody.write(bytes);
         }
 
-        if (log.isTraceEnabled()) {
-            {
-                Enumeration<String> headerNames = cachingRequest.getHeaderNames();
-                List<Map.Entry<String, String>> requestHeader = new ArrayList<>();
-                while (headerNames.hasMoreElements()) {
-                    String headerName = headerNames.nextElement();
-                    Enumeration<String> headers = cachingRequest.getHeaders(headerName);
-                    while (headers.hasMoreElements()) {
-                        String headerValue = headers.nextElement();
-                        requestHeader.add(Map.entry(headerName, headerValue));
-                    }
+        {
+            Enumeration<String> headerNames = cachingRequest.getHeaderNames();
+            List<Map.Entry<String, String>> requestHeader = new ArrayList<>();
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                Enumeration<String> headers = cachingRequest.getHeaders(headerName);
+                while (headers.hasMoreElements()) {
+                    String headerValue = headers.nextElement();
+                    requestHeader.add(Map.entry(headerName, headerValue));
                 }
-                httpLog.set_requestHeaders(requestHeader);
             }
-            {
-                Collection<String> headerNames = cachingResponse.getHeaderNames();
-                List<Map.Entry<String, String>> responseHeader = new ArrayList<>();
-                headerNames.forEach(headerName -> {
-                    Collection<String> headers = cachingResponse.getHeaders(headerName);
-                    headers.forEach(headerValue -> responseHeader.add(Map.entry(headerName, headerValue)));
-                });
-                httpLog.set_responseHeaders(responseHeader);
-            }
-            log.trace(httpLog.fullyInfo());
-        } else if (log.isDebugEnabled()) {
-            log.debug(httpLog.toString());
-        } else if (log.isInfoEnabled()) {
-            log.info(httpLog.baseInfo());
+            httpLog.setRequestHeaders(requestHeader);
         }
+
+        {
+            Collection<String> headerNames = cachingResponse.getHeaderNames();
+            List<Map.Entry<String, String>> responseHeader = new ArrayList<>();
+            headerNames.forEach(headerName -> {
+                Collection<String> headers = cachingResponse.getHeaders(headerName);
+                headers.forEach(headerValue -> responseHeader.add(Map.entry(headerName, headerValue)));
+            });
+            httpLog.setResponseHeaders(responseHeader);
+        }
+
+        httpLog.log();
     }
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return DEFAULT_FILTER_ORDERED;
     }
 
 }

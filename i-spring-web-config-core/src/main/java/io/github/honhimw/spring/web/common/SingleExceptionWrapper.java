@@ -1,18 +1,18 @@
 package io.github.honhimw.spring.web.common;
 
-import io.github.honhimw.spring.Result;
 import jakarta.annotation.Nonnull;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * 仅支持一种异常
+ * Single kind of exception wrapper
+ *
  * @author hon_him
  * @since 2023-05-09
  */
 @SuppressWarnings({"unchecked", "unused"})
-public abstract class SingleExceptionWrapper<E extends Throwable> implements ExceptionWrapper {
+public abstract class SingleExceptionWrapper<E extends Throwable> implements ExceptionWrapper.MessageExceptionWrapper {
 
     private Class<E> genericType() {
         ParameterizedType parameterizedType =
@@ -36,49 +36,24 @@ public abstract class SingleExceptionWrapper<E extends Throwable> implements Exc
         return true;
     }
 
-    /**
-     * make result code/error coed/http code return the very same value
-     * @param e exception to be wrapped
-     * @return unify code
-     */
-    protected int unifyCode(@Nonnull E e) {
-        return httpCode();
-    }
-
     @Nonnull
     @Override
-    public final Result<Void> wrap(@Nonnull Throwable e) {
-        E e1 = (E) e;
-        String msg = _wrap(e1);
-        Result<Void> result = Result.empty();
-        result.msg(msg);
-        result.code(_resultCode(e1));
-        return result;
+    public final String wrap(@Nonnull Throwable e) {
+        return _wrap((E) e);
     }
 
     @Nonnull
     protected abstract String _wrap(@Nonnull E e);
 
     @Override
-    public final String resultCode(Throwable e) {
-        return _resultCode((E) e);
-    }
-
-    protected String _resultCode(@Nonnull E e) {
-        return String.valueOf(unifyCode(e));
-    }
-
-    @Override
     public final int httpCode(Throwable e) {
         return _httpCode((E) e);
     }
 
-    protected int _httpCode(@Nonnull E e) {
-        return unifyCode(e);
-    }
+    protected abstract int _httpCode(@Nonnull E e);
 
     @Override
     public int getOrder() {
-        return LOWEST_PRECEDENCE - 1;
+        return LOWEST_PRECEDENCE - 1000;
     }
 }

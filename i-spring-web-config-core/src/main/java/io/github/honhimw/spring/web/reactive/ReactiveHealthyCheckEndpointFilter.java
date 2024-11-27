@@ -28,7 +28,7 @@ public class ReactiveHealthyCheckEndpointFilter implements WebFilter, Ordered {
     private final List<PathPattern> _pathPatterns = new ArrayList<>();
 
     public ReactiveHealthyCheckEndpointFilter() {
-        this("/healthy");
+        this("/health");
     }
 
     public ReactiveHealthyCheckEndpointFilter(String... paths) {

@@ -13,7 +13,7 @@ import org.springframework.statemachine.support.DefaultStateMachineContext;
 import java.util.Optional;
 
 /**
- * 简易FSM工厂
+ * Simple Finite State Machine Factory
  *
  * @author hon_him
  * @since 2022-12-29

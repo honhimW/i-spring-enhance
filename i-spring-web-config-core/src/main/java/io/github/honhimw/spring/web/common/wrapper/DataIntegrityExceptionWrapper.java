@@ -21,14 +21,14 @@ public class DataIntegrityExceptionWrapper extends SingleExceptionWrapper<DataIn
     @Override
     protected String _wrap(@Nonnull DataIntegrityViolationException e) {
         if (e instanceof DuplicateKeyException) {
-            return "duplicate key";
+            return "Duplicate Key";
         }
-        return "constraint violation";
+        return "Violation Constraint";
     }
 
     @Override
-    protected int unifyCode(@Nonnull DataIntegrityViolationException e) {
-        return HttpStatus.INTERNAL_SERVER_ERROR.value();
+    protected int _httpCode(@Nonnull DataIntegrityViolationException e) {
+        return HttpStatus.CONFLICT.value();
     }
 
 }

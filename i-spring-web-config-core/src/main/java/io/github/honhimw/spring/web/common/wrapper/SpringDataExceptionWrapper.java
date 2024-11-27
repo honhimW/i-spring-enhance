@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnClass(DataAccessException.class)
-public class SpringDataExceptionWrapper extends AbstractExceptionWrapper implements ExceptionWrapper {
+public class SpringDataExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
     public boolean support(@Nonnull Throwable e) {
@@ -25,13 +25,14 @@ public class SpringDataExceptionWrapper extends AbstractExceptionWrapper impleme
             ;
     }
 
+    @Nonnull
     @Override
-    public String message(Throwable e) {
-        return "database error";
+    public String wrap(@Nonnull Throwable e) {
+        return "Database Error";
     }
 
     @Override
-    public int httpCode() {
+    public int httpCode(Throwable e) {
         return HttpStatus.INTERNAL_SERVER_ERROR.value();
     }
 }

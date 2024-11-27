@@ -1,12 +1,14 @@
 plugins {
-    id 'org.springframework.boot' version '3.3.2'
+    id 'org.springframework.boot' version libs.versions.spring.boot.dependencies
 }
 
+apply from: rootProject.file('buildSrc/library.gradle')
 apply plugin: 'org.springframework.boot'
-apply from: rootProject.file('buildSrc/shared.gradle')
 
 dependencies {
     implementation platform(project(':i-spring-enhance-bom'))
+    annotationProcessor platform(project(':i-spring-enhance-bom'))
+    testAnnotationProcessor platform(project(':i-spring-enhance-bom'))
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation('org.springframework.boot:spring-boot-starter-webflux')
     implementation('org.springframework.boot:spring-boot-starter-data-redis')
@@ -16,53 +18,29 @@ dependencies {
 
     implementation(project(':i-spring-web-config-starter'))
     implementation(project(':i-spring-cache-starter'))
+    implementation(project(':i-common-utilities'))
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-toml'
-    implementation 'io.micrometer:context-propagation:1.1.1'
 
-//    implementation('org.slf4j:slf4j-simple')
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    runtimeOnly 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    runtimeOnly 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+    runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
+    runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery' exclude group: 'commons-logging', module: 'commons-logging'
+
     implementation('ch.qos.logback:logback-classic')
-    testImplementation(platform('org.junit:junit-bom:5.9.1'))
-    testImplementation('org.junit.jupiter:junit-jupiter')
-
     testImplementation('org.springframework.cloud:spring-cloud-starter-openfeign')
 
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.jetbrains:annotations:24.1.0'
 }
 
 bootJar {
-    enabled(true)
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-    }
-
-    java21 {
-        java {
-            srcDirs = ['src/main/java21']
-            compileClasspath += main.output
-            runtimeClasspath += main.output
-        }
-    }
-}
-
-compileJava21Java {
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
-}
-
-jar {
-    into('META-INF/version/21') {
-        from compileJava21Java.destinationDirectory
-    }
+    enabled true
+    setMainClass 'org.example.WebApp'
+    version ''
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
 }

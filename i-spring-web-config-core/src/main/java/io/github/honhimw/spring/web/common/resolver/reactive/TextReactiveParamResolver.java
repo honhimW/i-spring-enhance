@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.GZipUtils;
+import io.github.honhimw.util.GZipUtils;
 import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;

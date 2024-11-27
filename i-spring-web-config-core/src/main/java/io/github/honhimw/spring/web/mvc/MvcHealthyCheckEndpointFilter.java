@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 健康检查
  * @author hon_him
  * @since 2023-05-19
  */
@@ -28,7 +27,7 @@ public class MvcHealthyCheckEndpointFilter extends OncePerRequestFilter {
     private final List<PathPattern> _pathPatterns = new ArrayList<>();
 
     public MvcHealthyCheckEndpointFilter() {
-        this("/healthy");
+        this("/health");
     }
 
     public MvcHealthyCheckEndpointFilter(String... paths) {

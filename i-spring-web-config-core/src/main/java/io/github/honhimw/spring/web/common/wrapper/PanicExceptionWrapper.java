@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-public class PanicExceptionWrapper extends AbstractExceptionWrapper implements ExceptionWrapper {
+public class PanicExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
     public boolean support(@Nonnull Throwable e) {
@@ -20,9 +20,10 @@ public class PanicExceptionWrapper extends AbstractExceptionWrapper implements E
             || e instanceof Error;
     }
 
+    @Nonnull
     @Override
-    public String message(Throwable e) {
-        return "panic!";
+    public String wrap(@Nonnull Throwable e) {
+        return "PANIC!";
     }
 
     @Override

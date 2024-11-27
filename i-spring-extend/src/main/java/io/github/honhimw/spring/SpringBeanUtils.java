@@ -1,7 +1,9 @@
 package io.github.honhimw.spring;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -25,36 +27,47 @@ public class SpringBeanUtils implements ApplicationContextAware {
         SpringBeanUtils._context = context;
     }
 
+    @Nonnull
     public static ApplicationContext getApplicationContext() {
+        if (_context == null) {
+            throw new IllegalStateException("Spring context is not available, either this is not a Spring application or the context has not yet been initialized.");
+        }
         return _context;
     }
 
     /**
      * Get bean from applicationContext by beanId
-     * @see ApplicationContext#getBean(String)
+     *
      * @param beanId unique id in context
+     * @see ApplicationContext#getBean(String)
      */
+    @Nullable
     public static <T> T getBean(String beanId) {
         return (T) Optional.ofNullable(_context)
+            .filter(context -> context.containsBean(beanId))
             .map(context -> context.getBean(beanId))
             .orElse(null);
     }
 
     /**
      * Get bean from applicationContext by bean type
-     * @see ApplicationContext#getBean(Class)
+     *
      * @param clazz unique bean of type
+     * @see ApplicationContext#getBean(Class)
      */
+    @Nullable
     public static <T> T getBean(Class<T> clazz) {
         return Optional.ofNullable(_context)
-            .map(context -> context.getBean(clazz))
+            .map(context -> context.getBeanProvider(clazz))
+            .map(ObjectProvider::getIfAvailable)
             .orElse(null);
     }
 
     /**
      * Inject properties into the given object
-     * @see AutowireCapableBeanFactory#autowireBean(Object)
+     *
      * @param bean to be autowired
+     * @see AutowireCapableBeanFactory#autowireBean(Object)
      */
     public static void autowireBean(Object bean) {
         Objects.requireNonNull(bean);

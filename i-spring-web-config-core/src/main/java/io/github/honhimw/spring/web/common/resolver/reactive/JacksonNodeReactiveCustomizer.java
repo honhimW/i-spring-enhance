@@ -13,9 +13,9 @@ import reactor.core.publisher.Mono;
 public interface JacksonNodeReactiveCustomizer {
 
     /**
-     * @param objectNode         实体构造前的ObjectNode, 编辑该对象中增删改查节点树即可编辑最终生成的实体类数据
-     * @param parameter          Controller入口参数中被注解标记的参数的引用
-     * @param serverHttpRequest  请求对象, 在调用该方法前输入流已经读取完成, 因此不能再次读取, 但可以获取请求的上下文
+     * @param objectNode         data container
+     * @param parameter          parameter in endpoint
+     * @param serverHttpRequest  request
      */
     Mono<Void> customize(ObjectNode objectNode, MethodParameter parameter, ServerHttpRequest serverHttpRequest);
 

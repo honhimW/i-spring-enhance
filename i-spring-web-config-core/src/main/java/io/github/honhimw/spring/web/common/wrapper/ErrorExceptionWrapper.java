@@ -1,5 +1,6 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
+import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -12,14 +13,14 @@ import java.util.NoSuchElementException;
  */
 
 @Component
-public class ErrorExceptionWrapper extends AbstractExceptionWrapper {
+public class ErrorExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
     public boolean support(@Nonnull Throwable e) {
         return e instanceof NoSuchElementException
-            || e instanceof IllegalArgumentException
-            || e instanceof IllegalStateException
-            || e instanceof UnsupportedOperationException;
+               || e instanceof IllegalArgumentException
+               || e instanceof IllegalStateException
+               || e instanceof UnsupportedOperationException;
     }
 
     @Override

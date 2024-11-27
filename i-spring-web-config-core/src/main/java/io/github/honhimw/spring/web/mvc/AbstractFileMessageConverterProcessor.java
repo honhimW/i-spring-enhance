@@ -1,8 +1,8 @@
 package io.github.honhimw.spring.web.mvc;
 
+import io.github.honhimw.spring.ValidatorUtils;
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
-import io.github.honhimw.spring.data.common.ValidatorUtils;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;

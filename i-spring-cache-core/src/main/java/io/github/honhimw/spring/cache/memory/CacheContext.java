@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CacheContext {
 
     /**
-     * 触发缓存的事件, 默认只有一个事件{@link org.springframework.context.ApplicationEvent}
+     * Refresh Cache event
      */
     public static final String EVENT = "event";
 

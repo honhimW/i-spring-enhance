@@ -2,6 +2,7 @@ package io.github.honhimw.spring.web.reactive;
 
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.web.common.HttpLog;
+import io.github.honhimw.spring.web.util.MimeTypeSupports;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -10,7 +11,6 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.*;
-import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +29,7 @@ import java.util.Optional;
 @Slf4j
 public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
 
-    public static final int DEFAULT_HTTP_LOG_HANDLER_ORDERED = -1000;
+    public static final int DEFAULT_HANDLER_ORDERED = -1000;
 
     private final HttpHandler httpHandler;
 
@@ -37,7 +37,7 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
 
     public ReactiveHttpLogHandler(HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
-        this.ordered = DEFAULT_HTTP_LOG_HANDLER_ORDERED;
+        this.ordered = DEFAULT_HANDLER_ORDERED;
     }
 
     public ReactiveHttpLogHandler(HttpHandler httpHandler, int ordered) {
@@ -48,7 +48,7 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
     @Nonnull
     @Override
     public Mono<Void> handle(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response) {
-        // only work on TRACE/DEBUG/INFO level
+        // only work on TRACE/DEBUG/INFO
         if (!log.isInfoEnabled()) {
             return httpHandler.handle(request, response);
         }
@@ -56,57 +56,54 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
         String methodValue = request.getMethod().name();
         URI uri = request.getURI();
 
-        HttpLog httpLog = new HttpLog();
-        httpLog.set_method(methodValue);
-        httpLog.set_uri(uri);
+        final HttpLog httpLog = new HttpLog();
+        final HttpLog.LogHolder httpLogRef = new HttpLog.LogHolder(httpLog);
+        httpLog.setMethod(methodValue);
+        httpLog.setUri(uri);
 
         ServerHttpRequest _request = enhanceRequest(request, httpLog);
         ServerHttpResponse _response = enhanceResponse(response, httpLog);
         long pre = System.currentTimeMillis();
         return httpHandler.handle(_request, _response)
-                .doFinally(signalType -> {
-                    long post = System.currentTimeMillis();
-                    long cost = post - pre;
-                    httpLog.set_serverCost(cost);
-                    Optional.ofNullable(_response.getStatusCode())
-                            .map(HttpStatusCode::value)
-                            .ifPresent(httpLog::set_statusCode);
-                    if (log.isTraceEnabled()) {
-                        {
-                            List<Map.Entry<String, String>> requestHeader = new ArrayList<>();
-                            request.getHeaders().forEach((key, values) ->
-                                    values.forEach(value -> requestHeader.add(Map.entry(key, value))));
-                            httpLog.set_requestHeaders(requestHeader);
-                        }
-                        {
-                            List<Map.Entry<String, String>> responseHeader = new ArrayList<>();
-                            response.getHeaders().forEach((key, values) ->
-                                    values.forEach(value -> responseHeader.add(Map.entry(key, value))));
-                            httpLog.set_responseHeaders(responseHeader);
-                        }
-                        log.trace(httpLog.fullyInfo());
-                    } else if (log.isDebugEnabled()) {
-                        log.debug(httpLog.toString());
-                    } else if (log.isInfoEnabled()) {
-                        log.info(httpLog.baseInfo());
-                    }
-                });
+            .contextWrite(context -> context.put(HttpLog.LogHolder.class, httpLogRef))
+            .doFinally(signalType -> {
+                long post = System.currentTimeMillis();
+                long elapsed = post - pre;
+                HttpLog finalHttpLog = httpLogRef.get();
+                finalHttpLog.setElapsed(elapsed);
+                Optional.ofNullable(_response.getStatusCode())
+                    .map(HttpStatusCode::value)
+                    .ifPresent(finalHttpLog::setStatus);
+                {
+                    List<Map.Entry<String, String>> requestHeader = new ArrayList<>();
+                    request.getHeaders().forEach((key, values) ->
+                        values.forEach(value -> requestHeader.add(Map.entry(key, value))));
+                    httpLog.setRequestHeaders(requestHeader);
+                }
+                {
+                    List<Map.Entry<String, String>> responseHeader = new ArrayList<>();
+                    response.getHeaders().forEach((key, values) ->
+                        values.forEach(value -> responseHeader.add(Map.entry(key, value))));
+                    httpLog.setResponseHeaders(responseHeader);
+                }
+                finalHttpLog.log();
+            });
     }
 
     private ServerHttpRequest enhanceRequest(ServerHttpRequest request, HttpLog httpLog) {
         MediaType requestType = request.getHeaders().getContentType();
-        if (isRawType(requestType)) {
-            ByteArrayOutputStream baops = httpLog.get_rawRequestBody();
+        if (MimeTypeSupports.isRawType(requestType)) {
+            ByteArrayOutputStream baops = httpLog.getRawRequestBody();
             return new ServerHttpRequestDecorator(request) {
                 @Nonnull
                 @Override
                 public Flux<DataBuffer> getBody() {
                     ServerHttpRequest delegate = getDelegate();
                     return delegate.getBody()
-                            .doOnNext(dataBuffer -> {
-                                byte[] bs = IDataBufferUtils.dataBuffer2Bytes(dataBuffer, false);
-                                baops.writeBytes(bs);
-                            });
+                        .doOnNext(dataBuffer -> {
+                            byte[] bs = IDataBufferUtils.dataBuffer2Bytes(dataBuffer, false);
+                            baops.writeBytes(bs);
+                        });
                 }
             };
         }
@@ -126,8 +123,8 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
             @Override
             public Mono<Void> writeWith(@Nonnull Publisher<? extends DataBuffer> body) {
                 MediaType responseType = getDelegate().getHeaders().getContentType();
-                if (isRawType(responseType)) {
-                    ByteArrayOutputStream baops = httpLog.get_rawResponseBody();
+                if (MimeTypeSupports.isRawType(responseType)) {
+                    ByteArrayOutputStream baops = httpLog.getRawResponseBody();
                     if (body instanceof Mono<? extends DataBuffer> bodyMono) {
                         return super.writeWith(bodyMono.doOnNext(dataBuffer -> {
                             byte[] bs = IDataBufferUtils.dataBuffer2Bytes(dataBuffer, false);
@@ -146,17 +143,9 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
         };
     }
 
-    private boolean isRawType(MimeType mimeType) {
-        return MediaType.APPLICATION_JSON.isCompatibleWith(mimeType)
-                || MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(mimeType)
-                || MediaType.APPLICATION_XML.isCompatibleWith(mimeType)
-                || MediaType.TEXT_PLAIN.isCompatibleWith(mimeType)
-                || MediaType.TEXT_XML.isCompatibleWith(mimeType)
-                ;
-    }
-
     /**
      * set a custom handler ordered by constructor or override this method
+     *
      * @return ordered, {@link HttpHandlerDecoratorFactory} ordered also necessary.
      */
     @Override

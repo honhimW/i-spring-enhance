@@ -1,12 +1,15 @@
 pluginManagement  {
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        maven { url 'https://maven.aliyun.com/repository/spring-plugin' }
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/snapshot' }
         gradlePluginPortal()
     }
 }
 
 rootProject.name = 'i-spring-enhance'
+include 'i-core'
+include 'i-common-utilities'
+include 'i-spring-data-ddd'
 include 'i-spring-web-config-core'
 include 'i-spring-web-config-starter'
 include 'i-spring-web-test'
@@ -16,9 +19,7 @@ include 'i-spring-boot-project'
 include 'i-spring-enhance-bom'
 include 'i-spring-cache-core'
 include 'i-spring-cache-starter'
-include 'i-spring-data'
-include 'i-spring-data:i-spring-data-common'
-findProject(':i-spring-data:i-spring-data-common')?.name = 'i-spring-data-common'
-include 'i-spring-data:i-spring-data-jpa'
-findProject(':i-spring-data:i-spring-data-jpa')?.name = 'i-spring-data-jpa'
+include 'i-spring-data-ddd:i-spring-ddd-common'
+include 'i-spring-data-ddd:i-spring-ddd-jpa'
+include 'i-spring-data-ddd:i-spring-ddd-starter'
 

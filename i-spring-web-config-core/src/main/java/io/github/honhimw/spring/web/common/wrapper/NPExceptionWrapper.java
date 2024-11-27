@@ -20,7 +20,7 @@ public class NPExceptionWrapper extends SingleExceptionWrapper<NullPointerExcept
     }
 
     @Override
-    protected int unifyCode(@Nonnull NullPointerException e) {
+    protected int _httpCode(@Nonnull NullPointerException e) {
         return HttpStatus.INTERNAL_SERVER_ERROR.value();
     }
 

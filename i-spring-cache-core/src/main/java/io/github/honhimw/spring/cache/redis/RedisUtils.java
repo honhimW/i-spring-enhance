@@ -111,12 +111,10 @@ public class RedisUtils implements ApplicationContextAware {
         }
     }
 
-    @Nullable
     public static Boolean containsKey(String key) {
         return writeRedisTemplate.hasKey(key);
     }
 
-    @Nullable
     public static Long remove(String... key) {
         if (key.length > 0) {
             if (key.length == 1) {
@@ -204,41 +202,40 @@ public class RedisUtils implements ApplicationContextAware {
         return null;
     }
 
-    @Nullable
     public static Boolean persist(String key) {
         return writeRedisTemplate.persist(key);
     }
 
     /**
-     * Redis 字符串类型
+     * Redis String
      */
     public static <V> ValueOperations<String, V> string(Class<V> type) {
         return redisJacksonTemplateFactory.forType(type).opsForValue();
     }
 
     /**
-     * Redis Hash类型
+     * Redis Hash
      */
     public static <V> HashOperations<String, String, V> map(Class<V> type) {
         return redisJacksonTemplateFactory.forType(type).opsForHash();
     }
 
     /**
-     * Redis 列表类型
+     * Redis List
      */
     public static <V> ListOperations<String, V> list(Class<V> type) {
         return redisJacksonTemplateFactory.forType(type).opsForList();
     }
 
     /**
-     * Redis 集合类型
+     * Redis Set
      */
     public static <V> SetOperations<String, V> set(Class<V> type) {
         return redisJacksonTemplateFactory.forType(type).opsForSet();
     }
 
     /**
-     * Redis 有序集合类型
+     * Redis ZSet
      */
     public static <V> ZSetOperations<String, V> sortedSet(Class<V> type) {
         return redisJacksonTemplateFactory.forType(type).opsForZSet();

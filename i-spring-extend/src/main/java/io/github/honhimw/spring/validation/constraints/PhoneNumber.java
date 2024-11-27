@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public @interface PhoneNumber {
 
   /**
-   * 支持的号码类型{@link PhoneType}
+   * Supported phone number type
    */
   PhoneType phoneType() default PhoneType.ALL;
   
@@ -34,17 +34,17 @@ public @interface PhoneNumber {
   enum PhoneType {
     
     /**
-     * 支持所有号码
+     * Both mobile and fixed phone number
      */
     ALL("号码格式错误", Pattern.compile("^\\d{10,12}$")),
     
     /**
-     * 仅支持手机号
+     * Mobile phone number only
      */
     MOBILE("手机号码格式错误", Pattern.compile("^1\\d{10}$")),
     
     /**
-     * 仅支持固话号码
+     * Fixed phone number only
      */
     FIXED("固话号码格式错误", Pattern.compile("^0\\d{9,11}$"));
 

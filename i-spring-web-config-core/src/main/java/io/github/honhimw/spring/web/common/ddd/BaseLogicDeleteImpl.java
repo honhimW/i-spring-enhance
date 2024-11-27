@@ -1,12 +1,12 @@
 package io.github.honhimw.spring.web.common.ddd;
 
-import io.github.honhimw.spring.Result;
-import io.github.honhimw.spring.model.IdRequest;
-import io.github.honhimw.spring.data.jpa.domain.AbstractLogicDeleteAR;
-import io.github.honhimw.spring.data.jpa.domain.repository.BaseRepository;
-import io.github.honhimw.spring.WrappedException;
+import io.github.honhimw.core.IResult;
+import io.github.honhimw.core.IdRequest;
+import io.github.honhimw.core.WrappedException;
+import io.github.honhimw.ddd.jpa.domain.AbstractLogicDeleteAR;
+import io.github.honhimw.ddd.jpa.domain.repository.BaseRepository;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.Brook;
+import io.github.honhimw.util.tool.Brook;
 
 /**
  * @author hon_him
@@ -20,11 +20,11 @@ public abstract class BaseLogicDeleteImpl<C, U extends IdRequest<ID>, ID, DO ext
     protected abstract BaseRepository<DO, ID> getRepository();
 
     @Override
-    public Result<Void> delete(@TextParam IdRequest<ID> delete) {
+    public IResult<Void> delete(@TextParam IdRequest<ID> delete) {
         return Brook.with(delete)
             .map(IdRequest::getId)
             .exec(getRepository()::logicDelete)
-            .map(_do -> Result.<Void>ok())
+            .map(_do -> IResult.<Void>ok())
             .errElseThrow(WrappedException::new);
     }
 

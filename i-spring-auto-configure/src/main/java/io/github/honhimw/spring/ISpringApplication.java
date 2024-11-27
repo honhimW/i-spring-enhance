@@ -1,7 +1,8 @@
 package io.github.honhimw.spring;
 
 /**
- * 标记
+ * Marker
+ *
  * @author hon_him
  * @since 2023-06-01
  */

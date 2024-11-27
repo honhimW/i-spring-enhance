@@ -8,10 +8,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * A Better load balancer under development.
+ * Better load balancer under development.
  * <ul>
- *     <li>Avoid developers affecting each other by using the same host instance as preferred.</li>
- *     <li>Use the test server for the default service instance, so that developers don’t have to run the dependent services themselves.</li>
+ *     <li>Avoid developers to effect each other by using the same host instance as prefer.</li>
+ *     <li>Use the test server for default service instance, so that developers don't have to run the depended services themselves.</li>
  * </ul>
  *
  * @author hon_him

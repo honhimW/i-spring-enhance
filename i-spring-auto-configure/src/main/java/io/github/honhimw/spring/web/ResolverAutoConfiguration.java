@@ -43,9 +43,9 @@ public class ResolverAutoConfiguration {
     @ConditionalOnWebApplication(type = Type.SERVLET)
     static class Resolver4SpringWebMvc {
 
-        @Bean(name = "iSpringResolverMvcConfigurer")
-        @ConditionalOnMissingBean(name = "iSpringResolverMvcConfigurer")
-        WebMvcConfigurer iSpringResolverMvcConfigurer(@Autowired(required = false) List<JacksonNodeCustomizer> customizers) {
+        @Bean(name = "yfBaseResolverMvcConfigurer")
+        @ConditionalOnMissingBean(name = "yfBaseResolverMvcConfigurer")
+        WebMvcConfigurer yfBaseResolverMvcConfigurer(@Autowired(required = false) List<JacksonNodeCustomizer> customizers) {
             return new WebMvcConfigurer() {
                 @Override
                 public void addArgumentResolvers(@Nonnull List<HandlerMethodArgumentResolver> resolvers) {
@@ -81,9 +81,9 @@ public class ResolverAutoConfiguration {
             return new WebFluxJackson2Encoder();
         }
 
-        @Bean(name = "iSpringResolverReactiveConfigurer")
-        @ConditionalOnMissingBean(name = "iSpringResolverReactiveConfigurer")
-        WebFluxConfigurer iSpringResolverReactiveConfigurer(@Autowired(required = false) List<JacksonNodeReactiveCustomizer> customizers) {
+        @Bean(name = "yfBaseResolverReactiveConfigurer")
+        @ConditionalOnMissingBean(name = "yfBaseResolverReactiveConfigurer")
+        WebFluxConfigurer yfBaseResolverReactiveConfigurer(@Autowired(required = false) List<JacksonNodeReactiveCustomizer> customizers) {
             return new WebFluxConfigurer() {
                 @Override
                 public void configureArgumentResolvers(@Nonnull ArgumentResolverConfigurer configurer) {

@@ -19,6 +19,8 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * Under development. Avoid multiple developers affecting each other by using the same host instance as preferred
+ *
  * @author hon_him
  * @since 2022-06-10
  */
@@ -28,19 +30,10 @@ public class ReactiveDevLoadBalancer implements ReactorServiceInstanceLoadBalanc
 
     private static final ServiceInstanceListSupplier NOOP_SERVICE_INSTANCE_LIST_SUPPLIER = new NoopServiceInstanceListSupplier();
 
-    /**
-     * @see org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier
-     */
     protected ObjectProvider<ServiceInstanceListSupplier> serviceInstanceListSupplierProvider;
 
-    /**
-     * service id, ${spring.application.name}
-     */
     private final String serviceId;
 
-    /**
-     * prefer host to used.
-     */
     private final String preferHost;
 
     private final ServiceInstance defaultInstance;

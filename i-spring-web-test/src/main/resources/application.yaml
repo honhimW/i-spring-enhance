@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   main:
     web-application-type: reactive
   config:
@@ -6,14 +8,20 @@ spring:
   messages:
     basename: i18n/test
     use-code-as-default-message: true
+  threads:
+    virtual:
+      enabled: true
 logging:
   level:
     root: info
-    io.github.honhimw.spring.web.mvc.io.github.honhimw.spring.web.mvc.MvcHttpLogFilter: debug
-    io.github.honhimw.spring.web.reactive.io.github.honhimw.spring.web.reactive.ReactiveHttpLogHandler: debug
+    HTTP_LOG: debug
 
 server:
   port: 8080
+  compression:
+    enabled: true
+    min-response-size: 256B
+    mime-types: ["text/html", "text/xml", "text/plain", "text/css", "text/javascript", "application/javascript", "application/json", "application/xml", "text/csv"]
 
 springdoc:
   api-docs:
@@ -22,3 +30,11 @@ springdoc:
     path: /swagger-ui
   webjars:
     prefix: ""
+
+i:
+  spring:
+    web:
+      trace:
+        trace-header: ts-request-id
+    cache:
+      refresh-on-event: org.springframework.boot.context.event.ApplicationReadyEvent

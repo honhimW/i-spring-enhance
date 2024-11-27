@@ -7,14 +7,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import io.github.honhimw.spring.util.GZipUtils;
 import io.github.honhimw.spring.web.common.resolver.annotation.CsvField;
+import io.github.honhimw.util.GZipUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -56,13 +57,13 @@ public class CsvJacksonNodeCustomizer implements JacksonNodeCustomizer {
         }
         TextParam parameterAnnotation = parameter.getParameterAnnotation(TextParam.class);
         CsvField csvField = parameter.getParameterAnnotation(CsvField.class);
-        Validate.validState(parameterAnnotation != null, "argument resolver annotation should not be null.");
-        Validate.validState(csvField != null, "csv field annotation should not be null.");
+        Assert.state(parameterAnnotation != null, "argument resolver annotation should not be null.");
+        Assert.state(csvField != null, "csv field annotation should not be null.");
         String fieldName = csvField.value();
-        Validate.validState(StringUtils.isNotBlank(fieldName), "csv field annotation should not be null.");
+        Assert.state(StringUtils.isNotBlank(fieldName), "csv field annotation should not be null.");
 
         try {
-            byte[] bytes = servletRequest.getInputStream().readAllBytes();
+            byte[] bytes = IOUtils.toByteArray(servletRequest.getInputStream());
             bytes = tryDecompressGzip(parameterAnnotation, servletRequest, bytes);
             Charset charset = Optional.of(servletRequest.getCharacterEncoding())
                 .map(Charset::forName)
