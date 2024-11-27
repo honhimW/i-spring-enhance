@@ -5,6 +5,6 @@ package io.github.honhimw.ddd.jpa;
  * @since 2022-10-26
  */
 
-public class YfDDDJpa {
+public class DDDJpa {
 
 }

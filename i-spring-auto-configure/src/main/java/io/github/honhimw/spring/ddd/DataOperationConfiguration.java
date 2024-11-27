@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.ddd;
 
-import io.github.honhimw.ddd.jpa.YfDDDJpa;
+import io.github.honhimw.ddd.jpa.DDDJpa;
 import io.github.honhimw.ddd.jpa.util.PageUtils;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +25,7 @@ abstract class DataOperationConfiguration {
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnBean(DataSource.class)
     @ConditionalOnClass(value = {
-        YfDDDJpa.class,
+        DDDJpa.class,
         JpaRepository.class
     })
     static class JpaConfiguration {

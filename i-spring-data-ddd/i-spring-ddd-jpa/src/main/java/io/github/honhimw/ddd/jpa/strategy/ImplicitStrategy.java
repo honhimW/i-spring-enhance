@@ -12,7 +12,7 @@ import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
  * @since 2022-10-18
  */
 
-public class YfImplicitStrategy extends SpringImplicitNamingStrategy {
+public class ImplicitStrategy extends SpringImplicitNamingStrategy {
 
     @Override
     public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
