@@ -181,3 +181,30 @@ public class WebApp {
   public static void main(String[] args) { SpringApplication.run(WebApp.class, args); }
 }
 ```
+
+## Data
+
+### Common
+
+- Access control list: Acl/Ace/ResourceMod etc.
+- Data operation event
+
+### Jpa implementation
+
+#### Acl
+
+TODO
+
+```java
+
+```
+
+#### Query
+
+TODO
+
+```java
+
+
+
+```
