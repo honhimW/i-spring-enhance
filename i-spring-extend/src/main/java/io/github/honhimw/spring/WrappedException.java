@@ -1,7 +1,7 @@
 package io.github.honhimw.spring;
 
 /**
- * 包装异常
+ * wrap exception
  *
  * @author hon_him
  * @since 2024-06-17

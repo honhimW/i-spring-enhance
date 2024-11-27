@@ -56,7 +56,7 @@ public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler im
     }
 
     /**
-     * @see WebFluxConfigurationSupport#responseStatusExceptionHandler() @Order(0), 要在它之前执行异常处理
+     * @see WebFluxConfigurationSupport#responseStatusExceptionHandler() @Order(0)
      */
     @Override
     public int getOrder() {

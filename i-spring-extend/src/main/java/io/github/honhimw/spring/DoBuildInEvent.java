@@ -7,9 +7,9 @@ import org.springframework.context.ApplicationEvent;
  * @since 2023-05-29
  */
 
-public class ReBuildInEvent extends ApplicationEvent {
+public class DoBuildInEvent extends ApplicationEvent {
 
-    public ReBuildInEvent(Object source) {
+    public DoBuildInEvent(Object source) {
         super(source);
     }
 

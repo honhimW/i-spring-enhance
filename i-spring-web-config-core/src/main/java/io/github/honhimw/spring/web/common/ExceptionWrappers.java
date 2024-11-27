@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.common;
 
-import io.github.honhimw.spring.Result;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 

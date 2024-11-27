@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.mvc;
 
-import io.github.honhimw.spring.Result;
 import io.github.honhimw.spring.web.common.AbstractFallbackHandler;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
 import jakarta.annotation.Nonnull;
@@ -28,8 +27,6 @@ public class FallbackHandlerExceptionResolver extends AbstractFallbackHandler im
     private final HttpMessageConverters httpMessageConverters;
 
     private final ExceptionWrappers exceptionWrappers;
-
-    private boolean printStacktrace;
 
     public FallbackHandlerExceptionResolver(HttpMessageConverters httpMessageConverters, ExceptionWrappers exceptionWrappers) {
         this.httpMessageConverters = httpMessageConverters;

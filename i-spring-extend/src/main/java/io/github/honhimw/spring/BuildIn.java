@@ -1,12 +1,12 @@
 package io.github.honhimw.spring;
 
+import jakarta.annotation.Nonnull;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
-import jakarta.annotation.Nonnull;
-
 /**
- * 容器启动后按顺序执行多个Bean间的初始化工作, 如数据库内置数据设置是数据间依赖顺序
+ * Do the initialization after container startup
+ * 
  * @author hon_him
  * @since 2023-04-21
  */
