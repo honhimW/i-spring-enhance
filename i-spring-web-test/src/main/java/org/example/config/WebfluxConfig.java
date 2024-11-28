@@ -20,7 +20,7 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
  */
 
 @Configuration
-@EnableWebFlux
+//@EnableWebFlux
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 public class WebfluxConfig {
 
