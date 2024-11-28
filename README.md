@@ -377,7 +377,8 @@ public void ordering() {
 **Example**
 ```java
 @PostMapping("/list")
-public IResult<PageInfoVO<PersonVO>> list(@TextParam IPageRequest<Person> iPageRequest) {
+public IResult<PageInfoVO<PersonVO>> list(@TextParam IPageRequest<PersonVO> iPageRequest) {
+  iPageRequest = PageUtils.convertRequest(iPageRequest, person -> person.toDO());
   Page<Person> paging = PageUtils.paging(personRepository, iPageRequest);
   PageInfoVO<PersonVO> personPageInfoVO = PageUtils.pageInfoVO(paging, person -> person.toVO());
   return IResult.ok(personPageInfoVO);
