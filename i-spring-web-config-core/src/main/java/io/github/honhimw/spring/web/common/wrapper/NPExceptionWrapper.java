@@ -16,7 +16,7 @@ public class NPExceptionWrapper extends SingleExceptionWrapper<NullPointerExcept
     @Nonnull
     @Override
     protected String _wrap(@Nonnull NullPointerException e) {
-        return "NPE";
+        return "{npe}";
     }
 
     @Override

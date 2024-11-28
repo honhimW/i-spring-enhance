@@ -28,7 +28,7 @@ public class SpringDataExceptionWrapper implements ExceptionWrapper.MessageExcep
     @Nonnull
     @Override
     public String wrap(@Nonnull Throwable e) {
-        return "Database Error";
+        return "{database.error}";
     }
 
     @Override

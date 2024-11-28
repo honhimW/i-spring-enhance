@@ -23,7 +23,7 @@ public class PanicExceptionWrapper implements ExceptionWrapper.MessageExceptionW
     @Nonnull
     @Override
     public String wrap(@Nonnull Throwable e) {
-        return "PANIC!";
+        return "{panic}";
     }
 
     @Override

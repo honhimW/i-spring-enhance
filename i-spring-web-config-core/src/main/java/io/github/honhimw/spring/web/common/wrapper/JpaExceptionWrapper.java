@@ -31,7 +31,7 @@ public class JpaExceptionWrapper implements ExceptionWrapper.MessageExceptionWra
     @Nonnull
     @Override
     public String wrap(@Nonnull Throwable e) {
-        return "Persistence Error";
+        return "{database.persistence.error}";
     }
 
     @Override

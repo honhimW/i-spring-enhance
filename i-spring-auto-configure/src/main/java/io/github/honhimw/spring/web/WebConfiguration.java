@@ -19,6 +19,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
 import org.springframework.http.codec.json.AbstractJackson2Encoder;
@@ -28,6 +29,9 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.*;
 
@@ -55,10 +59,17 @@ abstract class WebConfiguration {
             return new ExceptionWrappers(exceptionWrappers);
         }
 
-        @Bean("i18NUtils")
-        @ConditionalOnMissingBean(name = "i18NUtils")
+        @Bean("i18nUtils")
+        @ConditionalOnMissingBean(name = "i18nUtils")
+        @ConditionalOnProperty(value = "i.spring.web.i18n", havingValue = "true", matchIfMissing = true)
         @ConditionalOnBean(MessageSource.class)
-        I18nUtils i18NUtils() {
+        I18nUtils i18nUtils(ObjectProvider<MessageSource> messageSourceProvider) {
+            MessageSource messageSource = messageSourceProvider.getIfUnique();
+            if (messageSource instanceof ResourceBundleMessageSource resourceBundle) {
+                Set<String> basenameSet = resourceBundle.getBasenameSet();
+                String[] newBaseNameSet = Stream.concat(basenameSet.stream(), Stream.of("i18n/enhance_embedded")).toArray(String[]::new);
+                resourceBundle.setBasenames(newBaseNameSet);
+            }
             return new I18nUtils();
         }
 

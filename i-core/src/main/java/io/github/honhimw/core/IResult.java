@@ -126,9 +126,9 @@ public class IResult<T> implements Serializable {
     }
 
     public enum Codes {
-        OK(0, "Okay"),
-        BAD(400, "Bad"),
-        ERROR(500, "Error");
+        OK(0, "{okay}"),
+        BAD(400, "{bad.request}"),
+        ERROR(500, "{internal.server.error}");
 
         private final int code;
         private final String brief;

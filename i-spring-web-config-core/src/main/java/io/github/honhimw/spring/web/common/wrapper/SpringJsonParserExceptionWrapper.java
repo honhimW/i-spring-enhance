@@ -17,7 +17,7 @@ public class SpringJsonParserExceptionWrapper extends SingleExceptionWrapper<Jso
     @Nonnull
     @Override
     protected String _wrap(@Nonnull JsonParseException e) {
-        return "JSON Parse Error";
+        return "{json.parse.error}";
     }
 
 

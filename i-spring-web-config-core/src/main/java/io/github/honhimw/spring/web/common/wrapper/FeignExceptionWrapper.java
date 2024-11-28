@@ -20,7 +20,7 @@ public class FeignExceptionWrapper extends SingleExceptionWrapper<FeignException
     @Nonnull
     @Override
     protected String _wrap(@Nonnull FeignException e) {
-        return "Feign Exception";
+        return "{feign.error}";
     }
 
     @Override

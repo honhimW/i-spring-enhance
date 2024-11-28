@@ -210,12 +210,15 @@ public class HttpUtils {
         this.loadBalancedResolver = resolver;
     }
 
+    public HttpResult request(Consumer<Configurer> configurer) throws URISyntaxException, IOException {
+        return request(null, null, configurer, httpResult -> httpResult);
+    }
+
     public HttpResult request(String method, String url, Consumer<Configurer> configurer) throws URISyntaxException, IOException {
         return request(method, url, configurer, httpResult -> httpResult);
     }
 
     public <T> T request(String method, String url, Consumer<Configurer> configurer, Function<HttpResult, T> resultMapper) throws URISyntaxException, IOException {
-        _assertState(StringUtils.isNotBlank(url), "URL should not be blank");
         _assertState(Objects.nonNull(configurer), "String should not be null");
         Configurer requestConfigurer = new Configurer()
             .method(method)
@@ -224,6 +227,8 @@ public class HttpUtils {
             .config(RequestConfig.copy(defaultRequestConfig)
                 .build());
         configurer.accept(requestConfigurer);
+        _assertState(StringUtils.isNotBlank(requestConfigurer.getMethod()), "Method should not be blank");
+        _assertState(StringUtils.isNotBlank(requestConfigurer.getUrl()), "URL should not be blank");
         HttpResult httpResult = request(requestConfigurer);
         return resultMapper.apply(httpResult);
     }

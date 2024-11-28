@@ -20,7 +20,7 @@ public class JsonParserExceptionWrapper extends SingleExceptionWrapper<JsonParse
     @Nonnull
     @Override
     protected String _wrap(@Nonnull JsonParseException e) {
-        return "JSON Parse Error";
+        return "{json.parse.error}";
     }
 
     @Override

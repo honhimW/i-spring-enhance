@@ -436,6 +436,15 @@ public class ReactiveHttpUtils implements AutoCloseable {
     /**
      * Sends an HTTP request to the specified URL, without configurer.
      *
+     * @return the result of the HTTP request
+     */
+    public HttpResult request(Consumer<Configurer> configurer) {
+        return request(null, null, configurer);
+    }
+
+    /**
+     * Sends an HTTP request to the specified URL, without configurer.
+     *
      * @param method the method of the request
      * @param url    the URL to send the request to
      * @return the result of the HTTP request
@@ -622,13 +631,22 @@ public class ReactiveHttpUtils implements AutoCloseable {
     /**
      * Reactive request
      *
+     * @param configurer configurer of the request
+     * @return the reactive result
+     */
+    public ReactiveHttpResult receiver(Consumer<Configurer> configurer) {
+        return receiver(null, null, configurer);
+    }
+
+    /**
+     * Reactive request
+     *
      * @param method     http method
      * @param url        http url
      * @param configurer configurer of the request
      * @return the reactive result
      */
     public ReactiveHttpResult receiver(String method, String url, Consumer<Configurer> configurer) {
-        _assertState(StringUtils.isNotBlank(url), "URL should not be blank");
         _assertState(Objects.nonNull(configurer), "String should not be null");
         Configurer requestConfigurer = new Configurer(_defaultRequestConfig)
             .method(method)
@@ -638,6 +656,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
             configurer = configurer.andThen(requestInterceptor);
         }
         configurer.accept(requestConfigurer);
+        _assertState(StringUtils.isNotBlank(requestConfigurer.method()), "Method should not be blank");
+        _assertState(StringUtils.isNotBlank(requestConfigurer.url()), "URL should not be blank");
         ResponseReceiver<?> responseReceiver = _request(requestConfigurer);
         ReactiveHttpResult reactiveHttpResult = new ReactiveHttpResult(responseReceiver, requestConfigurer);
         requestConfigurer.reactiveResultHook.accept(reactiveHttpResult);
@@ -1038,6 +1058,51 @@ public class ReactiveHttpUtils implements AutoCloseable {
         }
 
         /**
+         * GET
+         * @return this
+         */
+        public Configurer get() {
+            this.method = METHOD_GET;
+            return this;
+        }
+
+        /**
+         * POST
+         * @return this
+         */
+        public Configurer post() {
+            this.method = METHOD_POST;
+            return this;
+        }
+
+        /**
+         * PUT
+         * @return this
+         */
+        public Configurer put() {
+            this.method = METHOD_PUT;
+            return this;
+        }
+
+        /**
+         * DELETE
+         * @return this
+         */
+        public Configurer delete() {
+            this.method = METHOD_DELETE;
+            return this;
+        }
+
+        /**
+         * PATCH
+         * @return this
+         */
+        public Configurer patch() {
+            this.method = METHOD_PATCH;
+            return this;
+        }
+
+        /**
          * Configure the charset
          *
          * @param charset charset
@@ -1073,6 +1138,23 @@ public class ReactiveHttpUtils implements AutoCloseable {
                 this.headers.put(name, list);
             }
             list.add(value);
+            return this;
+        }
+
+        /**
+         * Add header pair only if absent
+         *
+         * @param name  header name
+         * @param value header value
+         * @return this
+         */
+        public Configurer headerIfAbsent(String name, String value) {
+            List<String> list = this.headers.get(name);
+            if (Objects.isNull(list)) {
+                list = new ArrayList<>();
+                this.headers.put(name, list);
+                list.add(value);
+            }
             return this;
         }
 

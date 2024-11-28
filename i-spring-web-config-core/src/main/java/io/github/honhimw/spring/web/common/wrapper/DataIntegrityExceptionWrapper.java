@@ -21,9 +21,9 @@ public class DataIntegrityExceptionWrapper extends SingleExceptionWrapper<DataIn
     @Override
     protected String _wrap(@Nonnull DataIntegrityViolationException e) {
         if (e instanceof DuplicateKeyException) {
-            return "Duplicate Key";
+            return "{database.duplicate-key}";
         }
-        return "Violation Constraint";
+        return "{database.violation-constraint}";
     }
 
     @Override
