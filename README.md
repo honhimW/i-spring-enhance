@@ -375,6 +375,7 @@ public void ordering() {
 ```
 
 **Example**
+> Just like GraphQL, you can query based on the data structure you see.
 ```java
 @PostMapping("/list")
 public IResult<PageInfoVO<PersonVO>> list(@TextParam IPageRequest<PersonVO> iPageRequest) {
