@@ -191,20 +191,220 @@ public class WebApp {
 
 ### Jpa implementation
 
+#### Event
+
+**Let Your Entity Extends AbstractAR**, and override DomainEntity#eventBuilder
+```java
+@Setter
+@Getter
+@Entity
+@Table(value = "table_name")
+public class YourEntity extends AbstractAR<YourEntity, String> {
+
+    @Id
+    private String id;
+
+    @Override
+    public Function<DaoAction, ? extends DomainEvent<YourEntity, String>> eventBuilder() {
+         return daoAction -> new YourEntityEvent(daoAction).id(getId()).entity(this);
+    }
+}
+```
+
+**Subscribe Entity Event with Spring Event**
+```java
+@Component
+public class YourListener extends AbstractListener {
+    @EventListener
+    public void appEvent(YourEvent event) {
+         afterInsert(event)
+             .ifPresent(e -> {
+                 String id = e.getId();
+                 YourEntity entity = e.getEntity();
+                 // do something
+             });
+    }
+}
+```
+
 #### Acl
 
-TODO
+**Create an AclExecutor**
+```java
+public class CustomAclExecutorImpl<T> extends AbstractAclExecutor<T> {
+
+    public PhalanxAclExecutorImpl(
+        @Nonnull ResourceMod defaultMod,
+        @Nonnull JpaEntityInformation<T, ?> ei,
+        @Nonnull EntityManager em, @Nonnull String dataDomain) {
+        super(defaultMod, ei, em, dataDomain);
+    }
+
+    @Override
+    protected boolean guard() {
+        if (SudoSupports.isSudo()) {
+            log.warn("Sudo mode, executed without ACL guard.");
+            return false;
+        }
+        return SecurityUtils.getAuthorizedUser().isPresent();
+    }
+
+    @Override
+    protected boolean isRoot() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::isRoot)
+            .orElse(false);
+    }
+
+    @Nonnull
+    @Override
+    protected Map<String, Object> getAttributes() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::getAttributes)
+            .orElseGet(HashMap::new);
+    }
+
+    @Nonnull
+    @Override
+    protected List<? extends Ace> getAcl() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::getAcl)
+            .orElseGet(ArrayList::new);
+    }
+}
+```
+
+**Register AclExecutor**
 
 ```java
+@Component
+public class CustomAclProvider implements AclProvider {
+    @Nonnull
+    @Override
+    public <T> AclExecutor<T> getExecutor(
+        JpaEntityInformation<T, ?> jpaEntityInformation,
+        EntityManager entityManager, String dataDomain,
+        ResourceMod resourceMod) {
+        return new CustomAclExecutorImpl<>(resourceMod, jpaEntityInformation, entityManager, dataDomain);
+    }
+}
+```
 
+**Enable Repositories**
+```java
+@Configuration
+@EnableJpaRepositories(basePackages = "repositories.package.to.scan", repositoryFactoryBeanClass = AclJpaRepositoryFactoryBean.class)
+public class CustomConfiguration {}
+```
+
+**Naming Domain**
+```java
+@AclDataDomain(DatabaseObjectClass.TABLE_NAME)
+@Entity
+@Table(name = DatabaseObjectClass.TABLE_NAME)
+@Generated(value = DatabaseObjectClass.TABLE_NAME)
+public class DatabaseObjectClass<ID> extends AbstractAggregateRoot<ID> {
+    @Id
+    private ID id;
+}
 ```
 
 #### Query
 
-TODO
+> Suppose you have the following data object relationship structure as follows:
+```json lines
+{
+  id: 1,
+  name: {
+    first_name: "John",
+    last_name: "Doe"
+  },
+  parent: {
+    id: 2,
+    name: {
+      first_name: "xxx",
+      last_name: "xxx"
+    }
+  }
+}
+```
 
+**Pattern Matching**, limited to Match as Equal, but easier to use
 ```java
+// select * from person where first_name = 'xxx' and parent_id = '2' limit 10;
+public void patternMatching() {
+  IPageRequest<Person> iPageRequest = IPageRequest.of(1, 10);
+  Person condition = new Person();
+  Name name = new Name();
+  name.setFirstName("xxx");
+  condition.setName(name);
+  Person parent = new Person();
+  parent.setId("2");
+  condition.setParent(parent);
+  iPageRequest.setCondition(condition);
+  Page<Person> paging = PageUtils.paging(personRepository, iPageRequest);
+  PageInfoVO<Person> personPageInfoVO = PageUtils.pageInfoVO(paging, person -> person);
+}
+```
 
+**Query Builder**, flexible
+```java
+// select * from person where first_name like '%xxx%' and parent_id is null limit 10;
+public void queryBuilder() {
+  IPageRequest<Person> iPageRequest = IPageRequest.of(1, 10);
+  List<ConditionColumn> conditions = new ArrayList<>();
+  conditions.add(ConditionColumn.of("name.firstName", "xxx", MatchingType.CONTAINING));
+  conditions.add(ConditionColumn.of("parent.id", "2", MatchingType.NULL));
+  iPageRequest.setConditions(conditions);
+  Page<Person> paging = PageUtils.paging(personRepository, iPageRequest);
+  PageInfoVO<Person> personPageInfoVO = PageUtils.pageInfoVO(paging, person -> person);
+}
+```
 
+**Ordering**
+```java
+// select * from person order by id desc limit 10;
+public void ordering() {
+  IPageRequest<Person> iPageRequest = IPageRequest.of(1, 10);
+  List<OrderColumn> orders = new ArrayList<>();
+  orders.add(OrderColumn.of("id", true));
+  iPageRequest.setOrders(orders);
+  Page<Person> paging = PageUtils.paging(personRepository, iPageRequest);
+  PageInfoVO<Person> personPageInfoVO = PageUtils.pageInfoVO(paging, person -> person);
+}
+```
 
+**Example**
+```java
+@PostMapping("/list")
+public IResult<PageInfoVO<PersonVO>> list(@TextParam IPageRequest<Person> iPageRequest) {
+  Page<Person> paging = PageUtils.paging(personRepository, iPageRequest);
+  PageInfoVO<PersonVO> personPageInfoVO = PageUtils.pageInfoVO(paging, person -> person.toVO());
+  return IResult.ok(personPageInfoVO);
+}
+```
+
+```http request
+POST /list
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "page": 1,
+  "pageSize": 10,
+  "condition": {
+    "name": {
+      "firstName": "xxx"
+    },
+    "parent": {
+      "id": "2"
+    }
+  },
+  "orders": [
+    {
+      "column": "id",
+      "desc": true
+    }
+  ]
+}
 ```
