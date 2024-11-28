@@ -312,18 +312,18 @@ public class DatabaseObjectClass<ID> extends AbstractAggregateRoot<ID> {
 #### Query
 
 > Suppose you have the following data object relationship structure as follows:
-```json lines
+```json
 {
-  id: 1,
-  name: {
-    first_name: "John",
-    last_name: "Doe"
+  "id": 1,
+  "name": {
+    "first_name": "John",
+    "last_name": "Doe"
   },
-  parent: {
-    id: 2,
-    name: {
-      first_name: "xxx",
-      last_name: "xxx"
+  "parent": {
+    "id": 2,
+    "name": {
+      "first_name": "xxx",
+      "last_name": "xxx"
     }
   }
 }
