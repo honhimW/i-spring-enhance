@@ -10,8 +10,10 @@ import io.github.honhimw.spring.web.mvc.MvcHealthyCheckEndpointFilter;
 import io.github.honhimw.spring.web.mvc.MvcHttpLogFilter;
 import io.github.honhimw.spring.web.mvc.MvcTraceFilter;
 import io.github.honhimw.spring.web.reactive.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.boot.autoconfigure.context.MessageSourceProperties;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -19,6 +21,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.DelegatingMessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
@@ -30,6 +33,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -63,12 +67,27 @@ abstract class WebConfiguration {
         @ConditionalOnMissingBean(name = "i18nUtils")
         @ConditionalOnProperty(value = "i.spring.web.i18n", havingValue = "true", matchIfMissing = true)
         @ConditionalOnBean(MessageSource.class)
-        I18nUtils i18nUtils(ObjectProvider<MessageSource> messageSourceProvider) {
+        I18nUtils i18nUtils(ObjectProvider<MessageSource> messageSourceProvider, ObjectProvider<MessageSourceProperties> propertiesProvider) {
             MessageSource messageSource = messageSourceProvider.getIfUnique();
             if (messageSource instanceof ResourceBundleMessageSource resourceBundle) {
                 Set<String> basenameSet = resourceBundle.getBasenameSet();
                 String[] newBaseNameSet = Stream.concat(basenameSet.stream(), Stream.of("i18n/enhance_embedded")).toArray(String[]::new);
                 resourceBundle.setBasenames(newBaseNameSet);
+            } else if (messageSource instanceof DelegatingMessageSource emptyMessageSource && StringUtils.equalsIgnoreCase(String.valueOf(messageSource), "Empty MessageSource")) {
+                MessageSourceProperties properties = propertiesProvider.getIfAvailable(MessageSourceProperties::new);
+                ResourceBundleMessageSource resourceBundleMessageSource = new ResourceBundleMessageSource();
+                resourceBundleMessageSource.setBasename("i18n/enhance_embedded");
+                if (properties.getEncoding() != null) {
+                    resourceBundleMessageSource.setDefaultEncoding(properties.getEncoding().name());
+                }
+                resourceBundleMessageSource.setFallbackToSystemLocale(properties.isFallbackToSystemLocale());
+                Duration cacheDuration = properties.getCacheDuration();
+                if (cacheDuration != null) {
+                    resourceBundleMessageSource.setCacheMillis(cacheDuration.toMillis());
+                }
+                resourceBundleMessageSource.setAlwaysUseMessageFormat(properties.isAlwaysUseMessageFormat());
+                resourceBundleMessageSource.setUseCodeAsDefaultMessage(properties.isUseCodeAsDefaultMessage());
+                emptyMessageSource.setParentMessageSource(resourceBundleMessageSource);
             }
             return new I18nUtils();
         }

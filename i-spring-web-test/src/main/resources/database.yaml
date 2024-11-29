@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 2
+      idle-timeout: 30000
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+

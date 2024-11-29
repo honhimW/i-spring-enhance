@@ -1,10 +1,14 @@
+#debug: true
+
 spring:
   profiles:
     active: dev
   main:
     web-application-type: reactive
   config:
-    import: redis.yaml
+    import:
+      - redis.yaml
+      - database.yaml
   messages:
     basename: i18n/test
     use-code-as-default-message: true
