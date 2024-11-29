@@ -404,7 +404,7 @@ Content-Type: application/json
   },
   "orders": [
     {
-      "column": "id",
+      "name": "id",
       "desc": true
     }
   ]
