@@ -5,6 +5,7 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.Executors;
 
 /**
  * Do nothing.
@@ -19,6 +20,8 @@ import javax.annotation.Nonnull;
 public class BootstrapExecutor implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(@Nonnull ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        int cpuCore = Runtime.getRuntime().availableProcessors();
+        beanFactory.setBootstrapExecutor(Executors.newFixedThreadPool(4 * cpuCore));
     }
 
 }

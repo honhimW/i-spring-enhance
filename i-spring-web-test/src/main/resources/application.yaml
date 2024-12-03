@@ -1,5 +1,3 @@
-#debug: true
-
 spring:
   profiles:
     active: dev
@@ -9,9 +7,9 @@ spring:
     import:
       - redis.yaml
       - database.yaml
-  messages:
-    basename: i18n/test
-    use-code-as-default-message: true
+#  messages:
+#    basename: i18n/test
+#    use-code-as-default-message: true
   threads:
     virtual:
       enabled: true

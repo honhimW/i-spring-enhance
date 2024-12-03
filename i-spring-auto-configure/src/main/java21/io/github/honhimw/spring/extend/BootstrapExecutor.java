@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 public class BootstrapExecutor implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(@Nonnull ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        beanFactory.setBootstrapExecutor(Executors.newVirtualThreadPerTaskExecutor());
     }
 
 }

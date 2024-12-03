@@ -29,6 +29,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.*;
@@ -114,10 +115,6 @@ public class HttpUtils {
     private Function<String, URI> loadBalancedResolver;
 
     private void init(InitCustomizer customizer) {
-        SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder.create()
-            .setSslContext(SSLContexts.createDefault())
-            .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-            .setTlsVersions(TLS.V_1_3, TLS.V_1_2);
         SocketConfig.Builder socketConfigBuilder = SocketConfig.custom()
             .setSoTimeout(1, TimeUnit.MINUTES)
             .setSoKeepAlive(true);
@@ -137,7 +134,7 @@ public class HttpUtils {
         Initializer initializer = new Initializer(socketConfigBuilder, connectionConfigBuilder, poolingHttpClientConnectionManagerBuilder, httpClientBuilder, requestConfigBuilder, OBJECT_MAPPER);
         customizer.customize(initializer);
         connectionManager = poolingHttpClientConnectionManagerBuilder
-            .setSSLSocketFactory(sslConnectionSocketFactoryBuilder.build())
+            .setTlsSocketStrategy(DefaultClientTlsStrategy.createDefault())
             .setDefaultSocketConfig(socketConfigBuilder.build())
             .setDefaultConnectionConfig(connectionConfigBuilder.build())
             .build();
@@ -505,7 +502,7 @@ public class HttpUtils {
                 ctx = HttpClientContext.create();
                 ctx.setCookieStore(new BasicCookieStore());
             } else if (!(context instanceof HttpClientContext)) {
-                ctx = HttpClientContext.adapt(context);
+                ctx = HttpClientContext.castOrCreate(context);
                 ctx.setCookieStore(new BasicCookieStore());
             } else {
                 ctx = (HttpClientContext) context;
