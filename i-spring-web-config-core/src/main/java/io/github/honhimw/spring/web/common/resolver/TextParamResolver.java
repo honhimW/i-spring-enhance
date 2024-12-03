@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -76,7 +77,7 @@ public class TextParamResolver extends BaseParamResolver {
             }
         }
         injectCustom(paramNode, parameter, servletRequest);
-        Object parameterTarget = readValue(parameter, paramNode);
+        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, OBJECT_MAPPER);
 
         validate(parameterTarget, parameterAnnotation.excludesValidate());
         return parameterTarget;

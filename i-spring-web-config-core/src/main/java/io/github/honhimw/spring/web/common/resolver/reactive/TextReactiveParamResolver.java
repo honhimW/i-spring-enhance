@@ -8,6 +8,7 @@ import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.GZipUtils;
 import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -63,7 +64,7 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
                 }
             })
             .flatMap(objectNode -> injectCustom(objectNode, parameter, request).thenReturn(objectNode))
-            .map(objectNode -> readValue(parameter, objectNode))
+            .map(objectNode -> IResolvableTypeSupports.readValue(parameter, objectNode, OBJECT_MAPPER))
             .doOnNext(target -> validate(target, parameterAnnotation.excludesValidate()));
     }
 

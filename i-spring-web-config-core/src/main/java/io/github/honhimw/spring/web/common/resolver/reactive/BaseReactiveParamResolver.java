@@ -8,16 +8,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,20 +80,6 @@ public abstract class BaseReactiveParamResolver implements HandlerMethodArgument
             }
         }
         return mono;
-    }
-
-    protected Object readValue(MethodParameter parameter, ObjectNode node) {
-        try {
-            Class<?> parameterType = parameter.getParameterType();
-            if (CharSequence.class.isAssignableFrom(parameterType)) {
-                return node.toString();
-            }
-            Type genericParameterType = parameter.getGenericParameterType();
-            Type type = GenericTypeResolver.resolveType(genericParameterType, (Class<?>) null);
-            return OBJECT_MAPPER.treeToValue(node, OBJECT_MAPPER.getTypeFactory().constructType(type));
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
     }
 
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.annotation.resolver.FormDataParam;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
@@ -57,7 +58,7 @@ public class FormDataParamResolver extends BaseParamResolver {
         injectUriParam(paramNode, uriTemplateVars);
         injectCustom(paramNode, parameter, multipartHttpServletRequest);
 
-        Object parameterTarget = readValue(parameter, paramNode);
+        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, OBJECT_MAPPER);
 
         PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(parameterType);
         for (PropertyDescriptor pd : propertyDescriptors) {
