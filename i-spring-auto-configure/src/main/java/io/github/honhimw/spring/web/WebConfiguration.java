@@ -66,14 +66,14 @@ abstract class WebConfiguration {
         @Bean("i18nUtils")
         @ConditionalOnMissingBean(name = "i18nUtils")
         @ConditionalOnProperty(value = "i.spring.web.i18n", havingValue = "true", matchIfMissing = true)
-        @ConditionalOnBean(MessageSource.class)
+//        @ConditionalOnBean(MessageSource.class)
         I18nUtils i18nUtils(ObjectProvider<MessageSource> messageSourceProvider, ObjectProvider<MessageSourceProperties> propertiesProvider) {
             MessageSource messageSource = messageSourceProvider.getIfUnique();
             if (messageSource instanceof ResourceBundleMessageSource resourceBundle) {
                 Set<String> basenameSet = resourceBundle.getBasenameSet();
                 String[] newBaseNameSet = Stream.concat(basenameSet.stream(), Stream.of("i18n/enhance_embedded")).toArray(String[]::new);
                 resourceBundle.setBasenames(newBaseNameSet);
-            } else if (messageSource instanceof DelegatingMessageSource emptyMessageSource && StringUtils.equalsIgnoreCase(String.valueOf(messageSource), "Empty MessageSource")) {
+            } else {
                 MessageSourceProperties properties = propertiesProvider.getIfAvailable(MessageSourceProperties::new);
                 ResourceBundleMessageSource resourceBundleMessageSource = new ResourceBundleMessageSource();
                 resourceBundleMessageSource.setBasename("i18n/enhance_embedded");
@@ -87,7 +87,13 @@ abstract class WebConfiguration {
                 }
                 resourceBundleMessageSource.setAlwaysUseMessageFormat(properties.isAlwaysUseMessageFormat());
                 resourceBundleMessageSource.setUseCodeAsDefaultMessage(properties.isUseCodeAsDefaultMessage());
-                emptyMessageSource.setParentMessageSource(resourceBundleMessageSource);
+                if (messageSource instanceof DelegatingMessageSource emptyMessageSource && StringUtils.equalsIgnoreCase(String.valueOf(messageSource), "Empty MessageSource")) {
+                    emptyMessageSource.setParentMessageSource(resourceBundleMessageSource);
+                } else {
+                    I18nUtils i18nUtils = new I18nUtils();
+                    i18nUtils.setMessageSource(resourceBundleMessageSource);
+                    return i18nUtils;
+                }
             }
             return new I18nUtils();
         }

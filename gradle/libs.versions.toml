@@ -15,6 +15,7 @@ commons-net = "3.11.1"
 bcprov-jdk18on = "1.79"
 mapstruct = "1.6.3"
 lombok-mapstruct-binding = "0.2.0"
+hypersistence-utils-hibernate = "3.9.0"
 
 [libraries.io-micrometer-context-propagation]
 module = "io.micrometer:context-propagation"
@@ -67,3 +68,19 @@ version.ref = "mapstruct"
 [libraries.lombok-mapstruct-binding]
 module = "org.projectlombok:lombok-mapstruct-binding"
 version.ref = "lombok-mapstruct-binding"
+
+[libraries.hypersistence-utils-hibernate-63]
+module = "io.hypersistence:hypersistence-utils-hibernate-63"
+version.ref = "hypersistence-utils-hibernate"
+
+[libraries.hypersistence-utils-hibernate-62]
+module = "io.hypersistence:hypersistence-utils-hibernate-62"
+version.ref = "hypersistence-utils-hibernate"
+
+[libraries.hypersistence-utils-hibernate-60]
+module = "io.hypersistence:hypersistence-utils-hibernate-60"
+version.ref = "hypersistence-utils-hibernate"
+
+[libraries.hypersistence-utils-hibernate-55]
+module = "io.hypersistence:hypersistence-utils-hibernate-55"
+version.ref = "hypersistence-utils-hibernate"
