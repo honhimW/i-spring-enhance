@@ -6,7 +6,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -26,7 +25,7 @@ public class DateTimeUtils {
      */
     public static final ZoneOffset CST = UTC_PLUS_8;
 
-    public static final ZoneOffset DEFAULT_ZONE_OFFSET = UTC_PLUS_8;
+    public static ZoneOffset DEFAULT_ZONE_OFFSET = UTC_PLUS_8;
 
     public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
 
@@ -76,6 +75,14 @@ public class DateTimeUtils {
         return format(localDate, DEFAULT_DATE_FORMATTER);
     }
 
+    public static String format(LocalDateTime localDateTime) {
+        return format(localDateTime, DEFAULT_DATE_TIME_FORMATTER);
+    }
+
+    public static String format(Instant instant) {
+        return format(instant, DEFAULT_DATE_TIME_FORMATTER);
+    }
+
     public static String format(LocalDate localDate, String pattern) {
         return format(localDate, DateTimeFormatter.ofPattern(pattern));
     }
@@ -88,8 +95,8 @@ public class DateTimeUtils {
         return format(localDateTime, DateTimeFormatter.ofPattern(pattern));
     }
 
-    public static String format(LocalDateTime localDateTime) {
-        return localDateTime.format(DEFAULT_DATE_TIME_FORMATTER);
+    public static String format(Instant instant, String pattern) {
+        return format(instant, DateTimeFormatter.ofPattern(pattern));
     }
 
     public static String format(LocalDate localDate, DateTimeFormatter formatter) {
@@ -104,6 +111,10 @@ public class DateTimeUtils {
         return localDateTime.format(formatter);
     }
 
+    public static String format(Instant instant, DateTimeFormatter formatter) {
+        return instant.atOffset(DEFAULT_ZONE_OFFSET).format(formatter);
+    }
+
     /**
      * ==================================================================================
      * String to Time
@@ -113,8 +124,12 @@ public class DateTimeUtils {
         return LocalDateTime.parse(dateTimeString, DEFAULT_DATE_TIME_FORMATTER);
     }
 
+    public static Instant parseInstant(String dateTimeString) {
+        return parseInstant(dateTimeString, DEFAULT_DATE_TIME_PATTERN);
+    }
+
     public static LocalDateTime parseLocalDateTime(Date date) {
-        SimpleDateFormat simpleFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA);
+        SimpleDateFormat simpleFormat = new SimpleDateFormat(DEFAULT_DATE_TIME_PATTERN);
         String dateTimeString = simpleFormat.format(date);
         return LocalDateTime.parse(dateTimeString, DEFAULT_DATE_TIME_FORMATTER);
     }
@@ -131,6 +146,11 @@ public class DateTimeUtils {
         return LocalDateTime.parse(dateTimeString, DateTimeFormatter.ofPattern(pattern));
     }
 
+    public static Instant parseInstant(String dateTimeString, String pattern) {
+        LocalDateTime localDateTime = parseLocalDateTime(dateTimeString, pattern);
+        return localDateTime.toInstant(DEFAULT_ZONE_OFFSET);
+    }
+
     public static LocalDateTime toLocalDateTime(Date date) {
         return LocalDateTime.ofInstant(date.toInstant(), getSystemOffset());
     }
@@ -140,7 +160,7 @@ public class DateTimeUtils {
     }
 
     public static boolean equal(LocalDateTime localDateTime, Date date) {
-        return localDateTime.toInstant(getSystemOffset()).equals(date.toInstant());
+        return localDateTime.toInstant(DEFAULT_ZONE_OFFSET).equals(date.toInstant());
     }
 
 

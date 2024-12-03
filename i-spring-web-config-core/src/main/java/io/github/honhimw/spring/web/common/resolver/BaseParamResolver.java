@@ -9,6 +9,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -88,8 +89,8 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
                 return node.toString();
             }
             Type genericParameterType = parameter.getGenericParameterType();
-
-            return OBJECT_MAPPER.treeToValue(node, OBJECT_MAPPER.getTypeFactory().constructType(genericParameterType));
+            Type type = GenericTypeResolver.resolveType(genericParameterType, (Class<?>) null);
+            return OBJECT_MAPPER.treeToValue(node, OBJECT_MAPPER.getTypeFactory().constructType(type));
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
