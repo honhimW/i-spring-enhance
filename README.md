@@ -214,7 +214,7 @@ public class YourEntity extends AbstractAR<YourEntity, String> {
 **Subscribe Entity Event with Spring Event**
 ```java
 @Component
-public class YourListener extends AbstractListener {
+public class YourListener extends DomainListenerSupports {
     @EventListener
     public void appEvent(YourEvent event) {
          afterInsert(event)
