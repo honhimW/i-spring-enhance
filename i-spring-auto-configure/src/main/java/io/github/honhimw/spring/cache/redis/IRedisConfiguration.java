@@ -1,12 +1,10 @@
 package io.github.honhimw.spring.cache.redis;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.cache.ICacheProperties;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactory;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactoryImpl;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisUtils;
-import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,8 +25,6 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import reactor.core.publisher.Mono;
 
-import java.util.TimeZone;
-
 /**
  * @author hon_him
  * @since 2022-06-16
@@ -47,14 +43,6 @@ public class IRedisConfiguration {
     public IRedisConfiguration(Environment environment, ICacheProperties iCacheProperties) {
         this.environment = environment;
         this.iCacheProperties = iCacheProperties;
-    }
-
-    @Bean(name = "redisObjectMapper")
-    @ConditionalOnMissingBean(name = "redisObjectMapper")
-    ObjectMapper redisObjectMapper() {
-        return JsonUtils.mapper().copy()
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .setTimeZone(TimeZone.getDefault());
     }
 
     @Bean(name = "redisKeySerializer")
@@ -81,14 +69,14 @@ public class IRedisConfiguration {
 
     @Bean(name = "redisValueSerializer")
     @ConditionalOnMissingBean(name = "redisValueSerializer")
-    Jackson2JsonRedisSerializer<Object> redisValueSerializer() {
-        return new Jackson2JsonRedisSerializer<>(redisObjectMapper(), Object.class);
+    Jackson2JsonRedisSerializer<Object> redisValueSerializer(ObjectMapper objectMapper) {
+        return new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
     }
 
     @Bean(name = "redisJacksonTemplateFactory")
     @ConditionalOnMissingBean(RedisJacksonTemplateFactory.class)
-    RedisJacksonTemplateFactory redisJacksonTemplateFactory(RedisConnectionFactory redisConnectionFactory) {
-        return new RedisJacksonTemplateFactoryImpl(redisConnectionFactory, redisKeySerializer(), redisObjectMapper());
+    RedisJacksonTemplateFactory redisJacksonTemplateFactory(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
+        return new RedisJacksonTemplateFactoryImpl(redisConnectionFactory, redisKeySerializer(), objectMapper);
     }
 
     @Bean(name = "jacksonValueRedisTemplate")
@@ -132,8 +120,8 @@ public class IRedisConfiguration {
 
         @Bean(name = "r2edisJacksonTemplateFactory")
         @ConditionalOnMissingBean(R2edisJacksonTemplateFactory.class)
-        R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
-            return new R2edisJacksonTemplateFactoryImpl(reactiveRedisConnectionFactory, redisKeySerializer(), redisObjectMapper());
+        R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory(ReactiveRedisConnectionFactory reactiveRedisConnectionFactory, ObjectMapper objectMapper) {
+            return new R2edisJacksonTemplateFactoryImpl(reactiveRedisConnectionFactory, redisKeySerializer(), objectMapper);
         }
 
         @Bean(name = "r2JacksonValueRedisTemplate")

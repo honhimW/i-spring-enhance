@@ -30,8 +30,6 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
 import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
@@ -39,11 +37,9 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
-import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 
@@ -481,11 +477,11 @@ public class HttpUtils {
             return this;
         }
 
-        public Configurer body(Consumer<BodyModel> configurer) {
+        public Configurer body(Consumer<Body> configurer) {
             if (Objects.isNull(httpEntity)) {
-                BodyModel bodyModel = new BodyModel();
+                Body bodyModel = new Body();
                 configurer.accept(bodyModel);
-                Body body = bodyModel.getBody();
+                AbstractBody<?> body = bodyModel.getBody();
                 if (Objects.nonNull(body)) {
                     httpEntity = body.toEntity(this.charset);
                     if (StringUtils.isNotBlank(body.contentType())) {
@@ -516,36 +512,37 @@ public class HttpUtils {
         }
 
         @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class BodyModel {
+        public static class Body {
 
-            private Body body;
+            private AbstractBody<?> body;
 
-            protected Body getBody() {
+            protected AbstractBody<?> getBody() {
                 return body;
             }
 
-            public BodyModel raw(Consumer<RawBodyModel> configurer) {
-                return type(RawBodyModel::new, configurer);
+            public Body raw(Consumer<Raw> configurer) {
+                return type(Raw::new, configurer);
             }
 
-            public BodyModel formData(Consumer<FormDataBodyModel> configurer) {
-                return type(FormDataBodyModel::new, configurer);
+            public Body formData(Consumer<FormData> configurer) {
+                return type(FormData::new, configurer);
             }
 
-            public BodyModel binary(Consumer<BinaryBodyModel> configurer) {
-                return type(BinaryBodyModel::new, configurer);
+            public Body binary(Consumer<Binary> configurer) {
+                return type(Binary::new, configurer);
             }
 
-            public BodyModel formUrlEncoded(Consumer<FormUrlEncodedBodyModel> configurer) {
-                return type(FormUrlEncodedBodyModel::new, configurer);
+            public Body formUrlEncoded(Consumer<FormUrlEncoded> configurer) {
+                return type(FormUrlEncoded::new, configurer);
             }
 
-            public <T extends Body> BodyModel type(Supplier<T> buildable, Consumer<T> configurer) {
+            public <T extends AbstractBody<T>> Body type(Supplier<T> buildable, Consumer<T> configurer) {
                 Objects.requireNonNull(buildable);
                 Objects.requireNonNull(configurer);
                 if (Objects.isNull(body)) {
                     T built = buildable.get();
                     if (Objects.nonNull(built)) {
+                        built.init();
                         configurer.accept(built);
                         body = built;
                     }
@@ -555,18 +552,56 @@ public class HttpUtils {
         }
 
 
-        public static abstract class Body {
+        public static abstract class AbstractBody<I extends AbstractBody<I>> {
+
+            protected ContentType contentType;
+
+            private boolean withCharset = false;
+
             protected void init() {
 
             }
 
-            protected abstract String contentType();
+            /**
+             * Content type with or without charset. default: false
+             * For example:
+             * with: "application/json; charset=utf-8"
+             * without: "application/json"
+             *
+             * @param withCharset true for with charset, false for without
+             * @return this
+             */
+            @SuppressWarnings("unchecked")
+            public I withCharset(boolean withCharset) {
+                this.withCharset = withCharset;
+                return (I) this;
+            }
+
+            /**
+             * Most of the time you won't need to set the content type manually.
+             * If you do need to set the content type manually, call this method after the body is built.
+             * Because the content type is set automatically while building the body.
+             *
+             * @param contentType custom content type
+             * @return this
+             */
+            @SuppressWarnings("unchecked")
+            public I contentType(ContentType contentType) {
+                this.contentType = contentType;
+                return (I) this;
+            }
+
+            protected String contentType() {
+                return Optional.ofNullable(contentType)
+                    .map(ct -> withCharset ? ct.toString() : ct.getMimeType())
+                    .orElse(null);
+            }
 
             protected abstract HttpEntity toEntity(Charset charset);
         }
 
 
-        public static class RawBodyModel extends Body {
+        public static class Raw extends AbstractBody<Raw> {
 
             public static final ContentType TEXT_PLAIN = ContentType.TEXT_PLAIN;
             public static final ContentType APPLICATION_JSON = ContentType.APPLICATION_JSON;
@@ -575,19 +610,19 @@ public class HttpUtils {
 
             private String raw;
 
-            private ContentType contentType = TEXT_PLAIN;
-
-            @Override
-            protected String contentType() {
-                return Optional.ofNullable(contentType).map(ContentType::getMimeType).orElse(null);
+            public Raw() {
+                super.contentType = TEXT_PLAIN;
             }
 
             @Override
             protected HttpEntity toEntity(Charset charset) {
+                if (Objects.nonNull(contentType)) {
+                    contentType = contentType.withCharset(charset);
+                }
                 return new StringEntity(raw, charset);
             }
 
-            public RawBodyModel text(String text) {
+            public Raw text(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
                     this.contentType = TEXT_PLAIN;
@@ -595,7 +630,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public RawBodyModel json(String text) {
+            public Raw json(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
                     this.contentType = APPLICATION_JSON;
@@ -603,7 +638,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public RawBodyModel json(Object obj) {
+            public Raw json(Object obj) {
                 if (Objects.isNull(raw) && Objects.nonNull(obj)) {
                     try {
                         this.raw = OBJECT_MAPPER.writeValueAsString(obj);
@@ -615,7 +650,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public RawBodyModel html(String text) {
+            public Raw html(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
                     this.contentType = TEXT_HTML;
@@ -623,7 +658,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public RawBodyModel xml(String text) {
+            public Raw xml(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
                     this.contentType = APPLICATION_XML;
@@ -632,16 +667,11 @@ public class HttpUtils {
             }
         }
 
-        public static class BinaryBodyModel extends Body {
+        public static class Binary extends AbstractBody<Binary> {
 
             private ContentType contentType;
 
             private Supplier<byte[]> bytesSupplier;
-
-            @Override
-            protected String contentType() {
-                return Optional.ofNullable(contentType).map(ContentType::getMimeType).orElse(null);
-            }
 
             @Override
             protected HttpEntity toEntity(Charset charset) {
@@ -651,7 +681,7 @@ public class HttpUtils {
                     .orElse(null);
             }
 
-            public BinaryBodyModel file(File file) {
+            public Binary file(File file) {
                 if (Objects.isNull(bytesSupplier)) {
                     bytesSupplier = () -> {
                         try {
@@ -664,14 +694,14 @@ public class HttpUtils {
                 return this;
             }
 
-            public BinaryBodyModel bytes(byte[] bytes) {
+            public Binary bytes(byte[] bytes) {
                 if (Objects.isNull(bytesSupplier)) {
                     this.bytesSupplier = () -> bytes;
                 }
                 return this;
             }
 
-            public BinaryBodyModel inputStream(InputStream ips) {
+            public Binary inputStream(InputStream ips) {
                 if (Objects.isNull(bytesSupplier)) {
                     this.bytesSupplier = () -> {
                         try {
@@ -684,7 +714,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public BinaryBodyModel file(File file, ContentType contentType) {
+            public Binary file(File file, ContentType contentType) {
                 if (Objects.isNull(bytesSupplier)) {
                     bytesSupplier = () -> {
                         try {
@@ -698,7 +728,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public BinaryBodyModel bytes(byte[] bytes, ContentType contentType) {
+            public Binary bytes(byte[] bytes, ContentType contentType) {
                 if (Objects.isNull(bytesSupplier)) {
                     this.bytesSupplier = () -> bytes;
                     this.contentType = contentType;
@@ -706,7 +736,7 @@ public class HttpUtils {
                 return this;
             }
 
-            public BinaryBodyModel inputStream(InputStream ips, ContentType contentType) {
+            public Binary inputStream(InputStream ips, ContentType contentType) {
                 if (Objects.isNull(bytesSupplier)) {
                     this.bytesSupplier = () -> {
                         try {
@@ -722,16 +752,14 @@ public class HttpUtils {
 
         }
 
-        public static class FormDataBodyModel extends Body {
+        public static class FormData extends AbstractBody<FormData> {
 
             public static final ContentType MULTIPART_FORM_DATA = ContentType.MULTIPART_FORM_DATA;
 
             private final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 
-            @Override
-            protected String contentType() {
-                return null;
-//                return Optional.ofNullable(MULTIPART_FORM_DATA).map(ContentType::getMimeType).orElse(null);
+            public FormData() {
+                super.contentType = null;
             }
 
             @Override
@@ -739,65 +767,67 @@ public class HttpUtils {
                 return builder.setCharset(charset).setContentType(ContentType.MULTIPART_FORM_DATA).build();
             }
 
-            public FormDataBodyModel text(String name, String value) {
+            public FormData text(String name, String value) {
                 builder.addTextBody(name, value, MULTIPART_FORM_DATA);
                 return this;
             }
 
-            public FormDataBodyModel file(String name, File file) {
+            public FormData file(String name, File file) {
                 builder.addBinaryBody(name, file, MULTIPART_FORM_DATA, name);
                 return this;
             }
 
-            public FormDataBodyModel bytes(String name, byte[] bytes) {
+            public FormData bytes(String name, byte[] bytes) {
                 builder.addBinaryBody(name, bytes, MULTIPART_FORM_DATA, name);
                 return this;
             }
 
-            public FormDataBodyModel inputStream(String name, InputStream ips) {
+            public FormData inputStream(String name, InputStream ips) {
                 builder.addBinaryBody(name, ips, MULTIPART_FORM_DATA, name);
                 return this;
             }
 
-            public FormDataBodyModel text(String name, String value, ContentType contentType) {
+            public FormData text(String name, String value, ContentType contentType) {
                 builder.addTextBody(name, value, contentType);
                 return this;
             }
 
-            public FormDataBodyModel file(String name, File file, ContentType contentType, String fileName) {
+            public FormData file(String name, File file, ContentType contentType, String fileName) {
                 builder.addBinaryBody(name, file, contentType, fileName);
                 return this;
             }
 
-            public FormDataBodyModel bytes(String name, byte[] bytes, ContentType contentType, String fileName) {
+            public FormData bytes(String name, byte[] bytes, ContentType contentType, String fileName) {
                 builder.addBinaryBody(name, bytes, contentType, fileName);
                 return this;
             }
 
-            public FormDataBodyModel inputStream(String name, InputStream ips, ContentType contentType, String fileName) {
+            public FormData inputStream(String name, InputStream ips, ContentType contentType, String fileName) {
                 builder.addBinaryBody(name, ips, contentType, fileName);
                 return this;
             }
 
         }
 
-        public static class FormUrlEncodedBodyModel extends Body {
+        public static class FormUrlEncoded extends AbstractBody<FormUrlEncoded> {
 
             public static final ContentType APPLICATION_FORM_URLENCODED = ContentType.APPLICATION_FORM_URLENCODED;
 
             private final List<NameValuePair> nameValuePairs = new ArrayList<>();
 
-            @Override
-            protected String contentType() {
-                return Optional.ofNullable(APPLICATION_FORM_URLENCODED).map(ContentType::getMimeType).orElse(null);
+            public FormUrlEncoded() {
+                super.contentType = ContentType.APPLICATION_FORM_URLENCODED;
             }
 
             @Override
             protected HttpEntity toEntity(Charset charset) {
+                if (Objects.nonNull(contentType)) {
+                    contentType = contentType.withCharset(charset);
+                }
                 return new UrlEncodedFormEntity(nameValuePairs, charset);
             }
 
-            public FormUrlEncodedBodyModel text(String name, String value) {
+            public FormUrlEncoded text(String name, String value) {
                 BasicNameValuePair basicNameValuePair = new BasicNameValuePair(name, value);
                 nameValuePairs.add(basicNameValuePair);
                 return this;

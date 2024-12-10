@@ -13,6 +13,7 @@ import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -35,6 +36,12 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 @Slf4j
 public class TextParamResolver extends BaseParamResolver {
+
+    protected final AbstractJackson2HttpMessageConverter jackson2HttpMessageConverter;
+
+    public TextParamResolver(AbstractJackson2HttpMessageConverter jackson2HttpMessageConverter) {
+        this.jackson2HttpMessageConverter = jackson2HttpMessageConverter;
+    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -61,7 +68,7 @@ public class TextParamResolver extends BaseParamResolver {
         Class<?> parameterType = parameter.getParameterType();
         assertBaseType(parameterType);
 
-        ObjectNode paramNode = OBJECT_MAPPER.createObjectNode();
+        ObjectNode paramNode = jackson2HttpMessageConverter.getObjectMapper().createObjectNode();
 
         injectParameterMap(paramNode, parameterMap);
         injectUriParam(paramNode, uriTemplateVars);
@@ -77,14 +84,14 @@ public class TextParamResolver extends BaseParamResolver {
             }
         }
         injectCustom(paramNode, parameter, servletRequest);
-        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, OBJECT_MAPPER);
+        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, jackson2HttpMessageConverter.getObjectMapper());
 
         validate(parameterTarget, parameterAnnotation.excludesValidate());
         return parameterTarget;
     }
 
     protected void injectBodyParam(ObjectNode objectNode, String jsonBody) throws JsonProcessingException {
-        JsonNode jsonNode = OBJECT_MAPPER.readTree(jsonBody);
+        JsonNode jsonNode = jackson2HttpMessageConverter.getObjectMapper().readTree(jsonBody);
         if (jsonNode instanceof ObjectNode bodyNode) {
             objectNode.setAll(bodyNode);
         }

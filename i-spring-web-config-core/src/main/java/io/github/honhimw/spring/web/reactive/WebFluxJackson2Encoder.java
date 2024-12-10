@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.reactive;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
-import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ResolvableType;
@@ -21,7 +19,6 @@ import org.springframework.core.codec.EncodingException;
 import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.Jackson2CodecSupport;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.lang.Nullable;
@@ -36,7 +33,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * @author hon_him
@@ -46,13 +42,6 @@ import java.util.TimeZone;
 public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
 
     private static final ResolvableType STRING = ResolvableType.forClass(String.class);
-
-    public WebFluxJackson2Encoder() {
-        this(JsonUtils.mapper().copy()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setTimeZone(TimeZone.getDefault())
-            , MediaType.APPLICATION_JSON);
-    }
 
     public WebFluxJackson2Encoder(ObjectMapper mapper, MimeType... mimeTypes) {
         super(mapper, mimeTypes);

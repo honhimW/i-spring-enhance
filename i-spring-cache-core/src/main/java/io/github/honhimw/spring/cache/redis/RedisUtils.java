@@ -188,6 +188,7 @@ public class RedisUtils implements ApplicationContextAware {
         return writeRedisTemplate.expire(key, ttl);
     }
 
+    @SuppressWarnings("all")
     @Nullable
     public static Duration getExpire(String key) {
         Long expire = writeRedisTemplate.getExpire(key, TimeUnit.MILLISECONDS);

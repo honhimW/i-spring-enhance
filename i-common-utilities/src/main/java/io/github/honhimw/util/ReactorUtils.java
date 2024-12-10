@@ -21,8 +21,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * @author whq
- * @since 2021/8/30
+ * @author hon_him
+ * @since 2021-08-30
  */
 @SuppressWarnings("unused")
 @Slf4j

@@ -1,13 +1,14 @@
 package io.github.honhimw.spring.web.reactive;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.honhimw.util.JsonUtils;
-import org.springframework.http.MediaType;
+import com.fasterxml.jackson.databind.ObjectReader;
+import jakarta.annotation.Nonnull;
+import org.springframework.core.IResolvableTypeSupports;
+import org.springframework.core.ResolvableType;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
 import org.springframework.util.MimeType;
 
-import java.util.TimeZone;
+import java.util.Map;
 
 /**
  * @author hon_him
@@ -16,15 +17,14 @@ import java.util.TimeZone;
 
 public class WebFluxJackson2Decoder extends AbstractJackson2Decoder {
 
-    public WebFluxJackson2Decoder() {
-        this(JsonUtils.mapper().copy()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setTimeZone(TimeZone.getDefault())
-            , MediaType.APPLICATION_JSON);
-    }
-
     public WebFluxJackson2Decoder(ObjectMapper mapper, MimeType... mimeTypes) {
         super(mapper, mimeTypes);
+    }
+
+    @Nonnull
+    @Override
+    protected ObjectReader customizeReader(ObjectReader reader, @Nonnull ResolvableType elementType, Map<String, Object> hints) {
+        return reader.forType(IResolvableTypeSupports.resolve(elementType).getType());
     }
 
 }

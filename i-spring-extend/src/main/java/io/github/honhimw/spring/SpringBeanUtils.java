@@ -12,6 +12,7 @@ import org.springframework.util.ClassUtils;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * @author hon_him
@@ -53,6 +54,8 @@ public class SpringBeanUtils implements ApplicationContextAware {
      * Get bean from applicationContext by bean type
      *
      * @param clazz unique bean of type
+     * @param <T>   bean type
+     * @return bean
      * @see ApplicationContext#getBean(Class)
      */
     @Nullable
@@ -61,6 +64,21 @@ public class SpringBeanUtils implements ApplicationContextAware {
             .map(context -> context.getBeanProvider(clazz))
             .map(ObjectProvider::getIfAvailable)
             .orElse(null);
+    }
+
+    /**
+     * Get bean provider from applicationContext by bean type
+     *
+     * @param clazz bean type
+     * @param <T>   bean type
+     * @return bean provider
+     */
+    @Nonnull
+    public static <T> ObjectProvider<T> getBeanProvider(Class<T> clazz) {
+        if (_context == null) {
+            return EmptyObjectProvider.getInstance();
+        }
+        return _context.getBeanProvider(clazz);
     }
 
     /**
@@ -77,10 +95,14 @@ public class SpringBeanUtils implements ApplicationContextAware {
     }
 
     public static String getProperty(String key) {
+        return getProperty(key, () -> null);
+    }
+
+    public static String getProperty(String key, Supplier<String> defaultValue) {
         return Optional.ofNullable(_context)
             .map(EnvironmentCapable::getEnvironment)
             .map(environment -> environment.getProperty(key))
-            .orElse(null);
+            .orElseGet(defaultValue);
     }
 
     public static boolean isWeb() {

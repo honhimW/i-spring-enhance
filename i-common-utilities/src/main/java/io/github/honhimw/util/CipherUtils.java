@@ -55,7 +55,7 @@ public class CipherUtils {
      */
     public static byte[] encryptByRsa(byte[] content, String publicKey) {
         try {
-            PublicKey _publicKey = io.github.honhimw.util.KeyUtils.getPublicKeyFromX509("RSA", publicKey);
+            PublicKey _publicKey = KeyUtils.getPublicKeyFromX509("RSA", publicKey);
             Cipher rsaCipher = Cipher.getInstance("RSA");
             rsaCipher.init(Cipher.ENCRYPT_MODE, _publicKey);
             return rsaCipher.doFinal(content);
@@ -73,7 +73,7 @@ public class CipherUtils {
      */
     public static byte[] encryptByEcc(byte[] content, String publicKey) {
         try {
-            PublicKey _publicKey = io.github.honhimw.util.KeyUtils.getPublicKeyFromX509("EC", publicKey);
+            PublicKey _publicKey = KeyUtils.getPublicKeyFromX509("EC", publicKey);
             Cipher eccCipher = Cipher.getInstance("ECIES", "BC");
             eccCipher.init(Cipher.ENCRYPT_MODE, _publicKey);
             return eccCipher.doFinal(content);
@@ -91,7 +91,7 @@ public class CipherUtils {
      */
     public static Map.Entry<String, String> encryptByRsaAndAes(byte[] content, String publicKey) {
         try {
-            PublicKey _publicKey = io.github.honhimw.util.KeyUtils.getPublicKeyFromX509("RSA", publicKey);
+            PublicKey _publicKey = KeyUtils.getPublicKeyFromX509("RSA", publicKey);
             // Generate a AES key
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256);
@@ -127,7 +127,7 @@ public class CipherUtils {
      */
     public static Map.Entry<String, String> encryptByEccAndAes(byte[] content, String publicKey) {
         try {
-            PublicKey _publicKey = io.github.honhimw.util.KeyUtils.getPublicKeyFromX509("EC", publicKey);
+            PublicKey _publicKey = KeyUtils.getPublicKeyFromX509("EC", publicKey);
             // Generate a AES key
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256);

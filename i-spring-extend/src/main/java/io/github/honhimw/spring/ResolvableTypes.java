@@ -1,5 +1,6 @@
-package io.github.honhimw.spring.web.util;
+package io.github.honhimw.spring;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.core.ResolvableType;
 
 import java.util.Collection;
@@ -18,5 +19,8 @@ public class ResolvableTypes {
 
     public static final ResolvableType STRING_TYPE = ResolvableType.forType(String.class);
 
+    public static final ResolvableType CHAR_SEQUENCE_TYPE = ResolvableType.forType(CharSequence.class);
+
+    public static final ResolvableType OBJECT_NODE_TYPE = ResolvableType.forType(ObjectNode.class);
 
 }

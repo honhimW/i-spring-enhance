@@ -133,9 +133,9 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(ReactiveHttpUtils.class);
 
-    private static ObjectMapper OBJECT_MAPPER = JsonUtils.mapper();
+    private ObjectMapper OBJECT_MAPPER;
 
-    public static void setObjectMapper(ObjectMapper objectMapper) {
+    public void setObjectMapper(ObjectMapper objectMapper) {
         Objects.requireNonNull(objectMapper);
         OBJECT_MAPPER = objectMapper;
     }
@@ -275,6 +275,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     private void init() {
         init(RequestConfig.DEFAULT_CONFIG);
+        OBJECT_MAPPER = JsonUtils.mapper();
     }
 
     @SuppressWarnings("resource")
@@ -678,7 +679,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
             client = client.headers(entries -> configurer.headers.forEach(entries::add));
         }
 
-        Configurer.Body body = Optional.ofNullable(configurer.bodyConfigurer)
+        Configurer.AbstractBody<?> body = Optional.ofNullable(configurer.bodyConfigurer)
             .map(bodyModelConsumer -> {
                 Configurer.Payload payload = new Configurer.Payload();
                 bodyModelConsumer.accept(payload);
@@ -1305,14 +1306,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
         @NoArgsConstructor(access = AccessLevel.PRIVATE)
         public static class Payload {
 
-            private Body body;
+            private AbstractBody<?> body;
 
             /**
              * Get configured body
              *
              * @return configured body
              */
-            protected Body getBody() {
+            protected AbstractBody<?> getBody() {
                 return body;
             }
 
@@ -1364,7 +1365,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @param <T>        Body type
              * @return this
              */
-            public <T extends Body> Payload type(
+            public <T extends AbstractBody<T>> Payload type(
                 Supplier<T> buildable, Consumer<T> configurer) {
                 Objects.requireNonNull(buildable);
                 Objects.requireNonNull(configurer);
@@ -1382,7 +1383,9 @@ public class ReactiveHttpUtils implements AutoCloseable {
         /**
          * Payload body abstract class
          */
-        public static abstract class Body {
+        public static abstract class AbstractBody<I extends AbstractBody<I>> {
+
+            protected String contentType;
 
             /**
              * Body initialize
@@ -1392,11 +1395,28 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             /**
+             * Note: May not work in some cases, netty-http will set automatically.
+             * Most of the time you won't need to set the content type manually.
+             * If you do need to set the content type manually, call this method after the body is built.
+             * Because the content type is set automatically while building the body.
+             *
+             * @param contentType custom content type
+             * @return this
+             */
+            @SuppressWarnings("unchecked")
+            public I contentType(String contentType) {
+                this.contentType = contentType;
+                return (I) this;
+            }
+
+            /**
              * Body payload content-type define
              *
              * @return content-type
              */
-            protected abstract String contentType();
+            protected String contentType() {
+                return contentType;
+            }
 
             /**
              * Do on sender.
@@ -1411,7 +1431,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
         /**
          * Raw type support
          */
-        public static class Raw extends Body {
+        public static class Raw extends AbstractBody<Raw> {
 
             /**
              * text/plain content-type
@@ -1432,11 +1452,10 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
             private String raw;
 
-            private String contentType = TEXT_PLAIN;
+            private ObjectMapper OBJECT_MAPPER;
 
-            @Override
-            protected String contentType() {
-                return contentType;
+            public Raw() {
+                super.contentType = TEXT_PLAIN;
             }
 
             @Override
@@ -1524,17 +1543,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
         /**
          * Binary payload body
          */
-        public static class Binary extends Body {
-
-            private String contentType;
+        public static class Binary extends AbstractBody<Binary> {
 
             private Supplier<byte[]> bytesSupplier;
 
             private Publisher<? extends ByteBuf> byteBufPublisher;
 
-            @Override
-            protected String contentType() {
-                return contentType;
+            public Binary() {
+                super.contentType = null;
             }
 
             @Override
@@ -1690,7 +1706,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
         /**
          * FormData payload body
          */
-        public static class FormData extends Body {
+        public static class FormData extends AbstractBody<FormData> {
 
             /**
              * multipart/form-data content-type
@@ -1699,9 +1715,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
             private final List<Function<HttpClientForm, HttpClientForm>> parts = new ArrayList<>();
 
-            @Override
-            protected String contentType() {
-                return MULTIPART_FORM_DATA;
+            public FormData() {
+                super.contentType = null;
             }
 
             @Override
@@ -1820,7 +1835,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
         /**
          * Form url encoded payload body
          */
-        public static class FormUrlEncoded extends Body {
+        public static class FormUrlEncoded extends AbstractBody<FormUrlEncoded> {
 
             /**
              * application/x-www-form-urlencoded content-type
@@ -1829,9 +1844,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
             private final List<Entry<String, String>> pairs = new ArrayList<>();
 
-            @Override
-            protected String contentType() {
-                return APPLICATION_FORM_URLENCODED;
+            public FormUrlEncoded() {
+                super.contentType = APPLICATION_FORM_URLENCODED;
             }
 
             @Override
@@ -2109,8 +2123,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
             });
             byte[] content = byteMono.block();
             if (log.isDebugEnabled()) {
-                log.debug("response: cost=" + (System.currentTimeMillis() - start) + "ms, code="
-                          + httpResult.getStatusCode() + ", length=" + httpResult.contentLength);
+                log.debug("response: cost={}ms, code={}, length={}", System.currentTimeMillis() - start, httpResult.getStatusCode(), httpResult.contentLength);
             }
             httpResult.setContent(content);
             return httpResult;

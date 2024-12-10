@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.mvc;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,7 +8,6 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
-import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -22,7 +20,6 @@ import org.springframework.util.TypeUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.util.TimeZone;
 
 /**
  * @author hon_him
@@ -30,14 +27,6 @@ import java.util.TimeZone;
  */
 
 public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
-
-    public MvcJackson2HttpMessageConverter() {
-        this(JsonUtils.mapper()
-                .copy()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .setTimeZone(TimeZone.getDefault())
-            , MediaType.APPLICATION_JSON);
-    }
 
     public MvcJackson2HttpMessageConverter(ObjectMapper objectMapper,
                                            MediaType supportedMediaType) {

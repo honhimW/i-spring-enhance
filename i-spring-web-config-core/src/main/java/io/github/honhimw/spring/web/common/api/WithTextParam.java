@@ -1,10 +1,6 @@
 package io.github.honhimw.spring.web.common.api;
 
-import io.github.honhimw.core.BatchIdRequest;
-import io.github.honhimw.core.IPageRequest;
-import io.github.honhimw.core.IResult;
-import io.github.honhimw.core.IdRequest;
-import io.github.honhimw.core.PageInfoVO;
+import io.github.honhimw.core.*;
 import io.github.honhimw.core.api.DefaultCRUD;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 

@@ -2,6 +2,7 @@ package org.springframework.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.honhimw.spring.ResolvableTypes;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -19,7 +20,25 @@ public class IResolvableTypeSupports {
             if (CharSequence.class.isAssignableFrom(parameterType)) {
                 return node.toString();
             }
-            ResolvableType resolvableType = IResolvableTypeSupports.resolve(parameter);
+
+            ResolvableType bodyType = ResolvableType.forMethodParameter(parameter);
+            Class<?> resolvedType = bodyType.resolve();
+            ReactiveAdapter adapter = (resolvedType != null ? ReactiveAdapterRegistry.getSharedInstance().getAdapter(resolvedType) : null);
+            ResolvableType elementType = (adapter != null ? bodyType.getGeneric() : bodyType);
+            ResolvableType resolvableType = resolve(elementType);
+            Type type = resolvableType.getType();
+            return mapper.treeToValue(node, mapper.getTypeFactory().constructType(type));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Object readValue(ResolvableType elementType, ObjectNode node, ObjectMapper mapper) {
+        try {
+            if (ResolvableTypes.CHAR_SEQUENCE_TYPE.isAssignableFrom(elementType)) {
+                return mapper.writeValueAsString(node);
+            }
+            ResolvableType resolvableType = resolve(elementType);
             Type type = resolvableType.getType();
             return mapper.treeToValue(node, mapper.getTypeFactory().constructType(type));
         } catch (IOException e) {
@@ -29,6 +48,10 @@ public class IResolvableTypeSupports {
 
     public static ResolvableType resolve(MethodParameter methodParameter) {
         ResolvableType resolvableType = ResolvableType.forMethodParameter(methodParameter);
+        return resolve(resolvableType);
+    }
+
+    public static ResolvableType resolve(ResolvableType resolvableType) {
         ResolvableType resolveType = resolvableType.resolveType();
         if (resolveType == ResolvableType.NONE) {
             return resolvableType;

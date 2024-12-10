@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.*;
 
 /**
- * Http log filter
+ * MVC http log filter
  *
  * @author hon_him
  * @since 2024-11-20

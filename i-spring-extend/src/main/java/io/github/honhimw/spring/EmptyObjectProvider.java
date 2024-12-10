@@ -1,4 +1,4 @@
-package io.github.honhimw.spring.web.util;
+package io.github.honhimw.spring;
 
 import jakarta.annotation.Nullable;
 import org.springframework.beans.BeansException;

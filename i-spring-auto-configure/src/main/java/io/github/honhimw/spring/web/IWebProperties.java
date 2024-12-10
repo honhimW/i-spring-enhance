@@ -24,6 +24,8 @@ public class IWebProperties implements Serializable {
 
     private Boolean healthyCheckPoint = true;
 
+    private Boolean cors = true;
+
     private Boolean i18n = true;
 
     private Trace trace = new Trace();

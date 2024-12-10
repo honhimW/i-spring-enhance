@@ -46,7 +46,7 @@ public class IpUtils {
                         netip = inetAddress.getHostAddress();
                         break out;
                     } else if (inetAddress.isSiteLocalAddress() && !inetAddress.isLoopbackAddress()
-                        && type.isAssignableFrom(inetAddress.getClass())) {
+                               && type.isAssignableFrom(inetAddress.getClass())) {
                         localip = inetAddress.getHostAddress();
                     }
                 }

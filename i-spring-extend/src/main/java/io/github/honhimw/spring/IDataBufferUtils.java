@@ -27,7 +27,7 @@ public class IDataBufferUtils {
     private IDataBufferUtils() {
     }
 
-    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = new DefaultDataBufferFactory();
+    public static final DefaultDataBufferFactory DEFAULT_DATA_BUFFER_FACTORY = DefaultDataBufferFactory.sharedInstance;
 
     public static Mono<DataBuffer> wrap2Mono(String data) {
         return Mono.just(wrap(DEFAULT_DATA_BUFFER_FACTORY, data));

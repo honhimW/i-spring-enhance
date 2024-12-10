@@ -7,6 +7,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -29,6 +30,12 @@ import java.util.Objects;
  */
 public class FormDataParamResolver extends BaseParamResolver {
 
+    protected final AbstractJackson2HttpMessageConverter jackson2HttpMessageConverter;
+
+    public FormDataParamResolver(AbstractJackson2HttpMessageConverter jackson2HttpMessageConverter) {
+        this.jackson2HttpMessageConverter = jackson2HttpMessageConverter;
+    }
+
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(FormDataParam.class);
@@ -37,7 +44,7 @@ public class FormDataParamResolver extends BaseParamResolver {
     @SuppressWarnings("unchecked")
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-        NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         // URI vars
         Map<String, String> uriTemplateVars = (Map<String, String>) webRequest.getAttribute(
             HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
@@ -53,12 +60,12 @@ public class FormDataParamResolver extends BaseParamResolver {
         MultiValueMap<String, MultipartFile> multipartFileMultiValueMap = multipartHttpServletRequest
             .getMultiFileMap();
 
-        ObjectNode paramNode = OBJECT_MAPPER.createObjectNode();
+        ObjectNode paramNode = jackson2HttpMessageConverter.getObjectMapper().createObjectNode();
         injectParameterMap(paramNode, parameterMap);
         injectUriParam(paramNode, uriTemplateVars);
         injectCustom(paramNode, parameter, multipartHttpServletRequest);
 
-        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, OBJECT_MAPPER);
+        Object parameterTarget = IResolvableTypeSupports.readValue(parameter, paramNode, jackson2HttpMessageConverter.getObjectMapper());
 
         PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(parameterType);
         for (PropertyDescriptor pd : propertyDescriptors) {

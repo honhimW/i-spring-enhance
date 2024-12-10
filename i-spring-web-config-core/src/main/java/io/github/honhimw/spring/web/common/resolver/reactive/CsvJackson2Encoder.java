@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import io.github.honhimw.spring.web.util.ResolvableTypes;
+import io.github.honhimw.spring.ResolvableTypes;
 import jakarta.annotation.Nonnull;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;

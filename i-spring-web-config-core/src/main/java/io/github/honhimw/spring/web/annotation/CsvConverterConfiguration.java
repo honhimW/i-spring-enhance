@@ -1,12 +1,12 @@
 package io.github.honhimw.spring.web.annotation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import io.github.honhimw.spring.web.common.resolver.CsvHttpMessageConverter;
 import io.github.honhimw.spring.web.common.resolver.CsvPartMessageConverterProcessor;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvJackson2Encoder;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveFileResultHandler;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveParamResolver;
-import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,8 +44,8 @@ class CsvConverterConfiguration {
 
         @Bean("mvcCsvConverterConfiguration")
         @ConditionalOnMissingBean(name = "mvcCsvConverterConfiguration")
-        WebMvcConfigurer mvcCsvConverterConfiguration() {
-            CsvHttpMessageConverter converter = new CsvHttpMessageConverter(JsonUtils.mapper());
+        WebMvcConfigurer mvcCsvConverterConfiguration(ObjectMapper objectMapper) {
+            CsvHttpMessageConverter converter = new CsvHttpMessageConverter(objectMapper);
             CsvPartMessageConverterProcessor csvPartMessageConverterProcessor = new CsvPartMessageConverterProcessor(List.of(converter));
             return new WebMvcConfigurer() {
                 @Override
@@ -71,27 +71,25 @@ class CsvConverterConfiguration {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
     static class ReactiveCsvConverterConfiguration {
 
-        private final CsvJackson2Encoder csvJackson2Encoder = new CsvJackson2Encoder(JsonUtils.mapper());
-
         @Bean("csvReactiveFileResultHandler")
         @ConditionalOnMissingBean(name = "csvReactiveFileResultHandler")
-        CsvReactiveFileResultHandler csvReactiveFileResultHandler() {
-            HttpMessageWriter<?> messageWriter = new EncoderHttpMessageWriter<>(csvJackson2Encoder);
+        CsvReactiveFileResultHandler csvReactiveFileResultHandler(ObjectMapper objectMapper) {
+            HttpMessageWriter<?> messageWriter = new EncoderHttpMessageWriter<>(new CsvJackson2Encoder(objectMapper));
             return new CsvReactiveFileResultHandler(List.of(messageWriter));
         }
 
         @Bean("webFluxCsvConverterConfiguration")
         @ConditionalOnMissingBean(name = "webFluxCsvConverterConfiguration")
-        WebFluxConfigurer webFluxCsvConverterConfiguration() {
+        WebFluxConfigurer webFluxCsvConverterConfiguration(ObjectMapper objectMapper) {
             return new WebFluxConfigurer() {
                 @Override
                 public void configureArgumentResolvers(@Nonnull ArgumentResolverConfigurer configurer) {
-                    configurer.addCustomResolver(new CsvReactiveParamResolver(JsonUtils.mapper()));
+                    configurer.addCustomResolver(new CsvReactiveParamResolver(objectMapper));
                 }
 
                 @Override
                 public void configureHttpMessageCodecs(@Nonnull ServerCodecConfigurer configurer) {
-                    configurer.customCodecs().registerWithDefaultConfig(csvJackson2Encoder);
+                    configurer.customCodecs().registerWithDefaultConfig(new CsvJackson2Encoder(objectMapper));
                 }
             };
         }

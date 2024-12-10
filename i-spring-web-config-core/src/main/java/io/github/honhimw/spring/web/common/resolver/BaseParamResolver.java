@@ -1,9 +1,7 @@
 package io.github.honhimw.spring.web.common.resolver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.ValidatorUtils;
-import io.github.honhimw.util.JsonUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,14 +25,7 @@ public abstract class BaseParamResolver implements HandlerMethodArgumentResolver
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected final ObjectMapper OBJECT_MAPPER;
-
     protected BaseParamResolver() {
-        OBJECT_MAPPER = JsonUtils.mapper();
-    }
-
-    protected BaseParamResolver(ObjectMapper objectMapper) {
-        OBJECT_MAPPER = objectMapper;
     }
 
     protected List<JacksonNodeCustomizer> jacksonNodeCustomizers = new ArrayList<>();

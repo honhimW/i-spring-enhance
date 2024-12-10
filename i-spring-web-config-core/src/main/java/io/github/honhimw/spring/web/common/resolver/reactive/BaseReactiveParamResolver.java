@@ -1,17 +1,17 @@
 package io.github.honhimw.spring.web.common.resolver.reactive;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.honhimw.spring.ValidatorUtils;
-import io.github.honhimw.util.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
+import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolverSupport;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
@@ -24,18 +24,12 @@ import java.util.Map;
  * @since 2022-07-04
  */
 
-public abstract class BaseReactiveParamResolver implements HandlerMethodArgumentResolver {
+public abstract class BaseReactiveParamResolver extends HandlerMethodArgumentResolverSupport implements HandlerMethodArgumentResolver {
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    protected final ObjectMapper OBJECT_MAPPER;
-
     public BaseReactiveParamResolver() {
-        this.OBJECT_MAPPER = JsonUtils.mapper();
-    }
-
-    public BaseReactiveParamResolver(ObjectMapper OBJECT_MAPPER) {
-        this.OBJECT_MAPPER = OBJECT_MAPPER;
+        super(ReactiveAdapterRegistry.getSharedInstance());
     }
 
     protected List<JacksonNodeReactiveCustomizer> jacksonNodeCustomizers = new ArrayList<>();

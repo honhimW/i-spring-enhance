@@ -1,5 +1,7 @@
 package io.github.honhimw.util;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -128,6 +130,19 @@ public class IDataSize implements Serializable, Comparable<IDataSize> {
         return new IDataSize(bytes);
     }
 
+    public static IDataSize of(String pattern) {
+        Objects.requireNonNull(pattern, "pattern cannot be null");
+        pattern = pattern.trim();
+        Unit unit = Unit.B;
+        for (Unit _unit : Unit.values()) {
+            if (pattern.endsWith(_unit.name())) {
+                pattern = pattern.substring(0, pattern.length() - _unit.name().length()).trim();
+                unit = _unit;
+            }
+        }
+        return unit.of(new BigDecimal(pattern));
+    }
+
     public static IDataSize ofKB(long kilobytes) {
         return new IDataSize(ONE_KB_VAL.multiply(BigDecimal.valueOf(kilobytes)));
     }
@@ -208,6 +223,10 @@ public class IDataSize implements Serializable, Comparable<IDataSize> {
         return new IDataSize(this.bytes.multiply(other.bytes));
     }
 
+    public BigInteger sizeOf(@Nonnull Unit unit) {
+        return unit.sizeOf(this);
+    }
+
     public BigInteger toBytes() {
         return this.bytes.toBigInteger();
     }
@@ -264,46 +283,101 @@ public class IDataSize implements Serializable, Comparable<IDataSize> {
         scale = Math.abs(scale);
 
         BigDecimal number = this.bytes;
-        String unit;
+        Unit unit;
         if (number.compareTo(ONE_DB_VAL) > 0) {
             number = number.divide(ONE_DB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "DB";
+            unit = Unit.DB;
         } else if (number.compareTo(ONE_NB_VAL) > 0) {
             number = number.divide(ONE_NB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "NB";
+            unit = Unit.NB;
         } else if (number.compareTo(ONE_BB_VAL) > 0) {
             number = number.divide(ONE_BB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "BB";
+            unit = Unit.DB;
         } else if (number.compareTo(ONE_YB_VAL) > 0) {
             number = number.divide(ONE_YB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "YB";
+            unit = Unit.YB;
         } else if (number.compareTo(ONE_ZB_VAL) > 0) {
             number = number.divide(ONE_ZB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "ZB";
+            unit = Unit.ZB;
         } else if (number.compareTo(ONE_EB_VAL) > 0) {
             number = number.divide(ONE_EB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "EB";
+            unit = Unit.EB;
         } else if (number.compareTo(ONE_PB_VAL) > 0) {
             number = number.divide(ONE_PB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "PB";
+            unit = Unit.PB;
         } else if (number.compareTo(ONE_TB_VAL) > 0) {
             number = number.divide(ONE_TB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "TB";
+            unit = Unit.TB;
         } else if (number.compareTo(ONE_GB_VAL) > 0) {
             number = number.divide(ONE_GB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "GB";
+            unit = Unit.GB;
         } else if (number.compareTo(ONE_MB_VAL) > 0) {
             number = number.divide(ONE_MB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "MB";
+            unit = Unit.MB;
         } else if (number.compareTo(ONE_KB_VAL) > 0) {
             number = number.divide(ONE_KB_VAL, scale, RoundingMode.HALF_UP);
-            unit = "KB";
+            unit = Unit.KB;
         } else {
             number = number.divide(BigDecimal.ONE, scale, RoundingMode.HALF_UP);
-            unit = "B";
+            unit = Unit.B;
         }
 
         return number.toPlainString() + " " + unit;
+    }
+
+    public enum Unit {
+        B(BigDecimal.ONE),
+        KB(ONE_KB_VAL),
+        MB(ONE_MB_VAL),
+        GB(ONE_GB_VAL),
+        TB(ONE_TB_VAL),
+        PB(ONE_PB_VAL),
+        EB(ONE_EB_VAL),
+        ZB(ONE_ZB_VAL),
+        YB(ONE_YB_VAL),
+        BB(ONE_BB_VAL),
+        NB(ONE_NB_VAL),
+        DB(ONE_DB_VAL),
+        ;
+
+        private final BigDecimal value;
+
+        Unit(BigDecimal value) {
+            this.value = value;
+        }
+
+        public IDataSize of(long bytes) {
+            return new IDataSize(this.value.multiply(BigDecimal.valueOf(bytes)));
+        }
+
+        public IDataSize of(BigInteger bytes) {
+            return new IDataSize(this.value.multiply(new BigDecimal(bytes)));
+        }
+
+        public IDataSize of(BigDecimal bytes) {
+            return new IDataSize(this.value.multiply(bytes));
+        }
+
+        public BigInteger sizeOf(BigInteger bytes) {
+            return bytes.divide(this.value.toBigInteger());
+        }
+
+        public BigInteger sizeOf(IDataSize bytes) {
+            return this.sizeOf(bytes.bytes.toBigInteger());
+        }
+
+        public BigInteger sizeOf(long bytes) {
+            return this.sizeOf(BigInteger.valueOf(bytes));
+        }
+
+        public BigInteger to(Unit unit, BigInteger bytes) {
+            return bytes.multiply(this.value.toBigInteger()).divide(unit.value.toBigInteger());
+        }
+
+        public BigInteger to(Unit unit, long size) {
+            return this.to(unit, BigInteger.valueOf(size));
+        }
+
     }
 
 }

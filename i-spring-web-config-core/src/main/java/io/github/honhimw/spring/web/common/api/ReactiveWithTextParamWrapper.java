@@ -1,7 +1,6 @@
 package io.github.honhimw.spring.web.common.api;
 
-import io.github.honhimw.core.IResult;
-import io.github.honhimw.core.PageInfoVO;
+import io.github.honhimw.core.*;
 import io.github.honhimw.core.api.DefaultCRUD;
 import io.github.honhimw.core.api.ReactiveDefaultCRUD;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
@@ -39,7 +38,7 @@ public abstract class ReactiveWithTextParamWrapper<C, U, ID, E> implements React
     }
 
     @Override
-    public Mono<IResult<E>> get(@TextParam io.github.honhimw.core.IdRequest<ID> read) {
+    public Mono<IResult<E>> get(@TextParam IdRequest<ID> read) {
         return decorate(Mono.just(read).map(getDelegate()::get));
     }
 
@@ -49,22 +48,22 @@ public abstract class ReactiveWithTextParamWrapper<C, U, ID, E> implements React
     }
 
     @Override
-    public Mono<IResult<Void>> delete(@TextParam io.github.honhimw.core.IdRequest<ID> delete) {
+    public Mono<IResult<Void>> delete(@TextParam IdRequest<ID> delete) {
         return decorate(Mono.just(delete).map(getDelegate()::delete));
     }
 
     @Override
-    public Mono<IResult<PageInfoVO<E>>> list(@TextParam io.github.honhimw.core.IPageRequest<E> iPageRequest) {
+    public Mono<IResult<PageInfoVO<E>>> list(@TextParam IPageRequest<E> iPageRequest) {
         return decorate(Mono.just(iPageRequest).map(getDelegate()::list));
     }
 
     @Override
-    public Mono<IResult<List<E>>> batchGet(@TextParam io.github.honhimw.core.BatchIdRequest<ID> read) {
+    public Mono<IResult<List<E>>> batchGet(@TextParam BatchIdRequest<ID> read) {
         return decorate(Mono.just(read).map(getDelegate()::batchGet));
     }
 
     @Override
-    public Mono<IResult<Void>> batchDelete(@TextParam io.github.honhimw.core.BatchIdRequest<ID> delete) {
+    public Mono<IResult<Void>> batchDelete(@TextParam BatchIdRequest<ID> delete) {
         return decorate(Mono.just(delete).map(getDelegate()::batchDelete));
     }
 }
