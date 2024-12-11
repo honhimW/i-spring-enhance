@@ -7,10 +7,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.security.ConditionalOnDefaultWebSecurity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -20,9 +17,6 @@ import java.util.Map;
  * @since 2023-05-22
  */
 
-@Component
-@ConditionalOnClass(OpenAPI.class)
-@ConditionalOnDefaultWebSecurity
 public class SecurityOpenApiCustomizer implements GlobalOpenApiCustomizer {
 
     @Override

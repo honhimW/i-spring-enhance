@@ -2,9 +2,10 @@ package io.github.honhimw.spring.cache.redis;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nonnull;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
+
+import jakarta.annotation.Nonnull;
 
 import java.lang.reflect.Type;
 

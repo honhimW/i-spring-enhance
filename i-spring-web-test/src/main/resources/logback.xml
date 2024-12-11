@@ -10,7 +10,6 @@
 
 	<logger name="ch.qos.logback" level="ERROR"/>
 
-	<logger name="io.github.honhimw" level="DEBUG"/>
 	<logger name="com.alibaba" level="ERROR"/>
 	<logger name="HTTP_LOG" level="DEBUG"/>
 	<logger name="org.hibernate.SQL" level="DEBUG"/>

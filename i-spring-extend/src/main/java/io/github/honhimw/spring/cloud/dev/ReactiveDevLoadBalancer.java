@@ -58,7 +58,7 @@ public class ReactiveDevLoadBalancer implements ReactorServiceInstanceLoadBalanc
     }
 
     private Response<ServiceInstance> processInstanceResponse(ServiceInstanceListSupplier supplier,
-        List<ServiceInstance> serviceInstances) {
+                                                              List<ServiceInstance> serviceInstances) {
         Response<ServiceInstance> serviceInstanceResponse = this.getInstanceResponse(serviceInstances);
         if (supplier instanceof SelectedInstanceCallback selectedInstanceCallback && serviceInstanceResponse.hasServer()) {
             selectedInstanceCallback.selectedServiceInstance(serviceInstanceResponse.getServer());

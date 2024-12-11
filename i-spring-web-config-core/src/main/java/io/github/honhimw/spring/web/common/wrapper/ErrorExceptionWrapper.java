@@ -3,7 +3,6 @@ package io.github.honhimw.spring.web.common.wrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 import java.util.NoSuchElementException;
 
@@ -12,7 +11,6 @@ import java.util.NoSuchElementException;
  * @since 2023-05-09
  */
 
-@Component
 public class ErrorExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override

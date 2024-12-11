@@ -1,8 +1,40 @@
 spring:
+  profiles:
+    active: dev
+  main:
+    web-application-type: reactive
+  config:
+    import: redis.yaml
   messages:
     basename: i18n/result
     use-code-as-default-message: true
-  cloud:
-    openfeign:
-      circuitbreaker:
-        enabled: true
+  threads:
+    virtual:
+      enabled: true
+logging:
+  level:
+    root: info
+    HTTP_LOG: debug
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+    min-response-size: 256B
+    mime-types: ["text/html", "text/xml", "text/plain", "text/css", "text/javascript", "application/javascript", "application/json", "application/xml", "text/csv"]
+
+springdoc:
+  api-docs:
+    path: /swagger-api
+  swagger-ui:
+    path: /swagger-ui
+  webjars:
+    prefix: ""
+
+i:
+  spring:
+    web:
+      trace:
+        trace-header: ts-request-id
+    cache:
+      refresh-on-event: org.springframework.boot.context.event.ApplicationReadyEvent

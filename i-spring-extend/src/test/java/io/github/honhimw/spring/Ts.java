@@ -4,8 +4,11 @@ import io.github.honhimw.spring.statemachine.FSMService;
 import io.github.honhimw.spring.statemachine.FSMUtils;
 import io.github.honhimw.spring.statemachine.IFSMFactory;
 import io.github.honhimw.spring.statemachine.SimpleFSMAdapter;
+import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,6 +36,19 @@ public class Ts extends SimpleFSMAdapter<Ts.S, Ts.E> {
     }
 
     @Override
+    public void configure(StateMachineConfigurationConfigurer<S, E> config) throws Exception {
+        super.configure(config);
+        config.withConfiguration()
+            .listener(new StateMachineListenerAdapter<>() {
+            @Override
+            public void eventNotAccepted(Message<E> event) {
+                super.eventNotAccepted(event);
+                log.info("not accepted: {}", event.getPayload());
+            }
+        });
+    }
+
+    @Override
     public void configure(StateMachineTransitionConfigurer<S, E> transitions) throws Exception {
         transitions.withExternal()
             .source(S.S1).target(S.S2).event(E.E1)
@@ -47,15 +63,15 @@ public class Ts extends SimpleFSMAdapter<Ts.S, Ts.E> {
                 _i.getAndDecrement();
                 log.info("S2 -> S1 on E2");
             })
-            ;
+        ;
     }
 
     enum S {
-        S1,S2
+        S1, S2
     }
 
     enum E {
-        E1,E2
+        E1, E2, E3
     }
 
     public static void main(String[] args) throws Exception {
@@ -65,8 +81,9 @@ public class Ts extends SimpleFSMAdapter<Ts.S, Ts.E> {
         fsmService.send(i, E.E2);
 
         StateMachine<S, E> fsm = fsmService.getFSM(i);
-        fsm.sendEvent(FSMUtils.eventMsg(E.E1)).next().toFuture().get();
-        fsm.sendEvent(FSMUtils.eventMsg(E.E2)).next().toFuture().get();
+        fsm.sendEvent(FSMUtils.eventMsg(E.E1)).next().block();
+        fsm.sendEvent(FSMUtils.eventMsg(E.E2)).next().block();
+        fsm.sendEvent(FSMUtils.eventMsg(E.E3)).next().block();
     }
 
 }

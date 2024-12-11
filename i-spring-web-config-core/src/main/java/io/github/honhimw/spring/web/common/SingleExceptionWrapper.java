@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 
 /**
  * Single kind of exception wrapper
- *
  * @author hon_him
  * @since 2023-05-09
  */

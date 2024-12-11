@@ -106,7 +106,7 @@ public interface FSMService<S, E, D> {
         Flux<StateMachineEventResult<S, E>> stateMachineEventResultFlux = fsm.sendEvent(
             FSMUtils.eventMsg(event));
 
-        StateMachineEventResult<S, E> stateResult = null;
+        StateMachineEventResult<S, E> stateResult;
         try {
             stateResult = stateMachineEventResultFlux.next().toFuture().get();
         } catch (Exception e) {

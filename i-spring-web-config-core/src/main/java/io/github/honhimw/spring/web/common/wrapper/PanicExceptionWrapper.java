@@ -3,14 +3,12 @@ package io.github.honhimw.spring.web.common.wrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 /**
  * @author hon_him
  * @since 2023-05-09
  */
 
-@Component
 public class PanicExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override

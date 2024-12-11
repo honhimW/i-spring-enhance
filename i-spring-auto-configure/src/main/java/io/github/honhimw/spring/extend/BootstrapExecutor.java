@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 /**
  * Do nothing.
  * <pre>
- * see src/main/java21/io/github/honhimw/spring/extend/BootstrapExecutor.java
+ * see src/main/java21
  * </pre>
  *
  * @author hon_him

@@ -1,8 +1,9 @@
 package io.github.honhimw.spring;
 
-import jakarta.annotation.Nonnull;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+
+import jakarta.annotation.Nonnull;
 
 /**
  * After the container starts, it will execute the initialization work of multiple beans in sequence, such as setting built-in data in the database

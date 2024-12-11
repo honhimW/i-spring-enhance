@@ -2,12 +2,9 @@ package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.Entity;
 import jakarta.persistence.PersistenceException;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
 
@@ -16,8 +13,6 @@ import java.sql.SQLException;
  * @since 2023-05-09
  */
 
-@Component
-@ConditionalOnClass(Entity.class)
 public class JpaExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override

@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.common.ddd;
 
-
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.core.IdRequest;
 import io.github.honhimw.ddd.jpa.domain.AbstractLogicDeleteAR;

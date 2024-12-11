@@ -2,7 +2,6 @@ package org.springframework.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.github.honhimw.spring.ResolvableTypes;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,6 +12,8 @@ import java.lang.reflect.Type;
  */
 
 public class IResolvableTypeSupports {
+
+    private static final ResolvableType CHAR_SEQUENCE_TYPE = ResolvableType.forType(CharSequence.class);
 
     public static Object readValue(MethodParameter parameter, ObjectNode node, ObjectMapper mapper) {
         try {
@@ -35,7 +36,7 @@ public class IResolvableTypeSupports {
 
     public static Object readValue(ResolvableType elementType, ObjectNode node, ObjectMapper mapper) {
         try {
-            if (ResolvableTypes.CHAR_SEQUENCE_TYPE.isAssignableFrom(elementType)) {
+            if (CHAR_SEQUENCE_TYPE.isAssignableFrom(elementType)) {
                 return mapper.writeValueAsString(node);
             }
             ResolvableType resolvableType = resolve(elementType);

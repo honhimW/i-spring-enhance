@@ -37,7 +37,6 @@ public class SnowflakeUtils implements Serializable {
     public static SnowflakeUtils getInstance() {
         return getInstance(1658914580040L);
     }
-
     public static SnowflakeUtils getInstance(long twepoch) {
         String ipv4 = IpUtils.localIPv4();
         String id3 = ipv4.split("\\.")[3];
@@ -102,7 +101,8 @@ public class SnowflakeUtils implements Serializable {
 
         lastTimestamp = timestamp;
 
-        return ((timestamp - twepoch) << timestampLeftShift) | (dataCenterId << dataCenterIdShift) | (workerId << workerIdShift) | sequence;
+        return ((timestamp - twepoch) << timestampLeftShift) | (dataCenterId
+                                                                << dataCenterIdShift) | (workerId << workerIdShift) | sequence;
     }
 
     public String nextIdStr() {

@@ -17,26 +17,90 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.toml.TomlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import io.github.honhimw.core.IResult;
+import io.github.honhimw.util.JsonUtils;
 import io.github.honhimw.spring.cache.redis.RedisMessageEvent;
 import io.github.honhimw.test.jacksonfilter.PointerFilteringGenerator;
-import io.github.honhimw.util.JsonUtils;
+import io.github.honhimw.util.ReactiveHttpUtils;
+import jakarta.validation.*;
+import jakarta.validation.bootstrap.GenericBootstrap;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.validation.beanvalidation.LocaleContextMessageInterpolator;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.io.File;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 /**
  * @author hon_him
  * @since 2023-05-15
  */
-
+@Slf4j
 public class MainRunner {
+
+    @Test
+    @SneakyThrows
+    void threadFactory() {
+        ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance();
+        ReactiveHttpUtils.ReactiveHttpResult hello = instance.receiver(configurer -> configurer
+            .patch()
+            .url("http://127.0.0.1:11451/hello")
+            .body(payload -> payload.raw(raw -> raw.text("hello")))
+        );
+        hello.response().block();
+        ReactorClientHttpConnector reactorClientHttpConnector = new ReactorClientHttpConnector();
+        Mono<ClientHttpResponse> connect = reactorClientHttpConnector.connect(HttpMethod.POST, URI.create("http://127.0.0.1:11451/hello"), clientHttpRequest -> {
+            return clientHttpRequest.writeWith(Mono.just(clientHttpRequest.bufferFactory().wrap("hello".getBytes())));
+        });
+        ClientHttpResponse block = connect.block();
+    }
+
+
+    @Test
+    @SneakyThrows
+    void iResult() {
+        IResult<Object> ok = IResult.ok();
+        System.out.println(JsonUtils.toJson(ok));
+    }
+
+    @Test
+    @SneakyThrows
+    void validator() {
+        GenericBootstrap genericBootstrap = Validation.byDefaultProvider();
+        Configuration<?> configure = genericBootstrap.configure();
+        MessageInterpolator defaultMessageInterpolator = configure.getDefaultMessageInterpolator();
+        configure.messageInterpolator(new LocaleContextMessageInterpolator(defaultMessageInterpolator));
+        ValidatorFactory validatorFactory = configure.buildValidatorFactory();
+        Validator validator = validatorFactory.getValidator();
+        validatorFactory.close();
+
+        Object arugment = List.of(
+            new Person("honhim", 18, true, new Person("foo", 1, null, null)),
+            new Person("hello", 18, null, null)
+        );
+        String[] excludesArgs = {"age"};
+        Set<ConstraintViolation<Object>> validResult = validator.validate(arugment);
+        if (StringUtils.isNoneBlank(excludesArgs)) {
+            Set<String> ea = Arrays.stream(excludesArgs).collect(Collectors.toSet());
+            validResult = validResult.stream().filter(cv -> !ea.contains(cv.getPropertyPath().toString())).collect(Collectors.toSet());
+        }
+        if (!validResult.isEmpty()) {
+            throw new ConstraintViolationException(validResult);
+        }
+    }
 
     @Test
     @SneakyThrows
@@ -44,10 +108,7 @@ public class MainRunner {
         TomlMapper tomlMapper = new TomlMapper();
         tomlMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
 
-        Person person = new Person("honhim", 18, true, Map.of(
-            "hello", "world",
-            "foo", List.of(Map.of("bar", "baz"), "baz")
-        ));
+        Person person = new Person("honhim", 18, true, null);
         @Language("TOML")
         String tomlContent = """
             name = 'honhim'
@@ -74,10 +135,7 @@ public class MainRunner {
         YAMLMapper yamlMapper = new YAMLMapper();
         yamlMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
 
-        Person person = new Person("honhim", 18, true, Map.of(
-            "hello", "world",
-            "foo", "bar"
-        ));
+        Person person = new Person("honhim", 18, true, null);
         @Language("YAML")
         String yamlContent = """
             name: honhim
@@ -101,7 +159,7 @@ public class MainRunner {
         csvMapper.setSerializerFactory(JsonUtils.mapper().getSerializerFactory());
         CsvSchema columns = csvMapper.schemaFor(ObjectNode.class).withHeader();
 
-        Person person = new Person("honhim", 18, true, new HashMap());
+        Person person = new Person("honhim", 18, true, null);
         String csvContent = """
             name,gender,age
             honhim,true,18
@@ -116,9 +174,14 @@ public class MainRunner {
         }
 
         System.out.println(csvMapper.writer().with(csvMapper.schemaFor(Person.class).withHeader()).writeValueAsString(person));
-    }
+        System.out.println(csvMapper.writer().with(csvMapper.schemaFor(Person.class).withHeader()).writeValueAsString(List.of(person, person)));
 
-    public record Person(String name, int age, boolean gender, Object sub) implements Serializable {}
+        CsvSchema build = CsvSchema.builder().addColumn("title").addColumn("id").build().withHeader();
+        System.out.println(csvMapper.writer().with(build).writeValueAsString(List.of(
+            Map.of("id", 1, "title", "foo"),
+            Map.of("id", 2, "title", "bar")
+        )));
+    }
 
     @Test
     public void file() {

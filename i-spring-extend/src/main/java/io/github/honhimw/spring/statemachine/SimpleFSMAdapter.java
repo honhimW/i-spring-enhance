@@ -1,5 +1,6 @@
 package io.github.honhimw.spring.statemachine;
 
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -22,11 +23,8 @@ public abstract class SimpleFSMAdapter<S extends Enum<S>, E extends Enum<E>> ext
 
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    @Setter
     protected ApplicationEventPublisher publisher;
-
-    public void setPublisher(ApplicationEventPublisher publisher) {
-        this.publisher = publisher;
-    }
 
     protected abstract S initialState();
 

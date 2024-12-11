@@ -13,8 +13,6 @@ import org.springframework.stereotype.Component;
  * @since 2023-05-09
  */
 
-@Component
-@ConditionalOnClass(Feign.class)
 public class FeignExceptionWrapper extends SingleExceptionWrapper<FeignException> {
 
     @Nonnull

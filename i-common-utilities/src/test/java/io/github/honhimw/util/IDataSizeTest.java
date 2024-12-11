@@ -3,6 +3,7 @@ package io.github.honhimw.util;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 class IDataSizeTest {
@@ -208,6 +209,19 @@ class IDataSizeTest {
         System.out.println("1BB: " + decimalFormat.format(IDataSize.ofBB(1).toBytes()));
         System.out.println("1NB: " + decimalFormat.format(IDataSize.ofNB(1).toBytes()));
         System.out.println("1DB: " + decimalFormat.format(IDataSize.ofDB(1).toBytes()));
+    }
+
+    @Test
+    void unit() {
+        IDataSize iDataSize = IDataSize.Unit.MB.of(512);
+        assert iDataSize.toMB().intValue() == 512;
+        BigInteger bigInteger = IDataSize.Unit.MB.to(IDataSize.Unit.B, 512);
+        assert bigInteger.intValue() == 512 * 1024 * 1024;
+    }
+
+    @Test
+    void pattern() {
+        System.out.println(IDataSize.of("123.321KB").format());
     }
 
 }

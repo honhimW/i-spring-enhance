@@ -4,16 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.extend.AsyncBlockingExecutionConfig;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
+import io.github.honhimw.spring.web.common.ExceptionWrapperConfiguration;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
+import io.github.honhimw.spring.web.common.openapi.SecurityOpenApiCustomizer;
 import io.github.honhimw.spring.web.mvc.*;
 import io.github.honhimw.spring.web.reactive.*;
+import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.autoconfigure.context.MessageSourceProperties;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.autoconfigure.security.ConditionalOnDefaultWebSecurity;
 import org.springframework.boot.system.JavaVersion;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.MessageSource;
@@ -52,7 +56,7 @@ abstract class WebConfiguration {
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnWebApplication(type = ANY)
-    @ComponentScan(basePackages = "io.github.honhimw.spring.web.common")
+    @Import(ExceptionWrapperConfiguration.class)
     static class IWebConfiguration {
 
         @Bean(value = "exceptionWrapperMessageFormatter")
@@ -65,6 +69,14 @@ abstract class WebConfiguration {
         @ConditionalOnMissingBean(name = "exceptionWrappers")
         ExceptionWrappers exceptionWrappers(ObjectProvider<ExceptionWrapper> exceptionWrappers) {
             return new ExceptionWrappers(exceptionWrappers);
+        }
+
+        @Bean(value = "securityOpenApiCustomizer")
+        @ConditionalOnMissingBean(name = "securityOpenApiCustomizer")
+        @ConditionalOnClass(OpenAPI.class)
+        @ConditionalOnDefaultWebSecurity
+        SecurityOpenApiCustomizer securityOpenApiCustomizer() {
+            return new SecurityOpenApiCustomizer();
         }
 
         @Bean("i18nUtils")
@@ -106,7 +118,6 @@ abstract class WebConfiguration {
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnWebApplication(type = SERVLET)
-    @ComponentScan(basePackages = "io.github.honhimw.spring.web.mvc")
     static class IMvcConfiguration {
 
         @Fallback
@@ -192,7 +203,6 @@ abstract class WebConfiguration {
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnWebApplication(type = REACTIVE)
-    @ComponentScan(basePackages = "io.github.honhimw.spring.web.reactive")
     static class IWebFluxConfiguration {
 
         @Bean("webFluxJackson2Decoder")

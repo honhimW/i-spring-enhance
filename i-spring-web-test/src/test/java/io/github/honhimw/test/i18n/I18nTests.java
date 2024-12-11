@@ -2,16 +2,18 @@ package io.github.honhimw.test.i18n;
 
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
-import io.github.honhimw.util.tool.Formats;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.example.WebApp;
+import org.assertj.core.api.Assertions;
+import io.github.honhimw.example.WebApp;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.util.Assert;
 
 import java.util.Locale;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author hon_him
@@ -25,21 +27,23 @@ public class I18nTests {
     @Test
     void getMessage() {
         {
-            String message = I18nUtils.getMessage("common.missing", Locale.ENGLISH);
-            String formatted = Formats.format(message, "123");
-            log.info(formatted);
-            Assert.state(StringUtils.equals(formatted, "id: 123 is not present"), "message should match");
+            Locale.setDefault(Locale.CHINESE);
+            IResult<Object> result = IResult.okWithMsg("{okay}");
+            I18nUtils.i18n(result);
+            Assertions.assertThat(result.msg()).isEqualTo("成功");
         }
         {
-            String message = I18nUtils.getMessage("common.missing", Locale.CHINESE);
-            String formatted = Formats.format(message, "123");
-            log.info(formatted);
-            Assert.state(StringUtils.equals(formatted, "id: 123 不存在"), "message should match");
+            String message = I18nUtils.getMessage("okay", Locale.ENGLISH);
+            Assertions.assertThat(message).isEqualTo("Okay");
+        }
+        {
+            String message = I18nUtils.getMessage("common.missing", new Object[]{"123"}, Locale.CHINESE);
+            Assertions.assertThat(message).isEqualTo("id: 123 不存在");
         }
     }
 
     @Test
-    void IResultMessage() {
+    void resultMessage() {
         {
             IResult<Object> result = IResult.okWithMsg("{common.missing}");
             LocaleContextHolder.setLocale(Locale.ENGLISH);

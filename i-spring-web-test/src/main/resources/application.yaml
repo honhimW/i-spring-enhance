@@ -8,7 +8,7 @@ spring:
       - redis.yaml
       - database.yaml
 #  messages:
-#    basename: i18n/test
+#    basename: i18n/test,messages
 #    use-code-as-default-message: true
   threads:
     virtual:

@@ -33,6 +33,7 @@ dependencies {
     runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
     runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery' exclude group: 'commons-logging', module: 'commons-logging'
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
 
     annotationProcessor 'org.mapstruct:mapstruct'
     annotationProcessor 'org.mapstruct:mapstruct-processor'

@@ -69,7 +69,7 @@ public interface ExceptionWrapper extends Ordered {
         return Ordered.LOWEST_PRECEDENCE;
     }
 
-    ExceptionWrapper DEFAULT = new MessageExceptionWrapper() {
+    ExceptionWrapper DEFAULT = new ExceptionWrapper.MessageExceptionWrapper() {
         @Override
         public boolean support(@Nonnull Throwable e) {
             return true;
