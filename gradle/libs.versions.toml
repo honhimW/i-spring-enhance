@@ -18,6 +18,8 @@ lombok-mapstruct-binding = "0.2.0"
 hypersistence-utils-hibernate = "3.9.0"
 jetbrains-annotations = "26.0.1"
 
+multi-release-jar = "0.1.1"
+
 [libraries.io-micrometer-context-propagation]
 module = "io.micrometer:context-propagation"
 version.ref = "context-propagation"
@@ -89,3 +91,8 @@ version.ref = "hypersistence-utils-hibernate"
 [libraries.jetbrains-annotations]
 module = "org.jetbrains:annotations"
 version.ref = "jetbrains-annotations"
+
+[plugins.multi-release-jar]
+id = "me.champeau.mrjar"
+version.ref = "multi-release-jar"
+
