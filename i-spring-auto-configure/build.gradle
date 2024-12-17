@@ -1,5 +1,5 @@
 plugins {
-    id 'me.champeau.mrjar' version '0.1'
+    id 'me.champeau.mrjar' version '0.1.1'
 }
 apply plugin: 'me.champeau.mrjar'
 
