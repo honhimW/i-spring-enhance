@@ -3,6 +3,14 @@ plugins {
 }
 apply plugin: 'me.champeau.mrjar'
 
+configurations {
+    java21CompileClasspath { extendsFrom using }
+    java21RuntimeClasspath { extendsFrom using }
+    java21AnnotationProcessor { extendsFrom using }
+    java21TestCompileClasspath { extendsFrom using }
+    java21TestRuntimeClasspath { extendsFrom using }
+    java21TestAnnotationProcessor { extendsFrom using }
+}
 
 dependencies {
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
