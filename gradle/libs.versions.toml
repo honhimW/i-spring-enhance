@@ -9,13 +9,14 @@ guava = "33.3.1-jre"
 commons-lang3 = "3.17.0"
 commons-codec = "1.17.1"
 commons-collections4 = "4.4"
-commons-io = "2.17.0"
+commons-io = "2.18.0"
 vavr = "0.10.5"
 commons-net = "3.11.1"
 bcprov-jdk18on = "1.79"
 mapstruct = "1.6.3"
 lombok-mapstruct-binding = "0.2.0"
 hypersistence-utils-hibernate = "3.9.0"
+jetbrains-annotations = "26.0.1"
 
 [libraries.io-micrometer-context-propagation]
 module = "io.micrometer:context-propagation"
@@ -84,3 +85,7 @@ version.ref = "hypersistence-utils-hibernate"
 [libraries.hypersistence-utils-hibernate-55]
 module = "io.hypersistence:hypersistence-utils-hibernate-55"
 version.ref = "hypersistence-utils-hibernate"
+
+[libraries.jetbrains-annotations]
+module = "org.jetbrains:annotations"
+version.ref = "jetbrains-annotations"
