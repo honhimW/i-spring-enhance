@@ -233,7 +233,7 @@ public class YourListener extends DomainListenerSupports {
 ```java
 public class CustomAclExecutorImpl<T> extends AbstractAclExecutor<T> {
 
-    public PhalanxAclExecutorImpl(
+    public CustomAclExecutorImpl(
         @Nonnull ResourceMod defaultMod,
         @Nonnull JpaEntityInformation<T, ?> ei,
         @Nonnull EntityManager em, @Nonnull String dataDomain) {
