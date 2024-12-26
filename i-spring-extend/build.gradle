@@ -5,7 +5,7 @@ dependencies {
     api(project(':i-common-utilities'))
     implementation 'org.slf4j:slf4j-api'
     compileOnly 'jakarta.validation:jakarta.validation-api'
-    compileOnly 'org.springframework.statemachine:spring-statemachine-core:3.2.0'
+    compileOnly 'org.springframework.statemachine:spring-statemachine-core:4.0.0'
     compileOnly 'org.springframework.cloud:spring-cloud-loadbalancer'
-    testImplementation('org.springframework.statemachine:spring-statemachine-core:3.2.0')
+    testImplementation('org.springframework.statemachine:spring-statemachine-core:4.0.0')
 }
