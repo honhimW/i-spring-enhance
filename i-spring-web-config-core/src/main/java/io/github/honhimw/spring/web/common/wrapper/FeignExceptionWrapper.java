@@ -1,12 +1,9 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import feign.Feign;
 import feign.FeignException;
 import jakarta.annotation.Nonnull;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 /**
  * @author hon_him

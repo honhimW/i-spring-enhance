@@ -49,6 +49,8 @@ public class ICacheProperties implements Serializable {
 
         private Boolean enabled = true;
 
+        private ProtocolVersion protocol;
+
         /**
          * redis event support
          */
@@ -58,7 +60,10 @@ public class ICacheProperties implements Serializable {
 
         private String notificationsTopicPattern;
 
-    }
+        public enum ProtocolVersion {
+            RESP2, RESP3
+        }
 
+    }
 
 }

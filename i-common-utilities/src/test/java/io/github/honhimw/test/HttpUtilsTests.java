@@ -2,7 +2,6 @@ package io.github.honhimw.test;
 
 import io.github.honhimw.util.HttpUtils;
 import lombok.SneakyThrows;
-import org.apache.hc.core5.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.Charset;

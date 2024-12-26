@@ -1,19 +1,18 @@
 package io.github.honhimw.spring.cache.redis;
 
 import io.github.honhimw.util.JsonUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
@@ -32,8 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketEndpoint {
 
     private final static Logger log = LoggerFactory.getLogger(WebSocketEndpoint.class);
-
-    private static RedisEventListenerWrapper redisEventListenerWrapper;
 
     private static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
 
@@ -62,11 +59,6 @@ public class WebSocketEndpoint {
                 }
             }
         }
-    }
-
-    @Autowired
-    public void setRedisEventListener(RedisEventListenerWrapper redisEventListenerWrapper) {
-        WebSocketEndpoint.redisEventListenerWrapper = redisEventListenerWrapper;
     }
 
     private Session session;

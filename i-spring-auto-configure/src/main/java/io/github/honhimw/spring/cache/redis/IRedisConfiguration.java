@@ -13,14 +13,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.listener.Topic;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import reactor.core.publisher.Mono;
@@ -33,16 +32,14 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(value = "i.spring.cache.redis.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(RedisConnectionFactory.class)
 @ConditionalOnClass(RedisTemplate.class)
+@Import({ILettuceConfiguration.class, IJedisConfiguration.class})
 @Configuration
 public class IRedisConfiguration {
 
     private final Environment environment;
 
-    private final ICacheProperties iCacheProperties;
-
-    public IRedisConfiguration(Environment environment, ICacheProperties iCacheProperties) {
+    public IRedisConfiguration(Environment environment) {
         this.environment = environment;
-        this.iCacheProperties = iCacheProperties;
     }
 
     @Bean(name = "redisKeySerializer")
@@ -98,20 +95,6 @@ public class IRedisConfiguration {
         RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
         redisMessageListenerContainer.setConnectionFactory(redisConnectionFactory);
         return redisMessageListenerContainer;
-    }
-
-    @Bean(name = "redisEventListener")
-    @ConditionalOnMissingBean(RedisEventListenerWrapper.class)
-    @ConditionalOnProperty(value = ICacheProperties.Redis.I_SPRING_CACHE_REDIS_ENABLED_EVENT, havingValue = "true")
-    RedisEventListenerWrapper redisEventListener(RedisMessageListenerContainer redisMessageListenerContainer) {
-        RedisEventListenerWrapper redisEventListenerWrapper = new RedisEventListenerWrapper(redisMessageListenerContainer);
-        redisEventListenerWrapper.setKeyspaceNotificationsConfigParameter(iCacheProperties.getRedis().getKeyspaceNotificationsConfigParameter());
-        String notificationsTopicPattern = iCacheProperties.getRedis().getNotificationsTopicPattern();
-        if (StringUtils.isNotBlank(notificationsTopicPattern)) {
-            Topic topic = new PatternTopic(notificationsTopicPattern);
-            redisEventListenerWrapper.setTopic(topic);
-        }
-        return redisEventListenerWrapper;
     }
 
     @ConditionalOnClass(Mono.class)

@@ -1,8 +1,8 @@
 package io.github.honhimw.core.api;
 
 import io.github.honhimw.core.BatchIdRequest;
-import io.github.honhimw.core.IdRequest;
 import io.github.honhimw.core.IResult;
+import io.github.honhimw.core.IdRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.PostMapping;
 import reactor.core.publisher.Mono;

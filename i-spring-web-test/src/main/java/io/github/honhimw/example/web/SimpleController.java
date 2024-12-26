@@ -1,6 +1,7 @@
 package io.github.honhimw.example.web;
 
 import io.github.honhimw.core.IResult;
+import io.github.honhimw.example.feign.DungEater;
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
 import io.github.honhimw.spring.web.common.HttpLog;
@@ -10,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import io.github.honhimw.example.feign.DungEater;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;

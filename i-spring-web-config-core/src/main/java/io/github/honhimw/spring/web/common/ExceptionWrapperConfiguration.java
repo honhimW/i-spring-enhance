@@ -1,6 +1,7 @@
 package io.github.honhimw.spring.web.common;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.github.honhimw.spring.web.common.wrapper.*;
 import feign.Feign;
 import jakarta.persistence.Entity;
@@ -49,6 +50,12 @@ public class ExceptionWrapperConfiguration {
     @ConditionalOnClass(JsonParser.class)
     JsonParserExceptionWrapper jsonParserExceptionWrapper() {
         return new JsonParserExceptionWrapper();
+    }
+
+    @Bean
+    @ConditionalOnClass(MismatchedInputException.class)
+    MismatchedInputExceptionWrapper mismatchedInputExceptionWrapper() {
+        return new MismatchedInputExceptionWrapper();
     }
 
     @Bean

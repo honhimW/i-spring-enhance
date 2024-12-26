@@ -1,7 +1,6 @@
 package io.github.honhimw.spring.web.reactive;
 
 import org.springframework.core.NamedInheritableThreadLocal;
-import org.springframework.core.NamedThreadLocal;
 import org.springframework.web.server.ServerWebExchange;
 
 /**

@@ -4,6 +4,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.BinaryCodec;
 import org.apache.commons.codec.binary.Hex;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -20,6 +23,10 @@ public class Bytes {
 
     public static Bytes fromStr(String str) {
         return new Bytes(str.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static Bytes fromStr(String str, Charset charset) {
+        return new Bytes(str.getBytes(charset));
     }
 
     public static Bytes fromHex(String hex) {
@@ -43,6 +50,24 @@ public class Bytes {
     public static Bytes fromAscii(String ascii) {
         try {
             byte[] bytes = BinaryCodec.fromAscii(ascii.toCharArray());
+            return new Bytes(bytes);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Bytes fromInputStream(InputStream inputStream) {
+        try {
+            byte[] bytes = inputStream.readAllBytes();
+            return new Bytes(bytes);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Bytes fromByteBuffer(ByteBuffer byteBuffer) {
+        try {
+            byte[] bytes = byteBuffer.array();
             return new Bytes(bytes);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
@@ -77,6 +102,14 @@ public class Bytes {
 
     public String toAscii() {
         return BinaryCodec.toAsciiString(bytes);
+    }
+
+    public InputStream toInputStream() {
+        return new ByteArrayInputStream(bytes);
+    }
+
+    public ByteBuffer toByteBuffer() {
+        return ByteBuffer.wrap(bytes);
     }
 
 }

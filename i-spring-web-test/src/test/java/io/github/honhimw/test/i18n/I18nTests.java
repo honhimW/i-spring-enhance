@@ -1,19 +1,17 @@
 package io.github.honhimw.test.i18n;
 
 import io.github.honhimw.core.IResult;
+import io.github.honhimw.example.WebApp;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
-import io.github.honhimw.example.WebApp;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.util.Assert;
 
 import java.util.Locale;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author hon_him

@@ -6,6 +6,7 @@ import io.github.honhimw.spring.web.reactive.ExchangeHolder;
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
@@ -16,6 +17,8 @@ import org.springframework.web.server.ServerWebExchange;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * @author hon_him
@@ -75,10 +78,19 @@ public class I18nUtils implements MessageSourceAware {
             }
 
             String msg = result.msg();
-            if (StringUtils.length(msg) > 2 && StringUtils.startsWith(msg, "{") && StringUtils.endsWith(msg, "}")) {
-                String code = msg.substring(1, msg.length() - 1).trim();
-                msg = messageSource.getMessage(code, args, code, getLocale());
-                result.msg(msg);
+            if (StringUtils.length(msg) > 2) {
+                Optional<String> first = msg.lines().findFirst();
+                if (first.isPresent()) {
+                    String firstLine = first.get();
+                    if (StringUtils.startsWith(firstLine, "{") && StringUtils.endsWith(firstLine, "}")) {
+                        if (ArrayUtils.isEmpty(args)) {
+                            args = msg.lines().skip(1).toArray();
+                        }
+                        String code = firstLine.substring(1, firstLine.length() - 1).trim();
+                        msg = messageSource.getMessage(code, args, code, getLocale());
+                        result.msg(msg);
+                    }
+                }
             }
         }
     }

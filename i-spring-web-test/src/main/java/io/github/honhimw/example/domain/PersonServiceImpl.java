@@ -38,7 +38,7 @@ public class PersonServiceImpl<T> extends BaseImpl<Map<String, Map<String, Map<S
     }
 
     @PostMapping("/body")
-    public IResult<Void> body(@RequestBody T t) {
+    public IResult<Void> body(@TextParam T t) {
         System.out.println(t);
         return IResult.ok();
     }

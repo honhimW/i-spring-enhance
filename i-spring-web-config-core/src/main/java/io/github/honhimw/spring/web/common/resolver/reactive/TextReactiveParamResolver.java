@@ -1,10 +1,12 @@
 package io.github.honhimw.spring.web.common.resolver.reactive;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.honhimw.core.WrappedException;
 import io.github.honhimw.spring.IDataBufferUtils;
-import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.spring.ResolvableTypes;
+import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.GZipUtils;
 import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
@@ -105,7 +107,7 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
                     .cast(ObjectNode.class)
                     .doOnNext(objectNode::setAll)
                     .flatMap(node -> injectCustom(node, parameter, request).thenReturn(objectNode))
-                    .map(node -> IResolvableTypeSupports.readValue(elementType, node, jackson2Decoder.getObjectMapper()))
+                    .map(node -> readValue(elementType, node, jackson2Decoder.getObjectMapper()))
                     .onErrorMap(ex -> handleReadError(parameter, ex));
                 return Mono.just(adapter.fromPublisher(flux));
             } else {
@@ -114,15 +116,23 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
                     .doOnNext(objectNode::setAll)
                     .flatMap(node -> injectCustom(node, parameter, request))
                     .thenReturn(objectNode)
-                    .map(node -> IResolvableTypeSupports.readValue(elementType, node, jackson2Decoder.getObjectMapper()))
+                    .map(node -> readValue(elementType, node, jackson2Decoder.getObjectMapper()))
                     .onErrorMap(ex -> handleReadError(parameter, ex));
                 return (adapter != null ? Mono.just(adapter.fromPublisher(mono)) : Mono.from(mono));
             }
         }
         Mono<?> mono = Mono.just(objectNode)
-            .map(node -> IResolvableTypeSupports.readValue(elementType, node, jackson2Decoder.getObjectMapper()))
+            .map(node -> readValue(elementType, node, jackson2Decoder.getObjectMapper()))
             .onErrorMap(ex -> handleReadError(parameter, ex));
         return (adapter != null ? Mono.just(adapter.fromPublisher(mono)) : Mono.from(mono));
+    }
+
+    protected Object readValue(ResolvableType elementType, ObjectNode node, ObjectMapper mapper) {
+        try {
+            return IResolvableTypeSupports.readValue(elementType, node, jackson2Decoder.getObjectMapper());
+        } catch (IOException e) {
+            throw new WrappedException(e);
+        }
     }
 
     protected void injectBodyParam(ObjectNode objectNode, byte[] jsonBody) {

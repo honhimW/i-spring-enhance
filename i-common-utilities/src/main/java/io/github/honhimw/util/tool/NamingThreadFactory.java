@@ -7,6 +7,8 @@ import java.lang.invoke.VarHandle;
 import java.util.concurrent.ThreadFactory;
 
 /**
+ * In radix 36
+ *
  * @author hon_him
  * @since 2024-11-27
  */

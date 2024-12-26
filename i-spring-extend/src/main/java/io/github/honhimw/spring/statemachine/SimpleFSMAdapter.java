@@ -1,5 +1,6 @@
 package io.github.honhimw.spring.statemachine;
 
+import jakarta.annotation.Nonnull;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,6 @@ import org.springframework.statemachine.config.builders.StateMachineConfiguratio
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 
-import jakarta.annotation.Nonnull;
 import java.util.Optional;
 import java.util.Set;
 

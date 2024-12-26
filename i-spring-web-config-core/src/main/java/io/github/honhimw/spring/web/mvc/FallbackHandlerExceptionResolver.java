@@ -39,10 +39,12 @@ public class FallbackHandlerExceptionResolver extends AbstractFallbackHandler im
     public ModelAndView resolveException(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, Object handler, @Nonnull Exception ex) {
         log(ex);
         try {
-            ExceptionWrapper wrapper = exceptionWrappers.getWrapper(ex);
-            int status = wrapper.httpCode(ex);
+            ExceptionWrappers.Pair pair = exceptionWrappers.getWrapper(ex);
+            Throwable t = pair.t();
+            ExceptionWrapper wrapper = pair.ew();
+            int status = wrapper.httpCode(t);
             response.setStatus(status);
-            Object result = handle(wrapper, ex, status);
+            Object result = handle(wrapper, t, status);
             List<HttpMessageConverter<?>> converters = httpMessageConverters.getConverters();
             for (HttpMessageConverter converter : converters) {
                 if (converter.canWrite(result.getClass(), MediaType.APPLICATION_JSON)) {

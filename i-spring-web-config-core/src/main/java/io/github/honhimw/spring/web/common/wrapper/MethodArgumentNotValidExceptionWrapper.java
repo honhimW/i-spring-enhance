@@ -1,6 +1,5 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
-import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
  * @since 2023-05-09
  */
 
-public class MethodArgumentNotValidExceptionWrapper extends SingleExceptionWrapper<MethodArgumentNotValidException> implements ExceptionWrapper {
+public class MethodArgumentNotValidExceptionWrapper extends SingleExceptionWrapper<MethodArgumentNotValidException> {
 
     @Nonnull
     @Override

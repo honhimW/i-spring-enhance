@@ -28,21 +28,22 @@ public class ExceptionWrappers {
         this.MAX_UNWRAP_DEPTH = depth;
     }
 
-    public ExceptionWrapper getWrapper(Throwable e) {
+    public Pair getWrapper(Throwable e) {
         ExceptionWrapper ew;
         Throwable t = e;
-        int deepth = 0;
+        int depth = 0;
+        Ref<Throwable> ref = new Ref<>();
         do {
-            Throwable finalT = t;
+            ref.t = t;
             ew = exceptionWrappers.orderedStream()
-                .filter(wrapper -> wrapper.support(finalT))
+                .filter(wrapper -> wrapper.support(ref.t))
                 .findFirst()
                 .orElse(ExceptionWrapper.DEFAULT);
         } while (ew.unwrapCause()
-                 && deepth++ < MAX_UNWRAP_DEPTH
+                 && depth++ < MAX_UNWRAP_DEPTH
                  && Objects.nonNull((t = t.getCause()))
         );
-        return ew;
+        return new Pair(ref.t, ew);
     }
 
     public <T> T handle(Throwable e, BiFunction<ExceptionWrapper, Throwable, T> hook) {
@@ -66,6 +67,21 @@ public class ExceptionWrappers {
         }
 
         return apply;
+    }
+
+    public record Pair(Throwable t, ExceptionWrapper ew) {}
+
+    private static class Ref<T> {
+        private T t;
+
+        private Ref() {
+        }
+
+        private static <T> Ref<T> of(T t) {
+            Ref<T> tRef = new Ref<>();
+            tRef.t = t;
+            return tRef;
+        }
     }
 
 }
