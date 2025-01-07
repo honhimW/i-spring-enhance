@@ -1,3 +1,13 @@
+plugins {
+    id("org.openrewrite.rewrite").version("6.29.3")
+}
+
+import org.gradle.api.internal.artifacts.dependencies.DefaultImmutableVersionConstraint
+import org.gradle.api.internal.catalog.DependencyModel
+import groovy.xml.XmlParser
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 
 group = 'io.github.honhimw'
 version = libs.versions.version.get()
@@ -65,4 +75,60 @@ tasks.register('deployAll') {
     dependsOn ':i-spring-data-ddd:i-spring-ddd-common:publishToMavenLocal'
     dependsOn ':i-spring-data-ddd:i-spring-ddd-jpa:publishToMavenLocal'
     dependsOn ':i-spring-data-ddd:i-spring-ddd-starter:publishToMavenLocal'
+}
+
+apply from: rootProject.file('buildSrc/rewrite.gradle')
+
+tasks.register('checkLibrariesUpdate') {
+    def pool = Executors.newFixedThreadPool(4)
+    def libsDef = [
+            'spring-boot-dependencies'         : buildModel('org.springframework.boot', 'spring-boot-dependencies', 'spring-boot-dependencies', libs.versions.spring.boot.dependencies.get()),
+            'spring-cloud-dependencies'        : buildModel('org.springframework.cloud', 'spring-cloud-dependencies', 'spring-cloud-dependencies', libs.versions.spring.cloud.dependencies.get()),
+            'spring-cloud-alibaba-dependencies': buildModel('com.alibaba.cloud', 'spring-cloud-alibaba-dependencies', 'spring-cloud-alibaba-dependencies', libs.versions.spring.cloud.alibaba.dependencies.get()),
+            'springdoc-openapi'                : buildModel('org.springdoc', 'springdoc-openapi', 'springdoc-openapi', libs.versions.springdoc.openapi.get()),
+            'spring-statemachine'              : buildModel('org.springframework.statemachine', 'spring-statemachine', 'spring-statemachine', libs.versions.spring.statemachine.get()),
+    ]
+
+    libsDef.putAll(defInLibs())
+    def countDownLatch = new CountDownLatch(libsDef.size())
+
+    println "Start check libraries update, libraries count: ${libsDef.size()}"
+    libsDef.each {
+        def dependency = it.value
+        pool.execute {
+            def latestVersion = getLatestVersion(dependency.group, dependency.name)
+            if (dependency.version.requiredVersion != latestVersion) {
+                println "$dependency.versionRef = \"${dependency.version.requiredVersion}\" -> \"${latestVersion}\""
+            }
+            countDownLatch.countDown()
+        }
+    }
+    countDownLatch.await()
+    println 'Finish check libraries update'
+    pool.shutdown()
+}
+
+Map<String, DependencyModel> defInLibs() {
+    def versionCatalogsExtension = project.extensions.getByType(VersionCatalogsExtension)
+    for (final def versionCatalog in versionCatalogsExtension) {
+        return versionCatalog.config.libraries as Map<String, DependencyModel>
+    }
+    return [:]
+}
+
+DependencyModel buildModel(String group, String name, String versionRef, String version) {
+    return new DependencyModel(
+            group, name, versionRef, new DefaultImmutableVersionConstraint(version), null
+    )
+}
+
+String getLatestVersion(String groupId, String artifactId) {
+    def baseUrl = "https://repo1.maven.org/maven2"
+    def groupPath = groupId.replace('.', '/')
+    def url = "${baseUrl}/${groupPath}/${artifactId}/maven-metadata.xml"
+
+    def response = uri(url).toURL().openStream().withCloseable { stream -> return stream.bytes }
+    def xmlContent = new XmlParser().parseText(new String(response, 'UTF-8'))
+    def latestVersion = xmlContent?.versioning?.latest?.text()
+    return latestVersion
 }

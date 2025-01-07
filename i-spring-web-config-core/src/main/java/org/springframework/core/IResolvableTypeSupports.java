@@ -47,11 +47,18 @@ public class IResolvableTypeSupports {
 
     public static ResolvableType resolve(ResolvableType resolvableType) {
         Type type = resolvableType.getType();
-        if (type instanceof TypeVariable<?>) {
-            ResolvableType resolveType = resolvableType.resolveType();
-            if (resolveType != ResolvableType.NONE) {
-                return resolveType;
+        ResolvableType resolveType = resolvableType;
+        int maxDepth = 10;
+        while (type instanceof TypeVariable<?>) {
+            resolveType = resolveType.resolveType();
+            type = resolveType.getType();
+            maxDepth--;
+            if (maxDepth < 0) {
+                return resolvableType;
             }
+        }
+        if (resolveType != ResolvableType.NONE) {
+            return resolveType;
         }
         return resolvableType;
     }

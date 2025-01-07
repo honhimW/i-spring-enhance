@@ -1,11 +1,12 @@
-package io.github.honhimw.ext.h2;
+package h2.ext;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.honhimw.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Objects;
 
 /**
  * @author hon_him
@@ -15,7 +16,10 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class H2CustomFunctions {
 
-    public static ObjectMapper OBJECT_MAPPER = JsonUtils.mapper();
+    /**
+     * Setup ObjectMapper
+     */
+    public static ObjectMapper OBJECT_MAPPER;
 
     public static final String SEPARATOR = String.valueOf(JsonPointer.SEPARATOR);
 
@@ -27,7 +31,7 @@ public class H2CustomFunctions {
      *     Query nativeQuery = em.createNativeQuery("""
      *       create
      *       alias json_extract_path_text
-     *       for "io.github.honhimw.ext.h2.H2CustomFunctions.jsonExtractPathText"
+     *       for "h2.ext.H2CustomFunctions.jsonExtractPathText"
      *     """);
      *     nativeQuery.executeUpdate();
      *   }
@@ -54,7 +58,7 @@ public class H2CustomFunctions {
     public static Object jsonExtractPath(String json, String pointer) {
         try {
             pointer = StringUtils.prependIfMissing(pointer, SEPARATOR);
-            JsonNode jsonNode = OBJECT_MAPPER.readTree(json);
+            JsonNode jsonNode = getMapper().readTree(json);
             JsonNode at = jsonNode.at(pointer);
             if (log.isTraceEnabled()) {
                 log.trace("H2 extract json pointer: {}", pointer);
@@ -74,6 +78,10 @@ public class H2CustomFunctions {
             log.error("json extract error.", e);
             throw new IllegalArgumentException("Unable to extract json during runtime.", e);
         }
+    }
+
+    private static ObjectMapper getMapper() {
+        return Objects.requireNonNull(OBJECT_MAPPER, "H2 custom functions `ObjectMapper` is not initialized.");
     }
 
 }

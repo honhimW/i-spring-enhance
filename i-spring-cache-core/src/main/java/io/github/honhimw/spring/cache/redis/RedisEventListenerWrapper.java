@@ -2,9 +2,10 @@ package io.github.honhimw.spring.cache.redis;
 
 import jakarta.annotation.Nonnull;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.data.redis.connection.*;
@@ -31,8 +32,9 @@ import java.util.*;
  * @since 2023-06-26
  */
 
-@Slf4j
 public class RedisEventListenerWrapper extends KeyspaceEventMessageListener implements ApplicationEventPublisherAware {
+
+    protected final Logger log = LoggerFactory.getLogger("REDIS_EVENT");
 
     protected final RedisMessageListenerContainer listenerContainer;
 
