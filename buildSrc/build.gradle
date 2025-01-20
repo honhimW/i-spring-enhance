@@ -1,5 +1,5 @@
 plugins {
-    id 'org.openrewrite.rewrite' version '6.28.1'
+    id 'org.openrewrite.rewrite' version '7.0.3'
     id 'java-library'
     id 'maven-publish'
     id 'distribution'
