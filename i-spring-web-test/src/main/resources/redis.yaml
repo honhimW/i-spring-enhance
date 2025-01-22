@@ -19,3 +19,6 @@ i:
       redis:
         enabled-event: true
         protocol: resp3
+logging:
+  level:
+    REDIS_EVENT: debug

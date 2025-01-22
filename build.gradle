@@ -86,7 +86,6 @@ tasks.register('checkLibrariesUpdate') {
             'spring-cloud-dependencies'        : buildModel('org.springframework.cloud', 'spring-cloud-dependencies', 'spring-cloud-dependencies', libs.versions.spring.cloud.dependencies.get()),
             'spring-cloud-alibaba-dependencies': buildModel('com.alibaba.cloud', 'spring-cloud-alibaba-dependencies', 'spring-cloud-alibaba-dependencies', libs.versions.spring.cloud.alibaba.dependencies.get()),
             'springdoc-openapi'                : buildModel('org.springdoc', 'springdoc-openapi', 'springdoc-openapi', libs.versions.springdoc.openapi.get()),
-            'spring-statemachine'              : buildModel('org.springframework.statemachine', 'spring-statemachine', 'spring-statemachine', libs.versions.spring.statemachine.get()),
     ]
 
     libsDef.putAll(defInLibs())

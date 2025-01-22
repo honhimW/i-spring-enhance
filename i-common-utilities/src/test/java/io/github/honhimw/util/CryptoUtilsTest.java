@@ -1,10 +1,13 @@
 package io.github.honhimw.util;
 
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Provider;
 import java.security.Security;
+import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -35,7 +38,6 @@ public class CryptoUtilsTest {
     @Test
     @SneakyThrows
     void ecc() {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         CryptoUtils.Asymmetric ecc = CryptoUtils.ecc();
         assertThatThrownBy(ecc::publicKey).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(ecc::privateKey).isInstanceOf(NullPointerException.class);
@@ -62,6 +64,23 @@ public class CryptoUtilsTest {
         Bytes wrap = Bytes.wrap(bytes);
         Bytes bytes1 = Bytes.fromAscii(wrap.toAscii());
         assertThat(bytes1.toString()).isEqualTo("hello world");
+    }
+
+    @Test
+    @SneakyThrows
+    void listTypes() {
+        Provider[] providers = Security.getProviders();
+        for (Provider provider : providers) {
+            Set<Provider.Service> services = provider.getServices();
+            for (Provider.Service service : services) {
+                System.out.printf("name: [%s], type: [%s], algorithm: [%s]%n", provider.getName(), service.getType(), service.getAlgorithm());
+            }
+        }
+    }
+
+    @BeforeAll
+    static void beforeAll() throws Exception {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
     }
 
 }

@@ -4,8 +4,6 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.concurrent.ThreadSafe;
-
 /**
  * @author hon_him
  * @since 2024-12-25
@@ -18,7 +16,7 @@ public class ArchiveTest {
     @BeforeAll
     static void beforeAll() {
         try {
-            RAW = HttpUtils.getInstance().get("https://www.apache.org/licenses/LICENSE-2.0.txt").str();
+            RAW = HttpUtils.getSharedInstance().get("https://www.apache.org/licenses/LICENSE-2.0.txt").str();
         } catch (Exception ignored) {
         }
     }

@@ -1,6 +1,7 @@
 package io.github.honhimw.spring.cache.redis;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -78,7 +79,7 @@ public class RedisEventListenerWrapper extends KeyspaceEventMessageListener impl
     }
 
     @Override
-    public void setKeyspaceNotificationsConfigParameter(String keyspaceNotificationsConfigParameter) {
+    public void setKeyspaceNotificationsConfigParameter(@Nullable String keyspaceNotificationsConfigParameter) {
         this.keyspaceNotificationsConfigParameter = keyspaceNotificationsConfigParameter;
         super.setKeyspaceNotificationsConfigParameter(keyspaceNotificationsConfigParameter);
     }

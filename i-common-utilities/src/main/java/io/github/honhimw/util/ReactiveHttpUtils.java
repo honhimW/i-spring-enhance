@@ -21,23 +21,23 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProtocols;
 import io.netty.resolver.AddressResolverGroup;
+import jakarta.annotation.Nullable;
 import lombok.*;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.ByteBufFlux;
-import reactor.netty.ByteBufMono;
+import reactor.core.publisher.MonoSink;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.http.HttpProtocol;
@@ -63,7 +63,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -133,11 +132,11 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(ReactiveHttpUtils.class);
 
-    private ObjectMapper OBJECT_MAPPER;
+    private ObjectMapper objectMapper;
 
     public void setObjectMapper(ObjectMapper objectMapper) {
         Objects.requireNonNull(objectMapper);
-        OBJECT_MAPPER = objectMapper;
+        this.objectMapper = objectMapper;
     }
 
     private ReactiveHttpUtils() {
@@ -250,7 +249,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
     /**
      * charset
      */
-    private static final Charset defaultCharset = StandardCharsets.UTF_8;
+    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     private HttpClient httpClient;
 
@@ -258,33 +257,20 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     private RequestConfig _defaultRequestConfig;
 
-    @Getter
-    private final List<Consumer<Configurer>> requestInterceptors = new ArrayList<>();
-
-    /**
-     * Register request interceptor, which will be called before each request
-     *
-     * @param interceptor interceptor
-     * @return this
-     */
-    public ReactiveHttpUtils addInterceptor(Consumer<Configurer> interceptor) {
-        Objects.requireNonNull(interceptor);
-        requestInterceptors.add(interceptor);
-        return this;
-    }
+    private ChainBuilder chainBuilder;
 
     private void init() {
         init(RequestConfig.DEFAULT_CONFIG);
-        OBJECT_MAPPER = JsonUtils.mapper();
     }
 
-    @SuppressWarnings("resource")
     private void init(RequestConfig requestConfig) {
         connectionProvider = requestConfig.connectionProvider;
         httpClient = HttpClient.create(connectionProvider);
         httpClient = requestConfig.config(httpClient);
-        addInterceptor(requestConfig.requestInterceptor);
+        chainBuilder = new ChainBuilder();
+        requestConfig.chainBuilder.accept(chainBuilder);
         _defaultRequestConfig = requestConfig;
+        objectMapper = requestConfig.objectMapper;
     }
 
     /**
@@ -473,7 +459,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rGet(String url) {
+    public ResponseReceiver<?> rGet(String url) {
         return receiver(METHOD_GET, url, configurer -> {
         });
     }
@@ -484,7 +470,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rPost(String url) {
+    public ResponseReceiver<?> rPost(String url) {
         return receiver(METHOD_POST, url, configurer -> {
         });
     }
@@ -495,7 +481,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rPut(String url) {
+    public ResponseReceiver<?> rPut(String url) {
         return receiver(METHOD_PUT, url, configurer -> {
         });
     }
@@ -506,7 +492,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rDelete(String url) {
+    public ResponseReceiver<?> rDelete(String url) {
         return receiver(METHOD_DELETE, url, configurer -> {
         });
     }
@@ -517,7 +503,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rOptions(String url) {
+    public ResponseReceiver<?> rOptions(String url) {
         return receiver(METHOD_OPTIONS, url, configurer -> {
         });
     }
@@ -528,7 +514,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param url the URL to send the request to
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rHead(String url) {
+    public ResponseReceiver<?> rHead(String url) {
         return receiver(METHOD_HEAD, url, configurer -> {
         });
     }
@@ -540,7 +526,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rGet(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rGet(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_GET, url, configurer);
     }
 
@@ -551,7 +537,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rPost(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rPost(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_POST, url, configurer);
     }
 
@@ -562,7 +548,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rPut(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rPut(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_PUT, url, configurer);
     }
 
@@ -573,7 +559,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rPatch(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rPatch(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_PATCH, url, configurer);
     }
 
@@ -584,7 +570,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rDelete(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rDelete(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_DELETE, url, configurer);
     }
 
@@ -595,7 +581,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rOptions(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rOptions(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_OPTIONS, url, configurer);
     }
 
@@ -606,7 +592,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result of the HTTP request
      */
-    public ReactiveHttpResult rHead(String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> rHead(String url, Consumer<Configurer> configurer) {
         return receiver(METHOD_HEAD, url, configurer);
     }
 
@@ -622,11 +608,13 @@ public class ReactiveHttpUtils implements AutoCloseable {
      */
     public <T> T request(String method, String url, Consumer<Configurer> configurer,
                          Function<HttpResult, T> resultMapper) {
-        ReactiveHttpResult receiver = receiver(method, url, configurer);
-        Configurer _configurer = receiver.getConfigurer();
-        HttpResult httpResult = receiver.toHttpResult();
-        _configurer.resultHook.accept(httpResult);
-        return resultMapper.apply(httpResult);
+        ResponseReceiver<?> receiver = receiver(method, url, configurer);
+        Consumer<Configurer> _configurer = conf -> conf
+            .method(method)
+            .charset(DEFAULT_CHARSET)
+            .url(url);
+        _configurer = _configurer.andThen(configurer);
+        return resultMapper.apply(execute(_configurer).block());
     }
 
     /**
@@ -635,7 +623,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result
      */
-    public ReactiveHttpResult receiver(Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> receiver(Consumer<Configurer> configurer) {
         return receiver(null, null, configurer);
     }
 
@@ -647,90 +635,60 @@ public class ReactiveHttpUtils implements AutoCloseable {
      * @param configurer configurer of the request
      * @return the reactive result
      */
-    public ReactiveHttpResult receiver(String method, String url, Consumer<Configurer> configurer) {
+    public ResponseReceiver<?> receiver(String method, String url, Consumer<Configurer> configurer) {
         _assertState(Objects.nonNull(configurer), "String should not be null");
-        Configurer requestConfigurer = new Configurer(_defaultRequestConfig)
+        Consumer<Configurer> _configurer = conf -> conf
             .method(method)
-            .charset(defaultCharset)
+            .charset(DEFAULT_CHARSET)
             .url(url);
-        for (Consumer<Configurer> requestInterceptor : requestInterceptors) {
-            configurer = configurer.andThen(requestInterceptor);
-        }
+        _configurer = _configurer.andThen(configurer);
+        Configurer requestConfigurer = new Configurer(this, _defaultRequestConfig);
+        _configurer.accept(requestConfigurer);
+        _assertState(StringUtils.isNotBlank(requestConfigurer.method()), "Method should not be blank");
+        _assertState(StringUtils.isNotBlank(requestConfigurer.url()), "URL should not be blank");
+        return toReceiver(requestConfigurer);
+    }
+
+    private Mono<HttpResult> execute(Consumer<Configurer> configurer) {
+        Configurer requestConfigurer = new Configurer(this, _defaultRequestConfig);
         configurer.accept(requestConfigurer);
         _assertState(StringUtils.isNotBlank(requestConfigurer.method()), "Method should not be blank");
         _assertState(StringUtils.isNotBlank(requestConfigurer.url()), "URL should not be blank");
-        ResponseReceiver<?> responseReceiver = _request(requestConfigurer);
-        ReactiveHttpResult reactiveHttpResult = new ReactiveHttpResult(responseReceiver, requestConfigurer);
-        requestConfigurer.reactiveResultHook.accept(reactiveHttpResult);
-        return reactiveHttpResult;
+        try {
+            FilterContext filterContext = new FilterContext(this, httpClient, requestConfigurer);
+            FilterChain filterChain = chainBuilder.build();
+            return filterChain.doFilter(filterContext);
+        } catch (Exception e) {
+            throw new IllegalStateException("HTTP Execution Error", e);
+        }
     }
 
-    private ResponseReceiver<?> _request(Configurer configurer) {
-        URI uri = null;
+    private ResponseReceiver<?> toReceiver(Configurer configurer) {
+        HttpClient client = Optional.ofNullable(configurer.config)
+            .map(requestConfig -> requestConfig.config(httpClient))
+            .orElse(httpClient);
+
+        Configurer.AbstractBody<?> body = Optional.ofNullable(configurer.bodyConfigurer)
+            .map(bodyModelConsumer -> {
+                Configurer.Payload payload = new Configurer.Payload(configurer);
+                bodyModelConsumer.accept(payload);
+                return payload.getBody();
+            }).orElse(null);
+        RequestSender requestSender = client.request(HttpMethod.valueOf(configurer.method));
+
+        URI uri;
         try {
             uri = new URIBuilder(configurer.url, configurer.charset).addParameters(configurer.params).build();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-        HttpClient client = Optional.ofNullable(configurer.config)
-            .map(requestConfig -> requestConfig.config(httpClient))
-            .orElse(httpClient);
-        if (MapUtils.isNotEmpty(configurer.headers)) {
-            client = client.headers(entries -> configurer.headers.forEach(entries::add));
-        }
+        requestSender = requestSender.uri(uri);
 
-        Configurer.AbstractBody<?> body = Optional.ofNullable(configurer.bodyConfigurer)
-            .map(bodyModelConsumer -> {
-                Configurer.Payload payload = new Configurer.Payload();
-                bodyModelConsumer.accept(payload);
-                return payload.getBody();
-            }).orElse(null);
-        if (Objects.nonNull(body) && StringUtils.isNotBlank(body.contentType())) {
-            client = client.headers(
-                entries -> entries.add(HttpHeaderNames.CONTENT_TYPE.toString(), body.contentType()));
-        }
-        ResponseReceiver<?> responseReceiver;
-        switch (configurer.method) {
-            case "GET": {
-                responseReceiver = client.get();
-                break;
-            }
-            case "DELETE": {
-                responseReceiver = client.delete();
-                break;
-            }
-            case "HEAD": {
-                responseReceiver = client.head();
-                break;
-            }
-            case "OPTIONS": {
-                responseReceiver = client.options();
-                break;
-            }
-            case "POST": {
-                responseReceiver = client.post();
-                break;
-            }
-            case "PUT": {
-                responseReceiver = client.put();
-                break;
-            }
-            case "PATCH": {
-                responseReceiver = client.patch();
-                break;
-            }
-            default: {
-                throw new IllegalArgumentException(String.format("not support http method [%s]", configurer.method));
-            }
-        }
-
-        responseReceiver = responseReceiver.uri(uri);
-
-        if (responseReceiver instanceof RequestSender requestSender && Objects.nonNull(body)) {
+        if (Objects.nonNull(body)) {
             body.init();
-            responseReceiver = body.sender(requestSender, configurer.charset);
+            return body.sender(requestSender, configurer);
         }
-        return responseReceiver;
+        return requestSender;
     }
 
     /**
@@ -757,7 +715,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
         private final boolean noSSL;
         private final ConnectionProvider connectionProvider;
         private final Function<HttpClient, HttpClient> customize;
-        private final Consumer<Configurer> requestInterceptor;
+        private final Consumer<ChainBuilder> chainBuilder;
+        private final ObjectMapper objectMapper;
 
         private HttpClient config(HttpClient httpClient) {
             HttpClient client = httpClient;
@@ -809,7 +768,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
             builder.noSSL(config.noSSL);
             builder.connectionProvider(config.connectionProvider);
             builder.customize(config.customize);
-            builder.requestInterceptor(config.requestInterceptor);
+            builder.chainBuilder = config.chainBuilder;
             return builder;
         }
 
@@ -842,8 +801,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
                 .pendingAcquireMaxCount(MAX_TOTAL_CONNECTIONS)
                 .build();
             private Function<HttpClient, HttpClient> customize = _httpClient -> _httpClient;
-            private Consumer<Configurer> requestInterceptor = configurer -> {
-            };
+            private Consumer<ChainBuilder> chainBuilder = ChainBuilder::withDefault;
+            private ObjectMapper objectMapper = JsonUtils.mapper().copy();
 
             /**
              * Configure the connect timeout
@@ -980,13 +939,24 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             /**
-             * Configure the request interceptor
+             * Configure the filter
              *
-             * @param interceptor request interceptor
+             * @param filters filters
              * @return this
              */
-            public Builder requestInterceptor(Consumer<Configurer> interceptor) {
-                this.requestInterceptor = this.requestInterceptor.andThen(interceptor);
+            public Builder filters(Consumer<ChainBuilder> filters) {
+                this.chainBuilder = this.chainBuilder.andThen(filters);
+                return this;
+            }
+
+            /**
+             * Configure the objectMapper
+             *
+             * @param objectMapper objectMapper
+             * @return this
+             */
+            public Builder objectMapper(ObjectMapper objectMapper) {
+                this.objectMapper = objectMapper;
                 return this;
             }
 
@@ -1009,7 +979,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
                     noSSL,
                     connectionProvider,
                     customize,
-                    requestInterceptor
+                    chainBuilder,
+                    objectMapper
                 );
             }
         }
@@ -1021,9 +992,12 @@ public class ReactiveHttpUtils implements AutoCloseable {
      */
     public final static class Configurer {
 
+        private final ReactiveHttpUtils self;
+
         private final RequestConfig currentDefaultConfig;
 
-        private Configurer(RequestConfig currentDefaultConfig) {
+        private Configurer(ReactiveHttpUtils self, RequestConfig currentDefaultConfig) {
+            this.self = self;
             this.currentDefaultConfig = currentDefaultConfig;
         }
 
@@ -1033,19 +1007,13 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         private String url;
 
-        private final Map<String, List<String>> headers = new HashMap<>();
+        private final Map<CharSequence, List<CharSequence>> headers = new HashMap<>();
 
         private final List<Entry<String, String>> params = new ArrayList<>();
 
         private Consumer<Payload> bodyConfigurer;
 
         private RequestConfig config;
-
-        private Consumer<HttpResult> resultHook = httpResult -> {
-        };
-
-        private Consumer<ReactiveHttpResult> reactiveResultHook = reactiveHttpResult -> {
-        };
 
         /**
          * Configure the method
@@ -1060,6 +1028,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         /**
          * GET
+         *
          * @return this
          */
         public Configurer get() {
@@ -1069,6 +1038,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         /**
          * POST
+         *
          * @return this
          */
         public Configurer post() {
@@ -1078,6 +1048,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         /**
          * PUT
+         *
          * @return this
          */
         public Configurer put() {
@@ -1087,6 +1058,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         /**
          * DELETE
+         *
          * @return this
          */
         public Configurer delete() {
@@ -1096,6 +1068,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         /**
          * PATCH
+         *
          * @return this
          */
         public Configurer patch() {
@@ -1132,8 +1105,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param value header value
          * @return this
          */
-        public Configurer header(String name, String value) {
-            List<String> list = this.headers.get(name);
+        public Configurer header(CharSequence name, CharSequence value) {
+            List<CharSequence> list = this.headers.get(name);
             if (Objects.isNull(list)) {
                 list = new ArrayList<>();
                 this.headers.put(name, list);
@@ -1149,8 +1122,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param value header value
          * @return this
          */
-        public Configurer headerIfAbsent(String name, String value) {
-            List<String> list = this.headers.get(name);
+        public Configurer headerIfAbsent(CharSequence name, CharSequence value) {
+            List<CharSequence> list = this.headers.get(name);
             if (Objects.isNull(list)) {
                 list = new ArrayList<>();
                 this.headers.put(name, list);
@@ -1165,7 +1138,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param headers headers
          * @return this
          */
-        public Configurer headers(Map<String, String> headers) {
+        public Configurer headers(Map<? extends CharSequence, ? extends CharSequence> headers) {
             headers.forEach(this::header);
             return this;
         }
@@ -1234,28 +1207,6 @@ public class ReactiveHttpUtils implements AutoCloseable {
         }
 
         /**
-         * Invoke after request process
-         *
-         * @param resultHook hook
-         * @return this
-         */
-        public Configurer resultHook(Consumer<HttpResult> resultHook) {
-            this.resultHook = this.resultHook.andThen(resultHook);
-            return this;
-        }
-
-        /**
-         * Invoke after request process
-         *
-         * @param resultHook hook
-         * @return this
-         */
-        public Configurer reactiveResultHook(Consumer<ReactiveHttpResult> resultHook) {
-            this.reactiveResultHook = this.reactiveResultHook.andThen(resultHook);
-            return this;
-        }
-
-        /**
          * Get current method
          *
          * @return http method
@@ -1296,15 +1247,20 @@ public class ReactiveHttpUtils implements AutoCloseable {
          *
          * @return headers
          */
-        public Map<String, List<String>> headers() {
+        public Map<CharSequence, List<CharSequence>> headers() {
             return this.headers;
         }
 
         /**
          * HTTP request payload entity
          */
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
         public static class Payload {
+
+            private final Configurer self;
+
+            public Payload(Configurer self) {
+                this.self = self;
+            }
 
             private AbstractBody<?> body;
 
@@ -1324,7 +1280,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Payload raw(Consumer<Raw> configurer) {
-                return type(Raw::new, configurer);
+                return type(() -> new Raw(self.self.objectMapper), configurer);
             }
 
             /**
@@ -1404,7 +1360,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             @SuppressWarnings("unchecked")
-            public I contentType(String contentType) {
+            public I contentType(@Nullable String contentType) {
                 this.contentType = contentType;
                 return (I) this;
             }
@@ -1421,11 +1377,11 @@ public class ReactiveHttpUtils implements AutoCloseable {
             /**
              * Do on sender.
              *
-             * @param sender  sender
-             * @param charset charset
+             * @param sender     sender
+             * @param configurer configurer
              * @return response receiver
              */
-            protected abstract ResponseReceiver<?> sender(RequestSender sender, Charset charset);
+            protected abstract ResponseReceiver<?> sender(RequestSender sender, Configurer configurer);
         }
 
         /**
@@ -1452,17 +1408,21 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
             private String raw;
 
-            private ObjectMapper OBJECT_MAPPER;
+            private final ObjectMapper objectMapper;
 
-            public Raw() {
+            public Raw(ObjectMapper objectMapper) {
                 super.contentType = TEXT_PLAIN;
+                this.objectMapper = objectMapper;
             }
 
             @Override
-            protected ResponseReceiver<?> sender(RequestSender sender, Charset charset) {
-                return sender.send(Mono.justOrEmpty(raw)
-                    .map(s -> s.getBytes(charset))
-                    .map(Unpooled::wrappedBuffer));
+            protected ResponseReceiver<?> sender(RequestSender sender, Configurer configurer) {
+                return sender.send((req, out) -> {
+                    Optional.ofNullable(contentType).ifPresent(ct -> req.header(HttpHeaderNames.CONTENT_TYPE, ct));
+                    return out.send(Mono.justOrEmpty(raw)
+                        .map(s -> s.getBytes(configurer.charset))
+                        .map(Unpooled::wrappedBuffer));
+                });
             }
 
             /**
@@ -1502,7 +1462,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
             public Raw json(Object obj) {
                 if (Objects.isNull(raw) && Objects.nonNull(obj)) {
                     try {
-                        this.raw = OBJECT_MAPPER.writeValueAsString(obj);
+                        this.raw = objectMapper.writeValueAsString(obj);
                     } catch (JsonProcessingException e) {
                         throw new IllegalArgumentException(e);
                     }
@@ -1545,8 +1505,6 @@ public class ReactiveHttpUtils implements AutoCloseable {
          */
         public static class Binary extends AbstractBody<Binary> {
 
-            private Supplier<byte[]> bytesSupplier;
-
             private Publisher<? extends ByteBuf> byteBufPublisher;
 
             public Binary() {
@@ -1554,13 +1512,12 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             @Override
-            protected ResponseReceiver<?> sender(RequestSender sender, Charset charset) {
+            protected ResponseReceiver<?> sender(RequestSender sender, Configurer configurer) {
                 if (Objects.nonNull(byteBufPublisher)) {
-                    return sender.send(byteBufPublisher);
-                }
-                if (Objects.nonNull(bytesSupplier)) {
-                    return sender.send(Mono.fromSupplier(bytesSupplier)
-                        .map(Unpooled::wrappedBuffer));
+                    return sender.send((req, out) -> {
+                        Optional.ofNullable(contentType).ifPresent(ct -> req.header(HttpHeaderNames.CONTENT_TYPE, ct));
+                        return out.send(byteBufPublisher);
+                    });
                 }
                 return sender;
             }
@@ -1600,14 +1557,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary file(File file) {
-                if (Objects.isNull(bytesSupplier)) {
-                    bytesSupplier = () -> {
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> {
                         try {
-                            return FileUtils.readFileToByteArray(file);
+                            return Unpooled.wrappedBuffer(FileUtils.readFileToByteArray(file));
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }
-                    };
+                    });
                 }
                 return this;
             }
@@ -1619,8 +1576,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary bytes(byte[] bytes) {
-                if (Objects.isNull(bytesSupplier)) {
-                    this.bytesSupplier = () -> bytes;
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> Unpooled.wrappedBuffer(bytes));
                 }
                 return this;
             }
@@ -1632,14 +1589,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary inputStream(InputStream ips) {
-                if (Objects.isNull(bytesSupplier)) {
-                    this.bytesSupplier = () -> {
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> {
                         try {
-                            return IOUtils.toByteArray(ips);
+                            return Unpooled.wrappedBuffer(IOUtils.toByteArray(ips));
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }
-                    };
+                    });
                 }
                 return this;
             }
@@ -1652,14 +1609,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary file(File file, String contentType) {
-                if (Objects.isNull(bytesSupplier)) {
-                    bytesSupplier = () -> {
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> {
                         try {
-                            return FileUtils.readFileToByteArray(file);
+                            return Unpooled.wrappedBuffer(FileUtils.readFileToByteArray(file));
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }
-                    };
+                    });
                     this.contentType = contentType;
                 }
                 return this;
@@ -1673,8 +1630,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary bytes(byte[] bytes, String contentType) {
-                if (Objects.isNull(bytesSupplier)) {
-                    this.bytesSupplier = () -> bytes;
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> Unpooled.wrappedBuffer(bytes));
                     this.contentType = contentType;
                 }
                 return this;
@@ -1688,14 +1645,14 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public Binary inputStream(InputStream ips, String contentType) {
-                if (Objects.isNull(bytesSupplier)) {
-                    this.bytesSupplier = () -> {
+                if (Objects.isNull(byteBufPublisher)) {
+                    byteBufPublisher = Mono.fromSupplier(() -> {
                         try {
-                            return IOUtils.toByteArray(ips);
+                            return Unpooled.wrappedBuffer(IOUtils.toByteArray(ips));
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }
-                    };
+                    });
                     this.contentType = contentType;
                 }
                 return this;
@@ -1720,13 +1677,12 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             @Override
-            protected ResponseReceiver<?> sender(RequestSender sender, Charset charset) {
-                return sender.sendForm((httpClientRequest, httpClientForm) -> {
-                    HttpClientForm form = httpClientForm
-                        .multipart(true)
-                        .charset(charset);
+            protected ResponseReceiver<?> sender(RequestSender sender, Configurer configurer) {
+                return sender.sendForm((req, form) -> {
+                    Optional.ofNullable(contentType).ifPresent(ct -> req.header(HttpHeaderNames.CONTENT_TYPE, ct));
+                    form.multipart(true).charset(configurer.charset);
                     for (Function<HttpClientForm, HttpClientForm> part : parts) {
-                        form = part.apply(form);
+                        part.apply(form);
                     }
                 });
             }
@@ -1739,10 +1695,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData text(String name, String value) {
-                parts.add(form -> {
-                    form.attr(name, value);
-                    return form;
-                });
+                parts.add(form -> form.attr(name, value));
                 return this;
             }
 
@@ -1789,10 +1742,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData file(String name, String fileName, File file, String contentType) {
-                parts.add(form -> {
-                    form.file(name, fileName, file, contentType);
-                    return form;
-                });
+                parts.add(form -> form.file(name, fileName, file, contentType));
                 return this;
             }
 
@@ -1806,10 +1756,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData bytes(String name, String fileName, byte[] bytes, String contentType) {
-                parts.add(form -> {
-                    form.file(name, fileName, new ByteArrayInputStream(bytes), contentType);
-                    return form;
-                });
+                parts.add(form -> form.file(name, fileName, new ByteArrayInputStream(bytes), contentType));
                 return this;
             }
 
@@ -1823,10 +1770,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData inputStream(String name, String fileName, InputStream ips, String contentType) {
-                parts.add(form -> {
-                    form.file(name, fileName, ips, MULTIPART_FORM_DATA);
-                    return form;
-                });
+                parts.add(form -> form.file(name, fileName, ips, MULTIPART_FORM_DATA));
                 return this;
             }
 
@@ -1849,12 +1793,12 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             @Override
-            protected ResponseReceiver<?> sender(RequestSender sender, Charset charset) {
-                return sender.sendForm((httpClientRequest, form) -> {
-                    form.charset(charset);
-                    form.multipart(false);
+            protected ResponseReceiver<?> sender(RequestSender sender, Configurer configurer) {
+                return sender.sendForm((req, form) -> {
+                    Optional.ofNullable(contentType).ifPresent(ct -> req.header(HttpHeaderNames.CONTENT_TYPE, ct));
+                    form.charset(configurer.charset).multipart(false);
                     for (Entry<String, String> pair : pairs) {
-                        form = form.attr(pair.getKey(), pair.getValue());
+                        form.attr(pair.getKey(), pair.getValue());
                     }
                 });
             }
@@ -1874,6 +1818,22 @@ public class ReactiveHttpUtils implements AutoCloseable {
         }
     }
 
+    public static HttpResult blockSingle(ResponseReceiver<?> responseReceiver) {
+        HttpResult httpResult = new HttpResult();
+        long start = System.currentTimeMillis();
+        Mono<byte[]> byteMono = responseReceiver.responseSingle((httpClientResponse, byteBufMono) -> {
+            httpResult.setHttpClientResponse(httpClientResponse);
+            httpResult.init();
+            return byteBufMono.asByteArray();
+        });
+        byte[] content = byteMono.block();
+        if (log.isDebugEnabled()) {
+            log.debug("response: cost={}ms, code={}, length={}", System.currentTimeMillis() - start, httpResult.getStatusCode(), httpResult.contentLength);
+        }
+        httpResult.setContent(content);
+        return httpResult;
+    }
+
     /**
      * Blocking http result keeper
      */
@@ -1882,6 +1842,10 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         @Getter
         private int statusCode;
+        @Getter
+        private String version;
+        @Getter
+        private String reasonPhrase;
         @Setter(AccessLevel.PRIVATE)
         private HttpClientResponse httpClientResponse;
         private final Map<String, List<String>> headers = new HashMap<>();
@@ -1898,7 +1862,10 @@ public class ReactiveHttpUtils implements AutoCloseable {
         private Map<CharSequence, Set<Cookie>> cookies;
 
         private void init() {
-            this.statusCode = httpClientResponse.status().code();
+            HttpResponseStatus status = httpClientResponse.status();
+            this.version = httpClientResponse.version().text();
+            this.statusCode = status.code();
+            this.reasonPhrase = status.reasonPhrase();
             HttpHeaders entries = httpClientResponse.responseHeaders();
             setHeaders(entries);
             Optional.ofNullable(getHeader(HttpHeaderNames.CONTENT_TYPE.toString()))
@@ -1923,6 +1890,10 @@ public class ReactiveHttpUtils implements AutoCloseable {
         public String toString() {
             return "HttpResult [statusCode=" + getStatusCode() + ", content-type=" + contentType + ", content-length="
                    + contentLength + "]";
+        }
+
+        public String getStatusLine() {
+            return version + " " + statusCode + " " + reasonPhrase;
         }
 
         /**
@@ -2035,102 +2006,6 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     }
 
-    /**
-     * Reactive http result keeper
-     */
-    public static class ReactiveHttpResult {
-
-        private final ResponseReceiver<?> responseReceiver;
-        @Getter
-        private final Configurer configurer;
-
-        private ReactiveHttpResult(ResponseReceiver<?> responseReceiver, Configurer configurer) {
-            this.responseReceiver = responseReceiver;
-            this.configurer = configurer;
-        }
-
-        /**
-         * Return the response status and headers as HttpClientResponse
-         * Will automatically close the response if necessary.
-         * Note: Will automatically close low-level network connection after returned Mono terminates or is being cancelled.
-         *
-         * @return the response status and headers as HttpClientResponse
-         */
-        public Mono<HttpClientResponse> response() {
-            return responseReceiver.response();
-        }
-
-        /**
-         * Return the response body chunks as ByteBufFlux.
-         * Will automatically close the response if necessary after the returned Flux terminates or is being cancelled.
-         *
-         * @return the response body chunks as ByteBufFlux.
-         */
-        public ByteBufFlux responseContent() {
-            return responseReceiver.responseContent();
-        }
-
-        /**
-         * Wrap all response data in to a mono.
-         *
-         * @param receiver response receiver
-         * @param <V>      forwarding type
-         * @return a Mono forwarding the returned Mono result
-         */
-        public <V> Mono<V> responseSingle(
-            BiFunction<? super HttpClientResponse, ? super ByteBufMono, ? extends Mono<V>> receiver) {
-            return responseReceiver.responseSingle(receiver);
-        }
-
-        /**
-         * Extract a response flux from the given HttpClientResponse and body ByteBufFlux.
-         * Will automatically close the response if necessary after the returned Flux terminates or is being cancelled.
-         *
-         * @param receiver extracting receiver
-         * @param <V>      forwarding type
-         * @return a Flux forwarding the returned Publisher sequence
-         */
-        public <V> Flux<V> response(
-            BiFunction<? super HttpClientResponse, ? super ByteBufFlux, ? extends Publisher<V>> receiver) {
-            return responseReceiver.response(receiver);
-        }
-
-        /**
-         * Extract a response flux from the given HttpClientResponse and underlying Connection.
-         * The connection will not automatically Connection.dispose() and manual interaction with this method might be necessary if the remote never terminates itself.
-         *
-         * @param receiver extracting receiver
-         * @param <V>      fowarding type
-         * @return a Flux forwarding the returned Publisher sequence
-         */
-        public <V> Flux<V> responseConnection(
-            BiFunction<? super HttpClientResponse, ? super Connection, ? extends Publisher<V>> receiver) {
-            return responseReceiver.responseConnection(receiver);
-        }
-
-        /**
-         * Will blocking process a real http request with each-invoked.
-         *
-         * @return blocking http result
-         */
-        public HttpResult toHttpResult() {
-            HttpResult httpResult = new HttpResult();
-            long start = System.currentTimeMillis();
-            Mono<byte[]> byteMono = responseReceiver.responseSingle((httpClientResponse, byteBufMono) -> {
-                httpResult.setHttpClientResponse(httpClientResponse);
-                httpResult.init();
-                return byteBufMono.asByteArray();
-            });
-            byte[] content = byteMono.block();
-            if (log.isDebugEnabled()) {
-                log.debug("response: cost={}ms, code={}, length={}", System.currentTimeMillis() - start, httpResult.getStatusCode(), httpResult.contentLength);
-            }
-            httpResult.setContent(content);
-            return httpResult;
-        }
-
-    }
-
     private void _assertState(boolean state, String message) {
         if (!state) {
             throw new IllegalStateException(message);
@@ -2158,4 +2033,230 @@ public class ReactiveHttpUtils implements AutoCloseable {
             .orElse(StandardCharsets.UTF_8);
     }
 
+    @Getter
+    public static final class FilterContext {
+        private final ReactiveHttpUtils self;
+        private final Configurer configurer;
+        private final Map<String, Object> attributes;
+
+        public FilterContext(ReactiveHttpUtils self, HttpClient httpClient, Configurer configurer) {
+            this.self = self;
+            this.httpClient = httpClient;
+            this.configurer = configurer;
+            this.attributes = new HashMap<>();
+        }
+
+        @Setter
+        private HttpClient httpClient;
+        @Setter
+        private RequestSender requestSender;
+        @Setter
+        private ResponseReceiver<?> responseReceiver;
+
+        @SuppressWarnings("unchecked")
+        public <T> T get(String key) {
+            return (T) attributes.get(key);
+        }
+
+        public <T> Optional<T> tryGet(String key) {
+            T value = get(key);
+            return Optional.ofNullable(value);
+        }
+
+        public void set(String key, Object value) {
+            attributes.put(key, value);
+        }
+
+    }
+
+    public enum Stage {
+        FIRST(Integer.MIN_VALUE),
+        SET_HEADERS(0),
+        CREATE_SENDER(1000),
+        SET_URI(2000),
+        SET_BODY(3000),
+        EXECUTE(Integer.MAX_VALUE), // Send request
+        ;
+
+        private final int order;
+
+        Stage(int order) {
+            this.order = order;
+        }
+
+        public int order() {
+            return order;
+        }
+    }
+
+    public interface Filter {
+        Mono<HttpResult> filter(FilterChain chain, FilterContext ctx);
+    }
+
+    private static class SetHeadersFilter implements Filter {
+        private static final SetHeadersFilter INSTANCE = new SetHeadersFilter();
+
+        @Override
+        public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
+            ctx.httpClient = ctx.httpClient.headers(entries -> ctx.configurer.headers().forEach(entries::add));
+            return chain.doFilter(ctx);
+        }
+    }
+
+    private static class CreateSenderFilter implements Filter {
+        private static final CreateSenderFilter INSTANCE = new CreateSenderFilter();
+
+        @Override
+        public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
+            ctx.requestSender = ctx.httpClient.request(HttpMethod.valueOf(ctx.configurer.method()));
+            return chain.doFilter(ctx);
+        }
+    }
+
+    private static class SetUriFilter implements Filter {
+        private static final SetUriFilter INSTANCE = new SetUriFilter(null);
+        private final Function<String, URI> hostResolver;
+
+        public SetUriFilter(Function<String, URI> hostResolver) {
+            this.hostResolver = hostResolver;
+        }
+
+        @Override
+        public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
+            try {
+                URIBuilder uriBuilder = new URIBuilder(ctx.configurer.url, ctx.configurer.charset);
+                Optional.ofNullable(hostResolver)
+                    .map(resolver -> resolver.apply(uriBuilder.getHost()))
+                    .ifPresent(uri -> {
+                        uriBuilder.setHost(uri.getHost());
+                        uriBuilder.setPort(uri.getPort());
+                    });
+                URI uri = uriBuilder.addParameters(ctx.configurer.params).build();
+                ctx.requestSender = ctx.requestSender.uri(uri);
+                return chain.doFilter(ctx);
+            } catch (URISyntaxException e) {
+                return Mono.error(e);
+            }
+        }
+    }
+
+    private static class CreateReceiverFilter implements Filter {
+        private static final CreateReceiverFilter INSTANCE = new CreateReceiverFilter();
+
+        @Override
+        public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
+            ctx.responseReceiver = Optional.ofNullable(ctx.configurer.bodyConfigurer)
+                .map(bodyBuilder -> {
+                    Configurer.Payload payload = new Configurer.Payload(ctx.configurer);
+                    bodyBuilder.accept(payload);
+                    return payload.getBody();
+                }).<ResponseReceiver<?>>map(b -> {
+                    b.init();
+                    return b.sender(ctx.requestSender, ctx.configurer);
+                })
+                .orElse(ctx.requestSender);
+            return chain.doFilter(ctx);
+        }
+    }
+
+    private static class ExecuteFilter implements Filter {
+        private static final ExecuteFilter INSTANCE = new ExecuteFilter();
+
+        @Override
+        public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
+            long startedAt = System.currentTimeMillis();
+            return ctx.responseReceiver.responseSingle((resp, byteBuf) -> {
+                HttpResult httpResult = new HttpResult();
+                httpResult.httpClientResponse = resp;
+                httpResult.init();
+                return byteBuf.asByteArray()
+                    .map(bytes -> {
+                        httpResult.content = bytes;
+                        return httpResult;
+                    })
+                    .doOnNext(unused -> ctx.set("elapsed", Duration.ofMillis(System.currentTimeMillis() - startedAt)));
+            });
+        }
+    }
+
+    public static final class FilterChain {
+        private final Filter current;
+        private final FilterChain chain;
+
+        private FilterChain(Filter current, FilterChain chain) {
+            this.current = current;
+            this.chain = chain;
+        }
+
+        private static FilterChain create(List<Filter> filters) {
+            FilterChain chain = new FilterChain(null, null);
+            for (int i = filters.size() - 1; i >= 0; i--) {
+                chain = new FilterChain(filters.get(i), chain);
+            }
+            return chain;
+        }
+
+        public Mono<HttpResult> doFilter(FilterContext ctx) {
+            return current != null && chain != null
+                ? current.filter(chain, ctx)
+                : Mono.create(MonoSink::success);
+        }
+
+    }
+
+    public static final class ChainBuilder {
+        private final SortedMap<Integer, Filter> filters = new TreeMap<>();
+
+        public ChainBuilder withDefault() {
+            this.addFilterAt(Stage.SET_HEADERS, SetHeadersFilter.INSTANCE);
+            this.addFilterAt(Stage.CREATE_SENDER, CreateSenderFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_URI, SetUriFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_BODY, CreateReceiverFilter.INSTANCE);
+            this.addFilterAt(Stage.EXECUTE, ExecuteFilter.INSTANCE);
+            return this;
+        }
+
+        public ChainBuilder useHostResolver(Function<String, URI> hostResolver) {
+            this.addFilterAt(Stage.SET_URI, new SetUriFilter(hostResolver));
+            return this;
+        }
+
+        public ChainBuilder addFilterAt(Stage stage, Filter filter) {
+            filters.put(stage.order(), filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterAt(int stage, Filter filter) {
+            filters.put(stage, filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterBefore(Stage stage, Filter filter) {
+            if (stage == Stage.FIRST) {
+                throw new IllegalArgumentException("Cannot add filter before FIRST");
+            }
+            int stageOrder = stage.order() - 1;
+            while (filters.containsKey(stageOrder)) {
+                stageOrder--;
+            }
+            filters.put(stageOrder, filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterAfter(Stage stage, Filter filter) {
+            if (stage == Stage.EXECUTE) {
+                throw new IllegalArgumentException("Cannot add filter after LAST");
+            }
+            int stageOrder = stage.order() + 1;
+            while (filters.containsKey(stageOrder)) {
+                stageOrder++;
+            }
+            filters.put(stageOrder, filter);
+            return this;
+        }
+
+        private FilterChain build() {
+            return FilterChain.create(new ArrayList<>(filters.values()));
+        }
+    }
 }

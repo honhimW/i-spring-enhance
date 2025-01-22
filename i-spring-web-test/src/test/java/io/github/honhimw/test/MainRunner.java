@@ -35,6 +35,7 @@ import org.springframework.http.client.reactive.ClientHttpResponse;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.validation.beanvalidation.LocaleContextMessageInterpolator;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 
 import java.io.File;
 import java.io.Serializable;
@@ -53,7 +54,7 @@ public class MainRunner {
     @SneakyThrows
     void threadFactory() {
         ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance();
-        ReactiveHttpUtils.ReactiveHttpResult hello = instance.receiver(configurer -> configurer
+        HttpClient.ResponseReceiver<?> hello = instance.receiver(configurer -> configurer
             .patch()
             .url("http://127.0.0.1:11451/hello")
             .body(payload -> payload.raw(raw -> raw.text("hello")))

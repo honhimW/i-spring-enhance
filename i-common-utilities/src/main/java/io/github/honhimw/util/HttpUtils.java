@@ -2,6 +2,7 @@ package io.github.honhimw.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,7 +21,6 @@ import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.Cookie;
 import org.apache.hc.client5.http.cookie.CookieStore;
-import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -38,6 +38,7 @@ import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.net.WWWFormCodec;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
 import org.apache.hc.core5.util.TimeValue;
@@ -97,18 +98,19 @@ public class HttpUtils {
 
     private static final Charset defaultCharset = StandardCharsets.UTF_8;
 
-    private static HttpUtils instance;
+    private static HttpUtils INSTANCE;
 
-    private static PoolingHttpClientConnectionManager connectionManager;
+    private PoolingHttpClientConnectionManager connectionManager;
 
-    private static CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient;
 
-    private static ObjectMapper OBJECT_MAPPER;
+    @Getter
+    private ObjectMapper objectMapper;
 
     @Getter
     private RequestConfig defaultRequestConfig;
 
-    private Function<String, URI> loadBalancedResolver;
+    private ChainBuilder chainBuilder;
 
     private void init(InitCustomizer customizer) {
         SocketConfig.Builder socketConfigBuilder = SocketConfig.custom()
@@ -126,8 +128,17 @@ public class HttpUtils {
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
         HttpClientBuilder httpClientBuilder = HttpClients.custom()
             .setRetryStrategy(new DefaultHttpRequestRetryStrategy(3, TimeValue.ofSeconds(1)));
-        OBJECT_MAPPER = JsonUtils.mapper().copy();
-        Initializer initializer = new Initializer(socketConfigBuilder, connectionConfigBuilder, poolingHttpClientConnectionManagerBuilder, httpClientBuilder, requestConfigBuilder, OBJECT_MAPPER);
+        objectMapper = JsonUtils.mapper().copy();
+        chainBuilder = new ChainBuilder().withDefault();
+        Initializer initializer = new Initializer(
+            socketConfigBuilder,
+            connectionConfigBuilder,
+            poolingHttpClientConnectionManagerBuilder,
+            httpClientBuilder,
+            requestConfigBuilder,
+            objectMapper,
+            chainBuilder
+        );
         customizer.customize(initializer);
         connectionManager = poolingHttpClientConnectionManagerBuilder
             .setTlsSocketStrategy(DefaultClientTlsStrategy.createDefault())
@@ -141,27 +152,22 @@ public class HttpUtils {
         httpClient = httpClientBuilder.build();
     }
 
-    public static HttpUtils getInstance() {
-        return getInstance(customizer -> {
-        }, false);
-    }
-
-    public static HttpUtils getInstance(InitCustomizer initializer) {
-        return getInstance(initializer, false);
-    }
-
-    public static HttpUtils getInstance(boolean force) {
-        return getInstance(customizer -> {
-        }, force);
-    }
-
-    public static HttpUtils getInstance(InitCustomizer initializer, boolean force) {
-        if (Objects.isNull(instance) || force) {
-            HttpUtils http5Utils = new HttpUtils();
-            http5Utils.init(initializer);
-            instance = http5Utils;
+    /**
+     * Get shared instance, initialize with default settings
+     *
+     * @return shared instance
+     * @see #buildSharedInstance(InitCustomizer)
+     */
+    public static HttpUtils getSharedInstance() {
+        if (Objects.isNull(INSTANCE)) {
+            buildSharedInstance(customizer -> {
+            });
         }
-        return instance;
+        return INSTANCE;
+    }
+
+    public static void buildSharedInstance(InitCustomizer initializer) {
+        INSTANCE = newInstance(initializer);
     }
 
     public static HttpUtils newInstance() {
@@ -181,7 +187,7 @@ public class HttpUtils {
      * @param route url/uri
      * @param max   max route connections
      */
-    public static void setMaxPerRoute(String route, int max) {
+    public void setMaxPerRoute(String route, int max) {
         Optional.ofNullable(connectionManager)
             .ifPresent(poolingHttpClientConnectionManager -> {
                 URI uri = URI.create(route);
@@ -190,17 +196,13 @@ public class HttpUtils {
             });
     }
 
-    public static void setObjectMapper(ObjectMapper objectMapper) {
+    public void setObjectMapper(ObjectMapper objectMapper) {
         Objects.requireNonNull(objectMapper);
-        OBJECT_MAPPER = objectMapper;
+        this.objectMapper = objectMapper;
     }
 
-    public static HttpClient getHttpClient() {
+    public HttpClient getHttpClient() {
         return httpClient;
-    }
-
-    public void enableLoadBalancer(Function<String, URI> resolver) {
-        this.loadBalancedResolver = resolver;
     }
 
     public HttpResult request(Consumer<Configurer> configurer) throws URISyntaxException, IOException {
@@ -213,16 +215,12 @@ public class HttpUtils {
 
     public <T> T request(String method, String url, Consumer<Configurer> configurer, Function<HttpResult, T> resultMapper) throws URISyntaxException, IOException {
         _assertState(Objects.nonNull(configurer), "String should not be null");
-        Configurer requestConfigurer = new Configurer()
+        Consumer<Configurer> _configurer = conf -> conf
             .method(method)
             .charset(defaultCharset)
             .url(url)
-            .config(RequestConfig.copy(defaultRequestConfig)
-                .build());
-        configurer.accept(requestConfigurer);
-        _assertState(StringUtils.isNotBlank(requestConfigurer.getMethod()), "Method should not be blank");
-        _assertState(StringUtils.isNotBlank(requestConfigurer.getUrl()), "URL should not be blank");
-        HttpResult httpResult = request(requestConfigurer);
+            .config(RequestConfig.copy(defaultRequestConfig).build());
+        HttpResult httpResult = execute(_configurer.andThen(configurer));
         return resultMapper.apply(httpResult);
     }
 
@@ -278,74 +276,23 @@ public class HttpUtils {
         return request(HttpDelete.METHOD_NAME, url, configurer, resultMapper);
     }
 
-    public HttpResult request(Configurer configurer) throws IOException {
-        long start = System.currentTimeMillis();
-        ClassicRequestBuilder classicRequestBuilder = ClassicRequestBuilder.create(configurer.method);
-
+    public HttpResult execute(Consumer<Configurer> configurer) throws IOException {
+        Configurer requestConfigurer = new Configurer(this);
+        configurer.accept(requestConfigurer);
+        _assertState(StringUtils.isNotBlank(requestConfigurer.getMethod()), "Method should not be blank");
+        _assertState(StringUtils.isNotBlank(requestConfigurer.getUrl()), "URL should not be blank");
+        FilterContext ctx = new FilterContext(this, httpClient, requestConfigurer);
         try {
-            URIBuilder uriBuilder = new URIBuilder(configurer.url, configurer.charset);
-            Optional.ofNullable(loadBalancedResolver)
-                .map(resolver -> resolver.apply(uriBuilder.getHost()))
-                .ifPresent(uri -> {
-                    uriBuilder.setHost(uri.getHost());
-                    uriBuilder.setPort(uri.getPort());
-                });
-            URI uri = uriBuilder.build();
-            classicRequestBuilder.setUri(uri);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("URISyntaxException", e);
-        }
-        configurer.params.forEach(classicRequestBuilder::addParameter);
-
-        if (MapUtils.isNotEmpty(configurer.headers)) {
-            configurer.headers.forEach((name, values) -> values.forEach(value -> classicRequestBuilder.addHeader(name, value)));
-        }
-
-        if (StringUtils.equalsAnyIgnoreCase(classicRequestBuilder.getMethod(), HttpPost.METHOD_NAME, HttpPut.METHOD_NAME) && Objects.nonNull(configurer.httpEntity)) {
-            classicRequestBuilder.setEntity(configurer.httpEntity);
-        }
-        ClassicHttpRequest request = classicRequestBuilder.build();
-        HttpClientContext context = configurer.getContext();
-        if (Objects.nonNull(configurer.config)) {
-            context.setRequestConfig(configurer.config);
-        }
-
-        try {
-            return httpClient.execute(request, context, response -> {
-                HttpResult result = new HttpResult();
-                Optional.ofNullable(context)
-                    .map(HttpClientContext::getCookieStore)
-                    .ifPresent(result::setCookieStore);
-                Optional.of(response)
-                    .ifPresent(_resp -> {
-                        result.setStatusCode(_resp.getCode());
-                        result.setVersion(String.valueOf(_resp.getVersion()));
-                        result.setReasonPhrase(_resp.getReasonPhrase());
-                        result.setHeaders(_resp.getHeaders());
-                    });
-
-                if (Objects.nonNull(response.getEntity())) {
-                    HttpEntity entity = response.getEntity();
-                    result.setEntity(entity);
-                    Optional.ofNullable(configurer.inputConfig)
-                        .ifPresent(result::setInputConfig);
-                    result.read();
-                }
-                if (log.isDebugEnabled()) {
-                    log.debug("response: cost={}, {}", Duration.ofMillis(System.currentTimeMillis() - start), response.getCode());
-                }
-                return result;
-            });
-
-
-        } catch (IOException e) {
-            if (log.isDebugEnabled()) {
-                log.debug("exception: cost={}, {}", Duration.ofMillis(System.currentTimeMillis() - start), e.getMessage());
+            FilterChain filterChain = chainBuilder.build();
+            filterChain.doFilter(ctx);
+            if (filterChain.pos < filterChain.filters.size()) {
+                log.warn("The filter chain did not execute completely. Terminated at {}", filterChain.filters.get(filterChain.pos - 1));
             }
-            throw e;
+            return ctx.httpResult;
+        } catch (Exception e) {
+            throw new IOException("HTTP Execution Error", e);
         }
     }
-
 
     @Data
     @NoArgsConstructor
@@ -364,26 +311,42 @@ public class HttpUtils {
 
         private ObjectMapper objectMapper;
 
-        public Initializer customizeSocket(Consumer<SocketConfig.Builder> customizer) {
+        private ChainBuilder chainBuilder;
+
+        public Initializer socket(Consumer<SocketConfig.Builder> customizer) {
             Optional.ofNullable(socketConfigBuilder).ifPresent(customizer);
             return this;
         }
 
-        public Initializer customizeConnection(Consumer<ConnectionConfig.Builder> customizer) {
+        public Initializer connection(Consumer<ConnectionConfig.Builder> customizer) {
             Optional.ofNullable(connectionConfigBuilder).ifPresent(customizer);
             return this;
         }
 
-        public Initializer customizeClient(Consumer<HttpClientBuilder> customizer) {
+        public Initializer connectionManager(Consumer<PoolingHttpClientConnectionManagerBuilder> customizer) {
+            Optional.ofNullable(poolingHttpClientConnectionManagerBuilder).ifPresent(customizer);
+            return this;
+        }
+
+        public Initializer client(Consumer<HttpClientBuilder> customizer) {
             Optional.ofNullable(httpClientBuilder).ifPresent(customizer);
             return this;
         }
 
-        public Initializer customizeMapper(Consumer<ObjectMapper> customizer) {
+        public Initializer request(Consumer<RequestConfig.Builder> customizer) {
+            Optional.ofNullable(requestConfigBuilder).ifPresent(customizer);
+            return this;
+        }
+
+        public Initializer mapper(Consumer<ObjectMapper> customizer) {
             Optional.ofNullable(objectMapper).ifPresent(customizer);
             return this;
         }
 
+        public Initializer filter(Consumer<ChainBuilder> customizer) {
+            Optional.ofNullable(chainBuilder).ifPresent(customizer);
+            return this;
+        }
     }
 
     @FunctionalInterface
@@ -391,8 +354,13 @@ public class HttpUtils {
         void customize(Initializer customizer);
     }
 
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public final static class Configurer {
+
+        private final HttpUtils self;
+
+        private Configurer(HttpUtils self) {
+            this.self = self;
+        }
 
         @Getter
         private String method;
@@ -478,16 +446,14 @@ public class HttpUtils {
         }
 
         public Configurer body(Consumer<Body> configurer) {
-            if (Objects.isNull(httpEntity)) {
-                Body bodyModel = new Body();
-                configurer.accept(bodyModel);
-                AbstractBody<?> body = bodyModel.getBody();
-                if (Objects.nonNull(body)) {
-                    httpEntity = body.toEntity(this.charset);
-                    if (StringUtils.isNotBlank(body.contentType())) {
-                        header(HttpHeaders.CONTENT_TYPE, body.contentType());
-                    }
-                }
+            Body bodyModel = new Body(this);
+            configurer.accept(bodyModel);
+            AbstractBody<?> body = bodyModel.getBody();
+            if (Objects.nonNull(body)) {
+                httpEntity = body.toEntity(this.charset);
+//                if (StringUtils.isNotBlank(body.contentType())) {
+//                    header(HttpHeaders.CONTENT_TYPE, body.contentType());
+//                }
             }
             return this;
         }
@@ -511,8 +477,12 @@ public class HttpUtils {
             return this;
         }
 
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
         public static class Body {
+            private final Configurer self;
+
+            private Body(Configurer self) {
+                this.self = self;
+            }
 
             private AbstractBody<?> body;
 
@@ -521,11 +491,11 @@ public class HttpUtils {
             }
 
             public Body raw(Consumer<Raw> configurer) {
-                return type(Raw::new, configurer);
+                return type(() -> new Raw(self.self.objectMapper), configurer);
             }
 
             public Body formData(Consumer<FormData> configurer) {
-                return type(FormData::new, configurer);
+                return type(() -> new FormData(self.charset), configurer);
             }
 
             public Body binary(Consumer<Binary> configurer) {
@@ -586,7 +556,7 @@ public class HttpUtils {
              * @return this
              */
             @SuppressWarnings("unchecked")
-            public I contentType(ContentType contentType) {
+            public I contentType(@Nullable ContentType contentType) {
                 this.contentType = contentType;
                 return (I) this;
             }
@@ -608,9 +578,11 @@ public class HttpUtils {
             public static final ContentType TEXT_HTML = ContentType.TEXT_HTML;
             public static final ContentType APPLICATION_XML = ContentType.TEXT_XML;
 
+            private final ObjectMapper objectMapper;
             private String raw;
 
-            public Raw() {
+            public Raw(ObjectMapper objectMapper) {
+                this.objectMapper = objectMapper;
                 super.contentType = TEXT_PLAIN;
             }
 
@@ -619,7 +591,7 @@ public class HttpUtils {
                 if (Objects.nonNull(contentType)) {
                     contentType = contentType.withCharset(charset);
                 }
-                return new StringEntity(raw, charset);
+                return new StringEntity(raw, contentType);
             }
 
             public Raw text(String text) {
@@ -641,7 +613,7 @@ public class HttpUtils {
             public Raw json(Object obj) {
                 if (Objects.isNull(raw) && Objects.nonNull(obj)) {
                     try {
-                        this.raw = OBJECT_MAPPER.writeValueAsString(obj);
+                        this.raw = objectMapper.writeValueAsString(obj);
                     } catch (JsonProcessingException e) {
                         throw new IllegalArgumentException(e);
                     }
@@ -757,33 +729,35 @@ public class HttpUtils {
             public static final ContentType MULTIPART_FORM_DATA = ContentType.MULTIPART_FORM_DATA;
 
             private final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            private final Charset charset;
 
-            public FormData() {
-                super.contentType = null;
+            public FormData(Charset charset) {
+                this.charset = charset;
+                super.contentType = ContentType.MULTIPART_FORM_DATA.withCharset(charset);
             }
 
             @Override
             protected HttpEntity toEntity(Charset charset) {
-                return builder.setCharset(charset).setContentType(ContentType.MULTIPART_FORM_DATA).build();
+                return builder.setContentType(contentType).setCharset(charset).build();
             }
 
             public FormData text(String name, String value) {
-                builder.addTextBody(name, value, MULTIPART_FORM_DATA);
+                builder.addTextBody(name, value, ContentType.DEFAULT_TEXT.withCharset(charset));
                 return this;
             }
 
             public FormData file(String name, File file) {
-                builder.addBinaryBody(name, file, MULTIPART_FORM_DATA, name);
+                builder.addBinaryBody(name, file, ContentType.DEFAULT_BINARY.withCharset(charset), file.getName());
                 return this;
             }
 
             public FormData bytes(String name, byte[] bytes) {
-                builder.addBinaryBody(name, bytes, MULTIPART_FORM_DATA, name);
+                builder.addBinaryBody(name, bytes, ContentType.DEFAULT_BINARY.withCharset(charset), name);
                 return this;
             }
 
             public FormData inputStream(String name, InputStream ips) {
-                builder.addBinaryBody(name, ips, MULTIPART_FORM_DATA, name);
+                builder.addBinaryBody(name, ips, ContentType.DEFAULT_BINARY.withCharset(charset), name);
                 return this;
             }
 
@@ -824,7 +798,7 @@ public class HttpUtils {
                 if (Objects.nonNull(contentType)) {
                     contentType = contentType.withCharset(charset);
                 }
-                return new UrlEncodedFormEntity(nameValuePairs, charset);
+                return new StringEntity(WWWFormCodec.format(nameValuePairs, charset), contentType);
             }
 
             public FormUrlEncoded text(String name, String value) {
@@ -836,8 +810,273 @@ public class HttpUtils {
         }
     }
 
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    @Getter
+    public static final class FilterContext {
+        private final HttpUtils self;
+        private final CloseableHttpClient httpClient;
+        private final Configurer configurer;
+        private final Map<String, Object> attributes;
+
+        private FilterContext(HttpUtils self, CloseableHttpClient httpClient, Configurer configurer) {
+            this.self = self;
+            this.httpClient = httpClient;
+            this.configurer = configurer;
+            this.attributes = new HashMap<>();
+        }
+
+        @Setter
+        private ClassicRequestBuilder requestBuilder;
+        private HttpClientContext httpContext;
+        private ClassicHttpRequest httpRequest;
+        private ClassicHttpResponse httpResponse;
+        private HttpResult httpResult;
+
+        @SuppressWarnings("unchecked")
+        public <T> T get(String key) {
+            return (T) attributes.get(key);
+        }
+
+        public <T> Optional<T> tryGet(String key) {
+            T value = get(key);
+            return Optional.ofNullable(value);
+        }
+
+        public void set(String key, Object value) {
+            attributes.put(key, value);
+        }
+    }
+
+    public enum Stage {
+        FIRST(Integer.MIN_VALUE),
+        CREATE_REQUEST(0),
+        SET_URI(1000),
+        SET_PARAMS(2000),
+        SET_ENTITY(3000),
+        SET_HEADERS(4000),
+        BUILD_REQUEST(5000),
+        EXECUTE(Integer.MAX_VALUE), // Send request
+        ;
+
+        private final int order;
+
+        Stage(int order) {
+            this.order = order;
+        }
+
+        public int order() {
+            return order;
+        }
+    }
+
+    public interface Filter {
+        void filter(FilterChain chain, FilterContext ctx) throws Exception;
+    }
+
+    public static abstract class AbstractFilter implements Filter {
+        @Override
+        public final void filter(FilterChain chain, FilterContext ctx) throws Exception {
+            preFilter(ctx);
+            chain.doFilter(ctx);
+            postFilter(ctx);
+        }
+
+        protected void preFilter(FilterContext ctx) throws Exception {
+        }
+
+        protected void postFilter(FilterContext ctx) throws Exception {
+        }
+    }
+
+    private static class CreateRequestFilter extends AbstractFilter {
+        private static final CreateRequestFilter INSTANCE = new CreateRequestFilter();
+
+        @Override
+        protected void preFilter(FilterContext ctx) throws Exception {
+            ctx.requestBuilder = ClassicRequestBuilder.create(ctx.configurer.method);
+        }
+    }
+
+    private static class SetUriFilter extends AbstractFilter {
+        private static final SetUriFilter INSTANCE = new SetUriFilter(null);
+
+        private final Function<String, URI> hostResolver;
+
+        private SetUriFilter(Function<String, URI> hostResolver) {
+            this.hostResolver = hostResolver;
+        }
+
+        @Override
+        protected void preFilter(FilterContext ctx) throws Exception {
+            URIBuilder uriBuilder = new URIBuilder(ctx.configurer.url, ctx.configurer.charset);
+            Optional.ofNullable(hostResolver)
+                .map(resolver -> resolver.apply(uriBuilder.getHost()))
+                .ifPresent(uri -> {
+                    uriBuilder.setHost(uri.getHost());
+                    uriBuilder.setPort(uri.getPort());
+                });
+            URI uri = uriBuilder.build();
+            ctx.requestBuilder.setUri(uri);
+        }
+    }
+
+    private static class SetParamsFilter extends AbstractFilter {
+        private static final SetParamsFilter INSTANCE = new SetParamsFilter();
+
+        @Override
+        public void preFilter(FilterContext ctx) throws Exception {
+            ctx.configurer.params.forEach(ctx.requestBuilder::addParameter);
+        }
+    }
+
+    private static class SetEntityFilter extends AbstractFilter {
+        private static final SetEntityFilter INSTANCE = new SetEntityFilter();
+
+        @Override
+        public void preFilter(FilterContext ctx) throws Exception {
+            if (StringUtils.equalsAnyIgnoreCase(ctx.requestBuilder.getMethod(), HttpPost.METHOD_NAME, HttpPut.METHOD_NAME) && Objects.nonNull(ctx.configurer.httpEntity)) {
+                ctx.requestBuilder.setEntity(ctx.configurer.httpEntity);
+            }
+        }
+    }
+
+    private static class SetHeadersFilter extends AbstractFilter {
+        private static final SetHeadersFilter INSTANCE = new SetHeadersFilter();
+
+        @Override
+        public void preFilter(FilterContext ctx) throws Exception {
+            if (MapUtils.isNotEmpty(ctx.configurer.headers)) {
+                ctx.configurer.headers.forEach((name, values) -> values.forEach(value -> ctx.requestBuilder.addHeader(name, value)));
+            }
+        }
+    }
+
+    private static class BuildRequestFilter extends AbstractFilter {
+        private static final BuildRequestFilter INSTANCE = new BuildRequestFilter();
+
+        @Override
+        public void preFilter(FilterContext ctx) throws Exception {
+            ctx.httpContext = ctx.configurer.getContext();
+            if (Objects.nonNull(ctx.configurer.config)) {
+                ctx.httpContext.setRequestConfig(ctx.configurer.config);
+            }
+            ctx.httpRequest = ctx.requestBuilder.build();
+        }
+    }
+
+    private static class ExecuteFilter implements Filter {
+        private static final ExecuteFilter INSTANCE = new ExecuteFilter();
+
+        @Override
+        public void filter(FilterChain chain, FilterContext ctx) throws Exception {
+            long startedAt = System.currentTimeMillis();
+            try {
+                ctx.httpResult = ctx.httpClient.execute(ctx.httpRequest, ctx.httpContext, response -> {
+                    HttpResult result = new HttpResult(ctx.self.objectMapper);
+                    Optional.ofNullable(ctx.httpContext)
+                        .map(HttpClientContext::getCookieStore)
+                        .ifPresent(result::setCookieStore);
+                    result.setStatusCode(response.getCode());
+                    result.setVersion(String.valueOf(response.getVersion()));
+                    result.setReasonPhrase(response.getReasonPhrase());
+                    result.setHeaders(response.getHeaders());
+
+                    if (Objects.nonNull(response.getEntity())) {
+                        HttpEntity entity = response.getEntity();
+                        result.setEntity(entity);
+                        Optional.ofNullable(ctx.configurer.inputConfig)
+                            .ifPresent(result::setInputConfig);
+                        result.read();
+                    }
+                    ctx.httpResponse = response;
+                    return result;
+                });
+            } finally {
+                ctx.set("elapsed", Duration.ofMillis(System.currentTimeMillis() - startedAt));
+            }
+        }
+    }
+
+    public static final class FilterChain {
+        private final List<Filter> filters;
+        private int pos;
+
+        private FilterChain(List<Filter> filters) {
+            this.filters = filters;
+            this.pos = 0;
+        }
+
+        public void doFilter(FilterContext ctx) throws Exception {
+            if (pos < filters.size()) {
+                Filter filter = filters.get(pos++);
+                filter.filter(this, ctx);
+            }
+        }
+    }
+
+    public static final class ChainBuilder {
+        private final SortedMap<Integer, Filter> filters = new TreeMap<>();
+
+        public ChainBuilder withDefault() {
+            this.addFilterAt(Stage.CREATE_REQUEST, CreateRequestFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_URI, SetUriFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_PARAMS, SetParamsFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_ENTITY, SetEntityFilter.INSTANCE);
+            this.addFilterAt(Stage.SET_HEADERS, SetHeadersFilter.INSTANCE);
+            this.addFilterAt(Stage.BUILD_REQUEST, BuildRequestFilter.INSTANCE);
+            this.addFilterAt(Stage.EXECUTE, ExecuteFilter.INSTANCE);
+            return this;
+        }
+
+        public ChainBuilder useHostResolver(Function<String, URI> hostResolver) {
+            this.addFilterAt(Stage.SET_URI, new SetUriFilter(hostResolver));
+            return this;
+        }
+
+        public ChainBuilder addFilterAt(Stage stage, Filter filter) {
+            filters.put(stage.order(), filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterAt(int stage, Filter filter) {
+            filters.put(stage, filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterBefore(Stage stage, Filter filter) {
+            if (stage == Stage.FIRST) {
+                throw new IllegalArgumentException("Cannot add filter before FIRST");
+            }
+            int stageOrder = stage.order() - 1;
+            while (filters.containsKey(stageOrder)) {
+                stageOrder--;
+            }
+            filters.put(stageOrder, filter);
+            return this;
+        }
+
+        public ChainBuilder addFilterAfter(Stage stage, Filter filter) {
+            if (stage == Stage.EXECUTE) {
+                throw new IllegalArgumentException("Cannot add filter after LAST");
+            }
+            int stageOrder = stage.order() + 1;
+            while (filters.containsKey(stageOrder)) {
+                stageOrder++;
+            }
+            filters.put(stageOrder, filter);
+            return this;
+        }
+
+        private FilterChain build() {
+            return new FilterChain(new ArrayList<>(filters.values()));
+        }
+    }
+
     public static class HttpResult {
+        private final ObjectMapper objectMapper;
+
+        private HttpResult(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+        }
 
         @Getter
         private int statusCode;
@@ -968,7 +1207,7 @@ public class HttpUtils {
         public <T> T json(Class<T> type) {
             return wrap(bytes -> {
                 try {
-                    return OBJECT_MAPPER.readValue(bytes, type);
+                    return objectMapper.readValue(bytes, type);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
