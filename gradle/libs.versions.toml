@@ -23,7 +23,7 @@ lombok-mapstruct-binding = "0.2.0"
 hypersistence-utils-hibernate = "3.9.0"
 zstd-jni = "1.5.6-9"
 xz = "1.10"
-jetbrains-annotations = "26.0.1"
+jetbrains-annotations = "26.0.2"
 jmh = "1.37"
 
 multi-release-jar = "0.1.1"
