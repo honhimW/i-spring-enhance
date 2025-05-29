@@ -77,7 +77,10 @@ tasks.register('deployAll') {
     dependsOn ':i-spring-data-ddd:i-spring-ddd-starter:publishToMavenLocal'
 }
 
-apply from: rootProject.file('buildSrc/rewrite.gradle')
+if (rootProject.file('buildSrc/rewrite.gradle').exists()) {
+    apply from: rootProject.file('buildSrc/rewrite.gradle')
+}
+
 
 tasks.register('checkLibrariesUpdate') {
     def pool = Executors.newFixedThreadPool(4)
