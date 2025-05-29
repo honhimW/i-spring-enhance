@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProtocols;
 import io.netty.resolver.AddressResolverGroup;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -49,7 +50,6 @@ import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.transport.TransportConfig;
 
-import javax.annotation.Nonnull;
 import javax.net.ssl.SSLException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -208,6 +208,18 @@ public class ReactiveHttpUtils implements AutoCloseable {
     public static ReactiveHttpUtils getInstance() {
         ReactiveHttpUtils reactiveHttpUtils = new ReactiveHttpUtils();
         reactiveHttpUtils.init();
+        return reactiveHttpUtils;
+    }
+
+    /**
+     * Construct a {@link ReactiveHttpUtils} instance with base-url
+     *
+     * @return {@link ReactiveHttpUtils}
+     */
+    public static ReactiveHttpUtils getInstance(String baseUrl) {
+        ReactiveHttpUtils reactiveHttpUtils = new ReactiveHttpUtils();
+        reactiveHttpUtils.init();
+        reactiveHttpUtils.httpClient = reactiveHttpUtils.httpClient.baseUrl(baseUrl);
         return reactiveHttpUtils;
     }
 
@@ -1848,7 +1860,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
         private String reasonPhrase;
         @Setter(AccessLevel.PRIVATE)
         private HttpClientResponse httpClientResponse;
-        private final Map<String, List<String>> headers = new HashMap<>();
+        private final Map<String, List<String>> headers = new LinkedHashMap<>();
         @Setter(AccessLevel.PRIVATE)
         private String contentType;
         @Setter(AccessLevel.PRIVATE)
@@ -1860,6 +1872,11 @@ public class ReactiveHttpUtils implements AutoCloseable {
         @Getter
         @Setter(AccessLevel.PRIVATE)
         private Map<CharSequence, Set<Cookie>> cookies;
+        @Getter
+        @Setter(AccessLevel.PRIVATE)
+        private FilterContext filterContext;
+        @Getter
+        private Duration elapsed = Duration.ZERO;
 
         private void init() {
             HttpResponseStatus status = httpClientResponse.status();
@@ -2161,6 +2178,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
     private static class ExecuteFilter implements Filter {
         private static final ExecuteFilter INSTANCE = new ExecuteFilter();
+        private static final byte[] EMPTY = new byte[0];
 
         @Override
         public Mono<HttpResult> filter(FilterChain chain, FilterContext ctx) {
@@ -2168,13 +2186,15 @@ public class ReactiveHttpUtils implements AutoCloseable {
             return ctx.responseReceiver.responseSingle((resp, byteBuf) -> {
                 HttpResult httpResult = new HttpResult();
                 httpResult.httpClientResponse = resp;
+                httpResult.filterContext = ctx;
                 httpResult.init();
                 return byteBuf.asByteArray()
+                    .defaultIfEmpty(EMPTY)
                     .map(bytes -> {
                         httpResult.content = bytes;
+                        httpResult.elapsed = Duration.ofMillis(System.currentTimeMillis() - startedAt);
                         return httpResult;
-                    })
-                    .doOnNext(unused -> ctx.set("elapsed", Duration.ofMillis(System.currentTimeMillis() - startedAt)));
+                    });
             });
         }
     }

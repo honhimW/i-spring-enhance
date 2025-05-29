@@ -1,12 +1,20 @@
 package io.github.honhimw.example.config;
 
 import io.github.honhimw.ddd.jpa.acl.AclJpaRepositoryFactoryBean;
-import io.github.honhimw.example.domain.BuildInData;
+import io.github.honhimw.example.domain.jpa.BuildInData;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionManager;
 
 /**
  * @author hon_him
@@ -19,4 +27,14 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackageClasses = BuildInData.class)
 @EnableJpaRepositories(basePackageClasses = BuildInData.class, repositoryFactoryBeanClass = AclJpaRepositoryFactoryBean.class)
 public class JpaConfig {
+
+    @Primary
+    @Bean
+    public PlatformTransactionManager transactionManager(
+        ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManagerCustomizers.ifAvailable((customizers) -> customizers.customize(transactionManager));
+        return transactionManager;
+    }
+
 }

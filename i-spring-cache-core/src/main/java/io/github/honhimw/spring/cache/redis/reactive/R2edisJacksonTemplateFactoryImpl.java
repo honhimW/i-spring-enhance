@@ -35,6 +35,8 @@ public class R2edisJacksonTemplateFactoryImpl implements R2edisJacksonTemplateFa
 
     private volatile ReactiveStringRedisTemplate stringReactiveRedisTemplate;
 
+    private volatile ReactiveRedisTemplate<String, byte[]> bytesReactiveRedisTemplate;
+
     public R2edisJacksonTemplateFactoryImpl(ReactiveRedisConnectionFactory redisConnectionFactory, RedisSerializer<String> keySerializer, ObjectMapper objectMapper) {
         this.redisConnectionFactory = redisConnectionFactory;
         this.keySerializer = keySerializer;
@@ -69,6 +71,25 @@ public class R2edisJacksonTemplateFactoryImpl implements R2edisJacksonTemplateFa
             }
         }
         return stringReactiveRedisTemplate;
+    }
+
+    @Override
+    public ReactiveRedisTemplate<String, byte[]> bytes() {
+        if (Objects.isNull(bytesReactiveRedisTemplate)) {
+            synchronized (this) {
+                if (Objects.isNull(bytesReactiveRedisTemplate)) {
+                    RedisSerializationContext.RedisSerializationContextBuilder<String, byte[]> builder =
+                        RedisSerializationContext.newSerializationContext();
+                    builder.key(keySerializer);
+                    builder.value(RedisSerializer.byteArray());
+                    builder.hashKey(RedisSerializer.string());
+                    builder.hashValue(RedisSerializer.byteArray());
+                    RedisSerializationContext<String, byte[]> context = builder.build();
+                    bytesReactiveRedisTemplate = new ReactiveRedisTemplate<>(redisConnectionFactory, context);
+                }
+            }
+        }
+        return bytesReactiveRedisTemplate;
     }
 
     @Override

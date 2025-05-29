@@ -84,7 +84,6 @@ public class PageUtils {
         return pageInfoDTO;
     }
 
-
     private static int springPageNo(int pageNo) {
         return Math.max(pageNo - FIRST_PAGE_NO, 0);
     }

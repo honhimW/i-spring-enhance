@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Type;
@@ -26,6 +27,8 @@ public class R2edisUtils implements ApplicationContextAware {
 
     private static R2edisJacksonTemplateFactory r2edisJacksonTemplateFactory;
 
+    private static ReactiveRedisTemplate<String, byte[]> bytesRedisTemplate;
+
     private static ReactiveRedisTemplate<String, String> readRedisTemplate;
     private static ReactiveRedisTemplate<String, Object> writeRedisTemplate;
 
@@ -35,6 +38,7 @@ public class R2edisUtils implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         r2edisJacksonTemplateFactory = applicationContext.getBean(R2edisJacksonTemplateFactory.class);
+        bytesRedisTemplate = r2edisJacksonTemplateFactory.bytes();
         readRedisTemplate = r2edisJacksonTemplateFactory.string();
         writeRedisTemplate = r2edisJacksonTemplateFactory.forType(Object.class);
         MAPPER = r2edisJacksonTemplateFactory.getMapper();
@@ -89,6 +93,14 @@ public class R2edisUtils implements ApplicationContextAware {
         } catch (Exception e) {
             return Mono.error(e);
         }
+    }
+
+    public static Mono<Boolean> putBytes(String key, byte[] value) {
+        return putBytes(key, value, DEFAULT_TTL);
+    }
+
+    public static Mono<Boolean> putBytes(String key, byte[] value, Duration ttl) {
+        return bytesRedisTemplate.opsForValue().set(key, value, ttl);
     }
 
     public static Mono<Boolean> containsKey(String key) {
@@ -150,6 +162,10 @@ public class R2edisUtils implements ApplicationContextAware {
             .mapNotNull(json -> deserialize(json, type));
     }
 
+    public static Mono<byte[]> getBytes(String key) {
+        return bytesRedisTemplate.opsForValue().get(key);
+    }
+
     public static Mono<Boolean> expire(String key, Duration ttl) {
         return writeRedisTemplate.expire(key, ttl);
     }
@@ -160,6 +176,13 @@ public class R2edisUtils implements ApplicationContextAware {
 
     public static Mono<Boolean> persist(String key) {
         return writeRedisTemplate.persist(key);
+    }
+
+    public static Flux<String> scan(String pattern, int count) {
+        return readRedisTemplate.scan(ScanOptions.scanOptions()
+            .match(pattern)
+            .count(count)
+            .build());
     }
 
     /**

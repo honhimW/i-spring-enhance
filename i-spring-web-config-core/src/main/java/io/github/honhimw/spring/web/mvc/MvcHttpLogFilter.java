@@ -7,7 +7,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,6 +16,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -26,47 +26,47 @@ import java.util.*;
  * @since 2024-11-20
  */
 
-@Slf4j
 public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
 
     public static final int DEFAULT_FILTER_ORDERED = -1000;
 
     @Override
     protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain filterChain) throws ServletException, IOException {
-        // only work on TRACE/DEBUG/INFO
-        if (!log.isInfoEnabled()) {
+        if (!HttpLog.log.isInfoEnabled()) {
             filterChain.doFilter(request, response);
             return;
         }
+
+        // construct http-log entity
+        HttpLog httpLog = new HttpLog();
+        StringBuilder sb = new StringBuilder();
+
+        String encoding = request.getCharacterEncoding();
+
+        if (StringUtils.isNotBlank(encoding)) {
+            Charset charset = Charset.forName(encoding);
+            httpLog.setCharset(charset);
+        }
+
+        sb.append(request.getRequestURL());
+        if (StringUtils.isNotBlank(request.getQueryString())) {
+            sb.append("?");
+            sb.append(request.getQueryString());
+        }
+        String string = sb.toString();
+        URI uri = URI.create(string);
+        httpLog.setUri(uri);
+        httpLog.setMethod(request.getMethod());
+        HttpLog.LogHolder logHolder = new HttpLog.LogHolder(httpLog);
+        request.setAttribute(HttpLog.LogHolder.class.getName(), logHolder);
 
         // wrap caching request/response
         ContentCachingRequestWrapper cachingRequest = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper cachingResponse = new ContentCachingResponseWrapper(response);
 
-        // construct http-log entity
-        HttpLog httpLog = new HttpLog();
-        StringBuilder sb = new StringBuilder();
-        httpLog.setStatus(cachingResponse.getStatus());
-        sb.append(cachingRequest.getRequestURL());
-        if (StringUtils.isNotBlank(cachingRequest.getQueryString())) {
-            sb.append("?");
-            sb.append(cachingRequest.getQueryString());
-        }
-        String string = sb.toString();
-        URI uri = URI.create(string);
-        httpLog.setUri(uri);
-        httpLog.setMethod(cachingRequest.getMethod());
-        HttpLog.LogHolder logHolder = new HttpLog.LogHolder(httpLog);
-        cachingRequest.setAttribute(HttpLog.LogHolder.class.getName(), logHolder);
-
         // do filter
-        long pre = System.currentTimeMillis();
-        filterChain.doFilter(cachingRequest, cachingResponse);
-        long post = System.currentTimeMillis();
-        long elapsed = post - pre;
-
+        doFilter(request, response, filterChain, logHolder);
         httpLog = logHolder.get();
-        httpLog.setElapsed(elapsed);
 
         // only raw-type request content will be recorded
         if (MimeTypeSupports.isRawType(cachingRequest.getContentType())) {
@@ -113,6 +113,16 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         }
 
         httpLog.log();
+    }
+
+    private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, HttpLog.LogHolder logHolder) throws ServletException, IOException {
+        long pre = System.currentTimeMillis();
+        filterChain.doFilter(request, response);
+        long post = System.currentTimeMillis();
+        long elapsed = post - pre;
+        HttpLog httpLog = logHolder.get();
+        httpLog.setStatus(response.getStatus());
+        httpLog.setElapsed(elapsed);
     }
 
     @Override

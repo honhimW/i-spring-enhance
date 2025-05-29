@@ -21,6 +21,8 @@ public interface R2edisJacksonTemplateFactory {
 
     ReactiveRedisTemplate<String, String> string();
 
+    ReactiveRedisTemplate<String, byte[]> bytes();
+
     <V> ReactiveRedisTemplate<String, V> forType(@Nonnull Type type);
 
     <V> ReactiveRedisTemplate<String, V> forType(@Nonnull Class<V> type);

@@ -1,7 +1,7 @@
 package io.github.honhimw.example.web;
 
 import io.github.honhimw.core.IResult;
-import io.github.honhimw.example.domain.PersonServiceImpl;
+import io.github.honhimw.example.domain.jpa.PersonServiceImpl;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -4,7 +4,7 @@ import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.web.common.HttpLog;
 import io.github.honhimw.spring.web.util.MimeTypeSupports;
 import jakarta.annotation.Nonnull;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Publisher;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -16,17 +16,14 @@ import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.charset.Charset;
+import java.util.*;
 
 /**
  * @author hon_him
  * @since 2023-08-02
  */
 
-@Slf4j
 public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
 
     public static final int DEFAULT_HANDLER_ORDERED = -1000;
@@ -48,8 +45,7 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
     @Nonnull
     @Override
     public Mono<Void> handle(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response) {
-        // only work on TRACE/DEBUG/INFO
-        if (!log.isInfoEnabled()) {
+        if (!HttpLog.log.isInfoEnabled()) {
             return httpHandler.handle(request, response);
         }
 
@@ -92,6 +88,9 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
 
     private ServerHttpRequest enhanceRequest(ServerHttpRequest request, HttpLog httpLog) {
         MediaType requestType = request.getHeaders().getContentType();
+        if (Objects.nonNull(requestType) && Objects.nonNull(requestType.getCharset())) {
+            httpLog.setCharset(requestType.getCharset());
+        }
         if (MimeTypeSupports.isRawType(requestType)) {
             ByteArrayOutputStream baops = httpLog.getRawRequestBody();
             return new ServerHttpRequestDecorator(request) {
@@ -116,6 +115,29 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
             @Nonnull
             @Override
             public Mono<Void> writeAndFlushWith(@Nonnull Publisher<? extends Publisher<? extends DataBuffer>> body) {
+                Charset charset = httpLog.getCharset();
+                if (HttpLog.log.isDebugEnabled()) {
+                    if (body instanceof Flux<? extends Publisher<? extends DataBuffer>> flux) {
+                        return super.writeAndFlushWith(
+                            flux.flatMap(publisher -> {
+                                ByteArrayOutputStream baops = new ByteArrayOutputStream();
+                                if (publisher instanceof Flux<? extends DataBuffer> f) {
+                                    return Flux.just(f.doOnNext(dataBuffer -> {
+                                        byte[] bs = IDataBufferUtils.dataBuffer2Bytes(dataBuffer, false);
+                                        baops.writeBytes(bs);
+                                    }).doOnComplete(() -> {
+                                        String string = baops.toString(charset);
+                                        string = HttpLog.snapshot(string);
+                                        if (HttpLog.log.isDebugEnabled()) {
+                                            HttpLog.log.debug("out >>> {}", string);
+                                        }
+                                    }));
+                                }
+                                return flux;
+                            })
+                        );
+                    }
+                }
                 return super.writeAndFlushWith(body);
             }
 

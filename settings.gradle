@@ -22,4 +22,5 @@ include 'i-spring-cache-starter'
 include 'i-spring-data-ddd:i-spring-ddd-common'
 include 'i-spring-data-ddd:i-spring-ddd-jpa'
 include 'i-spring-data-ddd:i-spring-ddd-starter'
-
+include 'i-spring-data-ddd:i-spring-ddd-jimmer'
+include 'i-spring-data-ddd:i-spring-ddd-starter-jimmer'

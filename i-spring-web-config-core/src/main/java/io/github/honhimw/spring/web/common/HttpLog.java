@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -29,9 +31,11 @@ import java.util.concurrent.atomic.AtomicReference;
 @Setter
 public class HttpLog implements Serializable {
 
-    protected static final Logger log = LoggerFactory.getLogger("HTTP_LOG");
-    protected static final Logger headerLog = LoggerFactory.getLogger("HTTP_LOG.HEADER");
-    protected static final Logger bodyLog = LoggerFactory.getLogger("HTTP_LOG.BODY");
+    public static final Logger log = LoggerFactory.getLogger("HTTP_LOG");
+    public static final Logger headerLog = LoggerFactory.getLogger("HTTP_LOG.HEADER");
+    public static final Logger bodyLog = LoggerFactory.getLogger("HTTP_LOG.BODY");
+
+    private String id;
 
     private String method;
 
@@ -53,13 +57,21 @@ public class HttpLog implements Serializable {
 
     private boolean printResponseBody = true;
 
+    private Charset charset = StandardCharsets.UTF_8;
+
     @Override
     public String toString() {
         return "[%s] %s".formatted(status, requestLine());
     }
 
     public String requestLine() {
-        return this.method + " " + this.uri;
+        return this.method + " " + decodedUri();
+    }
+
+    public String decodedUri() {
+        URI uri = getUri();
+        String string = uri.toString();
+        return URLDecoder.decode(string, charset);
     }
 
     public void log() {
@@ -75,7 +87,7 @@ public class HttpLog implements Serializable {
     }
 
     public void info() {
-        String sb = "[" + getStatus() + "] " + getMethod() + " " + getUri() +
+        String sb = "[" + getStatus() + "] " + getMethod() + " " + decodedUri() +
                     " [ET: " + Duration.ofMillis(getElapsed()) + "]" +
                     " [RQ: <" + IDataSize.of(getRawRequestBody().size()) + ">]" +
                     " [RP: <" + IDataSize.of(getRawResponseBody().size()) + ">]";
@@ -84,31 +96,25 @@ public class HttpLog implements Serializable {
 
     public void debug() {
         StringBuilder sb = new StringBuilder()
-            .append("[").append(getStatus()).append("] ").append(getMethod()).append(" ").append(getUri())
+            .append("[").append(getStatus()).append("] ").append(getMethod()).append(" ").append(decodedUri())
             .append(" [ET: ").append(Duration.ofMillis(getElapsed())).append("]");
         if (getRawRequestBody().size() > 0) {
             sb.append(" [RQ: ");
             String string = requestBodyToString();
-            string = StringUtils.abbreviateMiddle(string, "...", 2048);
-            string = StringUtils.remove(string, "\r\n");
-            string = StringUtils.remove(string, '\n');
-            string = StringUtils.remove(string, '\r');
+            string = snapshot(string);
             sb.append(string).append("]");
         }
         if (getRawResponseBody().size() > 0) {
             sb.append(" [RP: ");
             String string = responseBodyToString();
-            string = StringUtils.abbreviateMiddle(string, "...", 2048);
-            string = StringUtils.remove(string, "\r\n");
-            string = StringUtils.remove(string, '\n');
-            string = StringUtils.remove(string, '\r');
+            string = snapshot(string);
             sb.append(string).append("]");
         }
         log.debug(sb.toString());
     }
 
     public void trace() {
-        String baseInfo = "[" + getStatus() + "] " + getMethod() + " " + getUri() +
+        String baseInfo = "[" + getStatus() + "] " + getMethod() + " " + decodedUri() +
                           " [ET: " + Duration.ofMillis(getElapsed()) + "]" +
                           " [RQ: <" + IDataSize.of(getRawRequestBody().size()) + ">]" +
                           " [RP: <" + IDataSize.of(getRawResponseBody().size()) + ">]";
@@ -274,6 +280,21 @@ public class HttpLog implements Serializable {
         }
 
         @Override
+        public Charset getCharset() {
+            return httpLog.getCharset();
+        }
+
+        @Override
+        public void setCharset(Charset charset) {
+            httpLog.setCharset(charset);
+        }
+
+        @Override
+        public String decodedUri() {
+            return httpLog.decodedUri();
+        }
+
+        @Override
         public String toString() {
             return httpLog.toString();
         }
@@ -312,6 +333,14 @@ public class HttpLog implements Serializable {
         public String responseBodyToString() {
             return httpLog.responseBodyToString();
         }
+    }
+
+    public static String snapshot(String s) {
+        String string = StringUtils.abbreviateMiddle(s, "...", 2048);
+        string = StringUtils.remove(string, "\r\n");
+        string = StringUtils.remove(string, '\n');
+        string = StringUtils.remove(string, '\r');
+        return string;
     }
 
 }

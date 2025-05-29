@@ -17,6 +17,7 @@ dependencies {
     compileOnly project(':i-spring-web-config-core')
     compileOnly project(':i-spring-cache-core')
     compileOnly project(':i-spring-data-ddd:i-spring-ddd-jpa')
+    compileOnly project(':i-spring-data-ddd:i-spring-ddd-jimmer')
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
     compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'

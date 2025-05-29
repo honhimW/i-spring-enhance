@@ -58,8 +58,7 @@ public class HttpUtilsTests {
             .filter(chainBuilder -> chainBuilder
                 .addFilterBefore(HttpUtils.Stage.EXECUTE, (chain, ctx) -> {
                     chain.doFilter(ctx);
-                    Optional<Object> elapsed = ctx.tryGet("elapsed");
-                    elapsed.ifPresent(e -> log.info("elapsed: {}", e));
+                    log.info("elapsed: {}", ctx.getHttpResult().getElapsed());
                 })
             )
         );

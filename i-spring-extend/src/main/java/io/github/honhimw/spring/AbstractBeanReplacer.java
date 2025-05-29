@@ -122,9 +122,11 @@ public abstract class AbstractBeanReplacer<T> implements BeanDefinitionRegistryP
             this.supplier = () -> bean;
         }
 
+        @Nullable
+        @Override
+        protected Supplier<T> beanSupplier() {
+            return supplier;
+        }
     }
-
-
-
 
 }

@@ -3,3 +3,4 @@ io.github.honhimw.spring.web.ISpringWebAutoConfiguration
 io.github.honhimw.spring.web.ResolverAutoConfiguration
 io.github.honhimw.spring.cache.ICacheAutoConfiguration
 io.github.honhimw.spring.ddd.DDDAutoConfiguration
+io.github.honhimw.spring.ddd.JimmerAutoConfiguration

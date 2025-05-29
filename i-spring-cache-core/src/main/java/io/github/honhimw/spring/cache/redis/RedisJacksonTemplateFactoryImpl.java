@@ -34,6 +34,8 @@ public class RedisJacksonTemplateFactoryImpl implements RedisJacksonTemplateFact
 
     private volatile RedisTemplate<String, String> stringRedisTemplate;
 
+    private volatile RedisTemplate<String, byte[]> bytesRedisTemplate;
+
     public RedisJacksonTemplateFactoryImpl(RedisConnectionFactory redisConnectionFactory, RedisSerializer<String> keySerializer, ObjectMapper objectMapper) {
         this.redisConnectionFactory = redisConnectionFactory;
         this.keySerializer = keySerializer;
@@ -55,18 +57,35 @@ public class RedisJacksonTemplateFactoryImpl implements RedisJacksonTemplateFact
         if (Objects.isNull(stringRedisTemplate)) {
             synchronized (this) {
                 if (Objects.isNull(stringRedisTemplate)) {
-                    StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
                     stringRedisTemplate = new StringRedisTemplate();
                     stringRedisTemplate.setConnectionFactory(redisConnectionFactory);
                     stringRedisTemplate.setKeySerializer(keySerializer);
-                    stringRedisTemplate.setValueSerializer(stringRedisSerializer);
-                    stringRedisTemplate.setHashKeySerializer(stringRedisSerializer);
-                    stringRedisTemplate.setHashValueSerializer(stringRedisSerializer);
+                    stringRedisTemplate.setValueSerializer(RedisSerializer.string());
+                    stringRedisTemplate.setHashKeySerializer(RedisSerializer.string());
+                    stringRedisTemplate.setHashValueSerializer(RedisSerializer.string());
                     stringRedisTemplate.afterPropertiesSet();
                 }
             }
         }
         return stringRedisTemplate;
+    }
+
+    @Override
+    public RedisTemplate<String, byte[]> bytes() {
+        if (Objects.isNull(bytesRedisTemplate)) {
+            synchronized (this) {
+                if (Objects.isNull(bytesRedisTemplate)) {
+                    bytesRedisTemplate = new RedisTemplate<>();
+                    bytesRedisTemplate.setConnectionFactory(redisConnectionFactory);
+                    bytesRedisTemplate.setKeySerializer(keySerializer);
+                    bytesRedisTemplate.setValueSerializer(RedisSerializer.byteArray());
+                    bytesRedisTemplate.setHashKeySerializer(RedisSerializer.string());
+                    bytesRedisTemplate.setHashValueSerializer(RedisSerializer.byteArray());
+                    bytesRedisTemplate.afterPropertiesSet();
+                }
+            }
+        }
+        return bytesRedisTemplate;
     }
 
     @Override

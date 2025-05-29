@@ -18,6 +18,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.toml.TomlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.core.IResult;
+import io.github.honhimw.example.domain.jimmer.PlayerTable;
 import io.github.honhimw.spring.cache.redis.RedisMessageEvent;
 import io.github.honhimw.test.jacksonfilter.PointerFilteringGenerator;
 import io.github.honhimw.util.JsonUtils;
@@ -28,6 +29,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -49,6 +51,13 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MainRunner {
+
+    @Test
+    @SneakyThrows
+    void table() {
+        PropExpression<Object> objectPropExpression = PlayerTable.$.get("sbd");
+        System.out.println(objectPropExpression);
+    }
 
     @Test
     @SneakyThrows

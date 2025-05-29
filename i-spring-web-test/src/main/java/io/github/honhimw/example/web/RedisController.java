@@ -3,6 +3,7 @@ package io.github.honhimw.example.web;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.example.model.RedisJavaSerial;
 import io.github.honhimw.spring.cache.redis.RedisUtils;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 
 /**
@@ -67,21 +70,16 @@ public class RedisController {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
 
+    @SneakyThrows
     @RequestMapping("/putJavaSerialized")
     public IResult<Boolean> putJavaSerialized(@RequestParam("key") String key, @RequestParam("value") String value) {
-        RedisTemplate<String, RedisJavaSerial> redisTemplate = new RedisTemplate<>();
-        JdkSerializationRedisSerializer jdkSerializationRedisSerializer = new JdkSerializationRedisSerializer();
-        RedisSerializer<?> keySerializer = RedisUtils.writeRedisTemplate().getKeySerializer();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-        redisTemplate.setKeySerializer(keySerializer);
-        redisTemplate.setValueSerializer(jdkSerializationRedisSerializer);
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(jdkSerializationRedisSerializer);
-        redisTemplate.afterPropertiesSet();
-
         RedisJavaSerial _value = RedisJavaSerial.defaultObject();
         _value.setString(value);
-        redisTemplate.opsForValue().set(key, _value);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(out);
+        oos.writeObject(_value);
+        oos.flush();
+        RedisUtils.putBytes(key, out.toByteArray());
         return IResult.ok(true);
     }
 

@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.RedisProtocol;
 
+import static io.github.honhimw.spring.cache.ICacheProperties.Redis.I_SPRING_CACHE_REDIS_PROTOCOL;
+
 /**
  * @author hon_him
  * @since 2024-12-26
@@ -23,7 +25,7 @@ public class IJedisConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "i.spring.cache.redis.protocol")
+    @ConditionalOnProperty(name = I_SPRING_CACHE_REDIS_PROTOCOL)
     JedisClientConfigurationBuilderCustomizer jedisClientProtocolCustomizer() {
         return builder -> {
             ICacheProperties.Redis.ProtocolVersion protocol = iCacheProperties.getRedis().getProtocol();

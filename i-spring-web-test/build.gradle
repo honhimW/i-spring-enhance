@@ -19,6 +19,7 @@ dependencies {
     implementation(project(':i-spring-web-config-starter'))
     implementation(project(':i-spring-cache-starter'))
     implementation(project(':i-spring-data-ddd:i-spring-ddd-starter'))
+    implementation(project(':i-spring-data-ddd:i-spring-ddd-starter-jimmer'))
     implementation(project(':i-common-utilities'))
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
@@ -32,12 +33,14 @@ dependencies {
     runtimeOnly 'org.springframework.cloud:spring-cloud-starter-bootstrap'
     runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
     runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery' exclude group: 'commons-logging', module: 'commons-logging'
-    runtimeOnly 'com.h2database:h2'
+    implementation 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
 
     annotationProcessor 'org.mapstruct:mapstruct'
     annotationProcessor 'org.mapstruct:mapstruct-processor'
     annotationProcessor 'org.mapstruct:mapstruct-jdk8'
+
+    annotationProcessor 'org.babyfish.jimmer:jimmer-apt'
 
     implementation('ch.qos.logback:logback-classic')
     testImplementation('org.springframework.cloud:spring-cloud-starter-openfeign')

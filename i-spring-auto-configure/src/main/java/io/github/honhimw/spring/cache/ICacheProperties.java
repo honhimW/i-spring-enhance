@@ -2,7 +2,6 @@ package io.github.honhimw.spring.cache;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationEvent;
@@ -16,7 +15,6 @@ import java.util.Set;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @ConfigurationProperties(prefix = ICacheProperties.PREFIX)
@@ -34,7 +32,6 @@ public class ICacheProperties implements Serializable {
     private Redis redis;
 
     @Data
-    @EqualsAndHashCode(callSuper = false)
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Redis implements Serializable {
@@ -42,6 +39,8 @@ public class ICacheProperties implements Serializable {
         public static final String REDIS_PREFIX = "redis";
 
         public static final String I_SPRING_CACHE_REDIS_ENABLED = PREFIX + "." + REDIS_PREFIX + "." + "enabled";
+
+        public static final String I_SPRING_CACHE_REDIS_PROTOCOL = PREFIX + "." + REDIS_PREFIX + "." + "protocol";
 
         public static final String I_SPRING_CACHE_REDIS_ENABLED_EVENT = PREFIX + "." + REDIS_PREFIX + "." + "enabled-event";
 

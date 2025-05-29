@@ -10,7 +10,8 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.dependencies.get()}")
     api platform("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.dependencies.get()}")
     api platform("com.alibaba.cloud:spring-cloud-alibaba-dependencies:${libs.versions.spring.cloud.alibaba.dependencies.get()}")
-    api platform("org.springdoc:springdoc-openapi:${libs.versions.springdoc.openapi.get()}")
+    api platform("org.springdoc:springdoc-openapi-bom:${libs.versions.springdoc.openapi.get()}")
+    api platform("org.springframework.ai:spring-ai-bom:${libs.versions.spring.ai.bom.get()}")
     constraints {dpHandler ->
         add('api', project(':i-core'))
         add('api', project(':i-common-utilities'))

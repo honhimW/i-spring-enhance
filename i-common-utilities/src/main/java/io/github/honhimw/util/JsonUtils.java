@@ -2,6 +2,7 @@ package io.github.honhimw.util;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -24,10 +25,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author hon_him
@@ -90,6 +88,7 @@ public class JsonUtils {
             .enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
             .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
             .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+            .disable(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS)
             .defaultDateFormat(SafeDateFormat.create(DateTimeUtils.DEFAULT_DATE_TIME_PATTERN))
             .defaultTimeZone(TimeZone.getTimeZone(DateTimeUtils.DEFAULT_ZONE_OFFSET))
         ;
@@ -145,7 +144,7 @@ public class JsonUtils {
                 throw new IllegalArgumentException("can't deserialize from json", e);
             }
         }
-        return MAPPER.nullNode().require();
+        return new LinkedHashMap<>();
     }
 
     @Nonnull
@@ -179,13 +178,88 @@ public class JsonUtils {
     }
 
     /**
-     * Transform single quote json string to double quote
+     * Transform single quote json string to double quote.
      *
      * @param str "{'foo':'bar'}"
      * @return "{\"foo\":\"bar\"}"
+     * @see JsonReadFeature#ALLOW_SINGLE_QUOTES
      */
     public static String quote(String str) {
         return StringUtils.replaceChars(str, '\'', '"');
+    }
+
+    /**
+     * <pre>{@code
+     * JsonNode wanted = node.at("/path/to/node")
+     * if (JsonUtils.exists(wanted)) {
+     *     // ...
+     * }
+     * }</pre>
+     *
+     * @param node JsonNode
+     * @return whether the node contains value
+     */
+    public static boolean exists(JsonNode node) {
+        return node != null && !node.isMissingNode() && !node.isNull();
+    }
+
+    public static Map<String, Object> flatten(Object o) {
+        String separator = String.valueOf(JsonPointer.SEPARATOR);
+        return flatten(o, separator, true);
+    }
+
+    public static Map<String, Object> flatten(Object o, String separator, boolean ignoreNull) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        flatten("", o, map, separator, ignoreNull);
+        return map;
+    }
+
+    /**
+     * Flatten simple object to JsonPath-Value map
+     *
+     * @param path       base path
+     * @param o          object
+     * @param map        container
+     * @param separator  separator
+     * @param ignoreNull ignore null value
+     */
+    public static void flatten(String path, Object o, Map<String, Object> map, String separator, boolean ignoreNull) {
+        try {
+            JsonNode jsonNode = MAPPER.valueToTree(o);
+            if (jsonNode.isObject()) {
+                jsonNode.properties().forEach(entry -> {
+                    String key = entry.getKey();
+                    JsonNode node = entry.getValue();
+                    String p = path + separator + key;
+                    flatten(p, node, map, separator, ignoreNull);
+                });
+            } else if (jsonNode.isArray()) {
+                for (int i = 0; i < jsonNode.size(); i++) {
+                    JsonNode node = jsonNode.get(i);
+                    String p = path + separator + i;
+                    flatten(p, node, map, separator, ignoreNull);
+                }
+            } else {
+                Object v;
+                if (jsonNode.isTextual()) {
+                    v = jsonNode.asText();
+                } else if (jsonNode.isNumber()) {
+                    v = jsonNode.numberValue();
+                } else if (jsonNode.isBoolean()) {
+                    v = jsonNode.booleanValue();
+                } else {
+                    if (jsonNode.isNull() && ignoreNull) {
+                        return;
+                    }
+                    v = jsonNode.asText();
+                }
+                map.put(path, v);
+            }
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+
     }
 
 }

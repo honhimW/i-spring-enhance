@@ -971,7 +971,7 @@ public class HttpUtils {
             long startedAt = System.currentTimeMillis();
             try {
                 ctx.httpResult = ctx.httpClient.execute(ctx.httpRequest, ctx.httpContext, response -> {
-                    HttpResult result = new HttpResult(ctx.self.objectMapper);
+                    HttpResult result = new HttpResult(ctx.self.objectMapper, ctx);
                     Optional.ofNullable(ctx.httpContext)
                         .map(HttpClientContext::getCookieStore)
                         .ifPresent(result::setCookieStore);
@@ -991,7 +991,7 @@ public class HttpUtils {
                     return result;
                 });
             } finally {
-                ctx.set("elapsed", Duration.ofMillis(System.currentTimeMillis() - startedAt));
+                ctx.httpResult.elapsed = Duration.ofMillis(System.currentTimeMillis() - startedAt);
             }
         }
     }
@@ -1073,9 +1073,12 @@ public class HttpUtils {
 
     public static class HttpResult {
         private final ObjectMapper objectMapper;
+        @Getter
+        private final FilterContext filterContext;
 
-        private HttpResult(ObjectMapper objectMapper) {
+        private HttpResult(ObjectMapper objectMapper, FilterContext filterContext) {
             this.objectMapper = objectMapper;
+            this.filterContext = filterContext;
         }
 
         @Getter
@@ -1084,11 +1087,13 @@ public class HttpUtils {
         private String reasonPhrase;
         @Getter
         private HttpEntity entity;
-        private final Map<String, List<String>> headers = new HashMap<>();
+        private final Map<String, List<String>> headers = new LinkedHashMap<>();
         @Getter
         private Charset charset = StandardCharsets.UTF_8;
         private byte[] content;
         private CookieStore cookieStore;
+        @Getter
+        private Duration elapsed = Duration.ZERO;
 
         private Consumer<InputStream> inputConfig = inputStream -> {
             ByteArrayOutputStream baops = new ByteArrayOutputStream();

@@ -71,8 +71,8 @@ public class ReactiveLoggingRebinderEndpointFilter implements WebFilter, Ordered
                     response.getHeaders().setContentType(MediaType.TEXT_PLAIN);
                     return IDataBufferUtils.fluxData2Bytes(request.getBody())
                         .map(this::readTree)
-                        .doOnNext(jsonNode -> jsonNode.fields()
-                            .forEachRemaining(field -> {
+                        .doOnNext(jsonNode -> jsonNode.properties()
+                            .forEach(field -> {
                                 String key = field.getKey();
                                 JsonNode value = field.getValue();
                                 LoggingSystemUtils.setLevel(key, value.textValue());

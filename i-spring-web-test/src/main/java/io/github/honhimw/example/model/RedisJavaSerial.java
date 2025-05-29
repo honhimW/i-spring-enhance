@@ -2,7 +2,6 @@ package io.github.honhimw.example.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -13,7 +12,6 @@ import java.io.Serializable;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 public class RedisJavaSerial implements Serializable {

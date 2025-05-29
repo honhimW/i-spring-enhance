@@ -3,7 +3,6 @@ package io.github.honhimw.core;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -13,7 +12,6 @@ import java.io.Serializable;
  * @since 2024-11-18
  */
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderColumn implements Serializable {
@@ -34,6 +32,24 @@ public class OrderColumn implements Serializable {
         column.setName(name);
         column.setDesc(desc);
         return column;
+    }
+
+    public static OrderColumn asc(String name) {
+        return of(name, false);
+    }
+
+    public static OrderColumn desc(String name) {
+        return of(name, true);
+    }
+
+    public OrderColumn asc() {
+        this.desc = false;
+        return this;
+    }
+
+    public OrderColumn desc() {
+        this.desc = true;
+        return this;
     }
 
 }

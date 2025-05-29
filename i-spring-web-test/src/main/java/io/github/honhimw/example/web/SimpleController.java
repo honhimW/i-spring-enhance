@@ -4,13 +4,14 @@ import io.github.honhimw.core.IResult;
 import io.github.honhimw.example.feign.DungEater;
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
-import io.github.honhimw.spring.web.common.HttpLog;
 import io.github.honhimw.spring.web.util.DispositionHelper;
+import io.github.honhimw.spring.web.util.HttpLogHelper;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +20,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.RequestContextHolder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,7 @@ import java.util.Map;
  * @since 2023-05-10
  */
 
+@Slf4j
 @RestController
 @RequestMapping("/simple")
 public class SimpleController {
@@ -46,24 +46,12 @@ public class SimpleController {
 
     @GetMapping("/mvc/log")
     public IResult<String> mvcLog() {
-        Object attribute = RequestContextHolder.getRequestAttributes().getAttribute(HttpLog.LogHolder.class.getName(), 0);
-        if (attribute instanceof HttpLog.LogHolder httpLog) {
-            HttpLog httpLog1 = httpLog.get();
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            byteArrayOutputStream.writeBytes("fake request body".getBytes());
-            httpLog1.setRawRequestBody(byteArrayOutputStream);
-            HttpLog sub = new HttpLog.Delegate(httpLog1) {
-                @Override
-                public void log() {
-                    log.warn("before super log");
-                    super.log();
-                    log.warn("after super log");
-                }
-            };
-//                sub.setPrintResponseBody(false);
-            httpLog.set(sub);
-        }
-        return IResult.ok(String.valueOf(attribute));
+        HttpLogHelper.Mvc.log((logger, httpLog) -> {
+            logger.warn("before super log");
+            httpLog.log();
+            logger.warn("after super log");
+        });
+        return IResult.ok("log");
     }
 
     @GetMapping("/log2")
@@ -73,24 +61,11 @@ public class SimpleController {
 
     @GetMapping("/log")
     public Mono<IResult<String>> log() {
-        return Mono.deferContextual(contextView -> Mono.just(contextView.get(HttpLog.LogHolder.class)))
-            .map(httpLog -> {
-                HttpLog httpLog1 = httpLog.get();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                byteArrayOutputStream.writeBytes("fake request body".getBytes());
-                httpLog1.setRawRequestBody(byteArrayOutputStream);
-                HttpLog sub = new HttpLog.Delegate(httpLog1) {
-                    @Override
-                    public void log() {
-                        log.warn("before super log");
-                        super.log();
-                        log.warn("after super log");
-                    }
-                };
-//                sub.setPrintResponseBody(false);
-                httpLog.set(sub);
-                return IResult.ok(String.valueOf(sub));
-            });
+        return HttpLogHelper.Webflux.log((logger, httpLog) -> {
+            logger.warn("before super log");
+            httpLog.log();
+            logger.warn("after super log");
+        }).then(Mono.just(IResult.ok("log")));
     }
 
     @RequestMapping("/hello")

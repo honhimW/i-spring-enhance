@@ -57,7 +57,7 @@ public class MvcLoggingRebinderEndpointFilter extends OncePerRequestFilter imple
                     ServletInputStream inputStream = request.getInputStream();
                     byte[] bytes = inputStream.readAllBytes();
                     JsonNode jsonNode = readTree(bytes);
-                    jsonNode.fields().forEachRemaining(field -> {
+                    jsonNode.properties().forEach(field -> {
                         String key = field.getKey();
                         JsonNode value = field.getValue();
                         LoggingSystemUtils.setLevel(key, value.textValue());

@@ -12,7 +12,6 @@ import java.io.Serializable;
  */
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @ConfigurationProperties(prefix = IWebProperties.PREFIX)

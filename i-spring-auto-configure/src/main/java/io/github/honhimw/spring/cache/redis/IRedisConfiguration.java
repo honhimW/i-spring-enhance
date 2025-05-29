@@ -51,12 +51,14 @@ public class IRedisConfiguration {
         }
         final String _prefix = StringUtils.appendIfMissing(prefix, ":");
         return new StringRedisSerializer() {
+            @Nullable
             @Override
             public String deserialize(@Nullable byte[] bytes) {
                 String saveKey = super.deserialize(bytes);
                 return StringUtils.removeStart(saveKey, _prefix);
             }
 
+            @Nullable
             @Override
             public byte[] serialize(@Nullable String string) {
                 return super.serialize(_prefix + string);

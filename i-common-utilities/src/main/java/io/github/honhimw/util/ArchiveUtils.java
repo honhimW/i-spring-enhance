@@ -3,13 +3,13 @@ package io.github.honhimw.util;
 import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
+import com.google.errorprone.annotations.ThreadSafe;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.SingleXZInputStream;
 import org.tukaani.xz.XZOutputStream;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.io.*;
 import java.util.function.Function;
 import java.util.zip.*;
@@ -35,7 +35,7 @@ public class ArchiveUtils {
 
     public static Archiver kindOf(Kind kind) {
         if (kind == null) {
-            return NoSupport.INSTANCE;
+            return UnSupported.INSTANCE;
         }
         checkAvailable(kind);
         return switch (kind) {
@@ -79,7 +79,7 @@ public class ArchiveUtils {
             }
         },
         Z_STD {
-            private final boolean available = isXZCompressionAvailable();
+            private final boolean available = isZstdCompressionAvailable();
 
             @Override
             public boolean available() {
@@ -279,9 +279,9 @@ public class ArchiveUtils {
 
     }
 
-    private static final class NoSupport implements Archiver {
+    private static final class UnSupported implements Archiver {
 
-        private static final NoSupport INSTANCE = new NoSupport();
+        private static final UnSupported INSTANCE = new UnSupported();
 
         @Override
         public void compress(InputStream ips, OutputStream ops) {

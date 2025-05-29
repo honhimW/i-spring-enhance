@@ -4,8 +4,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.BinaryCodec;
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -74,6 +73,22 @@ public class Bytes {
         }
     }
 
+    public static Bytes fromObject(Object object) {
+        if (!(object instanceof Serializable)) {
+            throw new IllegalArgumentException("object is not serializable");
+        }
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(object);
+            oos.flush();
+            byte[] bytes = out.toByteArray();
+            return new Bytes(bytes);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     private final byte[] bytes;
 
     private Bytes(byte[] bytes) {
@@ -110,6 +125,18 @@ public class Bytes {
 
     public ByteBuffer toByteBuffer() {
         return ByteBuffer.wrap(bytes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T toObject() {
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+            ObjectInputStream ois = new ObjectInputStream(in);
+            Object object = ois.readObject();
+            return (T) object;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

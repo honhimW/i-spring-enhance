@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -17,17 +16,21 @@ import java.util.function.Function;
  * @author hon_him
  * @since 2022-07-26
  */
+
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 public class IPageRequest<T> implements Serializable {
 
-    @NotNull
-    @Min(0)
     private Integer pageNo;
 
     private Integer pageSize;
+
+    @NotNull
+    @Min(0)
+    public Integer getPageNo() {
+        return pageNo;
+    }
 
     @NotNull
     @Min(1)

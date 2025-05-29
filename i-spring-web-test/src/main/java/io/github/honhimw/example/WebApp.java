@@ -4,6 +4,8 @@ import io.github.honhimw.spring.cloud.dev.Config;
 import io.github.honhimw.spring.cloud.dev.EnableDevLoadBalancer;
 import io.github.honhimw.spring.cloud.dev.TestServer;
 import io.github.honhimw.spring.web.annotation.EnableCsvConverter;
+import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -27,6 +29,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 })
 @EnableFeignClients
 public class WebApp {
+
+    @Autowired
+    EntityManager em;
 
     public static void main(String[] args) {
         SpringApplication.run(WebApp.class, args);

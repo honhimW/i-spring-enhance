@@ -13,11 +13,15 @@ dependencies {
 
     implementation 'org.bouncycastle:bcprov-jdk18on'
 
+    compileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+    compileOnly 'com.github.pemistahl:lingua:1.2.2'
+
     compileOnly 'ch.qos.logback:logback-classic'
     compileOnly 'org.apache.logging.log4j:log4j-core'
     compileOnly 'com.github.luben:zstd-jni'
     compileOnly 'org.tukaani:xz'
 
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     testImplementation 'org.apache.commons:commons-compress'
     testRuntimeOnly 'com.github.luben:zstd-jni'
     testRuntimeOnly 'org.tukaani:xz'

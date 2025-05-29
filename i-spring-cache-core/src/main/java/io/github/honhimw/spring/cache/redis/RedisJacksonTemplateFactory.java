@@ -21,6 +21,8 @@ public interface RedisJacksonTemplateFactory {
 
     RedisTemplate<String, String> string();
 
+    RedisTemplate<String, byte[]> bytes();
+
     <V> RedisTemplate<String, V> forType(@Nonnull Type type);
 
     <V> RedisTemplate<String, V> forType(@Nonnull Class<V> type);

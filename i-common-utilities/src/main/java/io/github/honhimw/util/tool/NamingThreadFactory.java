@@ -7,7 +7,7 @@ import java.lang.invoke.VarHandle;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * In radix 36
+ * In radix 36 by default
  *
  * @author hon_him
  * @since 2024-11-27
@@ -24,13 +24,20 @@ public class NamingThreadFactory extends DelegateThreadFactory {
         }
     }
 
+    @SuppressWarnings("all")
     private volatile long count;
     private final String name;
+    private final int radix;
 
     public NamingThreadFactory(ThreadFactory delegate, String prefix) {
+        this(delegate, prefix, Character.MAX_RADIX);
+    }
+
+    public NamingThreadFactory(ThreadFactory delegate, String prefix, int radix) {
         super(delegate);
         this.name = prefix;
         this.count = 0L;
+        this.radix = radix;
     }
 
     @Override
@@ -45,6 +52,7 @@ public class NamingThreadFactory extends DelegateThreadFactory {
     }
 
     protected String nextThreadName(long no) {
-        return name + Long.toString(no, 36);
+        return name + Long.toString(no, radix);
     }
+
 }

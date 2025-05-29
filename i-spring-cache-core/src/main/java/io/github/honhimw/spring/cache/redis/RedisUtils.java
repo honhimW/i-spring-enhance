@@ -15,8 +15,7 @@ import org.springframework.data.redis.serializer.SerializationException;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,6 +29,8 @@ public class RedisUtils implements ApplicationContextAware {
 
     private static RedisJacksonTemplateFactory redisJacksonTemplateFactory;
 
+    private static RedisTemplate<String, byte[]> bytesRedisTemplate;
+
     private static RedisTemplate<String, String> readRedisTemplate;
     private static RedisTemplate<String, Object> writeRedisTemplate;
 
@@ -39,6 +40,7 @@ public class RedisUtils implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         redisJacksonTemplateFactory = applicationContext.getBean(RedisJacksonTemplateFactory.class);
+        bytesRedisTemplate = redisJacksonTemplateFactory.bytes();
         readRedisTemplate = redisJacksonTemplateFactory.string();
         writeRedisTemplate = redisJacksonTemplateFactory.forType(Object.class);
         MAPPER = redisJacksonTemplateFactory.getMapper();
@@ -61,7 +63,7 @@ public class RedisUtils implements ApplicationContextAware {
         return writeRedisTemplate;
     }
 
-    public static Boolean putPersist(String key, Object value) {
+    public static boolean putPersist(String key, Object value) {
         try {
             writeRedisTemplate.opsForValue().set(key, value);
             return true;
@@ -71,7 +73,7 @@ public class RedisUtils implements ApplicationContextAware {
         }
     }
 
-    public static Boolean putPersistAsString(String key, Object value) {
+    public static boolean putPersistAsString(String key, Object value) {
         try {
             String json = MAPPER.writeValueAsString(value);
             writeRedisTemplate.opsForValue().set(key, json);
@@ -82,11 +84,11 @@ public class RedisUtils implements ApplicationContextAware {
         }
     }
 
-    public static Boolean put(String key, Object value) {
+    public static boolean put(String key, Object value) {
         return put(key, value, DEFAULT_TTL);
     }
 
-    public static Boolean put(String key, Object value, Duration ttl) {
+    public static boolean put(String key, Object value, Duration ttl) {
         try {
             writeRedisTemplate.opsForValue().set(key, value, ttl);
             return true;
@@ -96,11 +98,11 @@ public class RedisUtils implements ApplicationContextAware {
         }
     }
 
-    public static Boolean putAsString(String key, Object value) {
+    public static boolean putAsString(String key, Object value) {
         return putAsString(key, value, DEFAULT_TTL);
     }
 
-    public static Boolean putAsString(String key, Object value, Duration ttl) {
+    public static boolean putAsString(String key, Object value, Duration ttl) {
         try {
             String json = MAPPER.writeValueAsString(value);
             writeRedisTemplate.opsForValue().set(key, json, ttl);
@@ -111,17 +113,41 @@ public class RedisUtils implements ApplicationContextAware {
         }
     }
 
-    public static Boolean containsKey(String key) {
-        return writeRedisTemplate.hasKey(key);
+    public static boolean putBytes(String key, byte[] value) {
+        return putBytes(key, value, DEFAULT_TTL);
     }
 
-    public static Long remove(String... key) {
-        if (key.length > 0) {
-            if (key.length == 1) {
-                return Boolean.TRUE.equals(writeRedisTemplate.delete(key[0])) ? 1L : 0L;
-            } else {
-                return writeRedisTemplate.delete(Arrays.asList(key));
+    public static boolean putBytes(String key, byte[] value, Duration ttl) {
+        try {
+            bytesRedisTemplate.opsForValue().set(key, value, ttl);
+            return true;
+        } catch (Exception e) {
+            log.error(e.toString());
+            return false;
+        }
+    }
+
+    public static boolean containsKey(String key) {
+        try {
+            Boolean b = writeRedisTemplate.hasKey(key);
+            return Boolean.TRUE.equals(b);
+        } catch (Exception e) {
+            log.error(e.toString());
+            return false;
+        }
+    }
+
+    public static long remove(String... key) {
+        try {
+            if (key.length > 0) {
+                if (key.length == 1) {
+                    return Boolean.TRUE.equals(writeRedisTemplate.delete(key[0])) ? 1L : 0L;
+                } else {
+                    return writeRedisTemplate.delete(Arrays.asList(key));
+                }
             }
+        } catch (Exception e) {
+            log.error(e.toString());
         }
         return 0L;
     }
@@ -184,6 +210,11 @@ public class RedisUtils implements ApplicationContextAware {
     }
 
     @Nullable
+    public static byte[] getBytes(String key) {
+        return bytesRedisTemplate.opsForValue().get(key);
+    }
+
+    @Nullable
     public static Boolean expire(String key, Duration ttl) {
         return writeRedisTemplate.expire(key, ttl);
     }
@@ -205,6 +236,53 @@ public class RedisUtils implements ApplicationContextAware {
 
     public static Boolean persist(String key) {
         return writeRedisTemplate.persist(key);
+    }
+
+    /**
+     * Scan Keys with pattern, A better command than `KEYS`.
+     * Using count=100 as default scan size
+     *
+     * @param pattern key pattern, e.g. spring:redis:i-*, *
+     * @return keys iterator
+     */
+    public static Iterator<String> scan(String pattern) {
+        return readRedisTemplate.scan(ScanOptions.scanOptions().match(pattern).count(100).build());
+    }
+
+    /**
+     * Get on batch keys from pattern and count
+     *
+     * @param pattern key pattern, e.g. spring:redis:i-*, *
+     * @param count   max result size
+     * @return scan once result
+     */
+    public static List<String> scan(String pattern, int count) {
+        try (Cursor<String> scan = readRedisTemplate.scan(ScanOptions.scanOptions()
+            .match(pattern)
+            .count(count)
+            .build())) {
+            List<String> keys = new ArrayList<>(count);
+            while (scan.hasNext()) {
+                String key = scan.next();
+                keys.add(key);
+                if (keys.size() == count) {
+                    break;
+                }
+            }
+            return keys;
+        }
+    }
+
+    /**
+     * Alias for `SCAN`
+     *
+     * @param pattern key pattern, e.g. spring:redis:i-*, *
+     * @param count   max result size
+     * @return scan once result
+     * @see #scan(String, int) alias, preffer using `SCAN`
+     */
+    public static List<String> keys(String pattern, int count) {
+        return scan(pattern, count);
     }
 
     /**

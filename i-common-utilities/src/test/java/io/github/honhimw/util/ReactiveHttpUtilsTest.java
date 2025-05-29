@@ -59,14 +59,13 @@ public class ReactiveHttpUtilsTest {
     void block() {
         ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance(builder -> builder
             .filters(chainBuilder -> chainBuilder.addFilterBefore(ReactiveHttpUtils.Stage.EXECUTE, (chain, ctx) -> {
-            System.out.println(ctx.getAttributes());
-            return chain.doFilter(ctx)
-                .doOnNext(httpResult -> {
-                    Duration elapsed = ctx.get("elapsed");
-                    System.out.println(elapsed);
-                    System.out.println(httpResult.getStatusLine());
-                });
-        })));
+                System.out.println(ctx.getAttributes());
+                return chain.doFilter(ctx)
+                    .doOnNext(httpResult -> {
+                        System.out.println(httpResult.getElapsed());
+                        System.out.println(httpResult.getStatusLine());
+                    });
+            })));
         ReactiveHttpUtils.HttpResult post = instance.post("http://127.0.0.1:11451/post/json", configurer -> configurer
             .body(payload -> payload.raw(raw -> raw
                 .json(Map.of("foo", "bar")))

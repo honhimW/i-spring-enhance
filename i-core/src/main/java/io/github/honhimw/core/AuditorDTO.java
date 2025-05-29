@@ -3,7 +3,6 @@ package io.github.honhimw.core;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
  * @since 2022-12-14
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuditorDTO implements Serializable {
