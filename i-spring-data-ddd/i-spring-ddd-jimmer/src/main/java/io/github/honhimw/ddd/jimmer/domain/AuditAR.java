@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.domain;
 
-import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.MappedSuperclass;
 
 /**
@@ -11,7 +11,7 @@ import org.babyfish.jimmer.sql.MappedSuperclass;
 @MappedSuperclass
 public interface AuditAR extends AggregateRoot {
 
-    @Nonnull
+    @Nullable
     Auditor auditor();
 
 }

@@ -1,5 +1,7 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
+import io.github.honhimw.ddd.jimmer.mapping.JimmerEntityInformation;
+import io.github.honhimw.ddd.jimmer.mapping.JimmerPersistentEntityImpl;
 import jakarta.annotation.Nonnull;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.data.repository.core.EntityInformation;
@@ -8,6 +10,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import java.util.Optional;
@@ -27,8 +30,8 @@ public class JimmerRepositoryFactory extends RepositoryFactorySupport {
 
     @Nonnull
     @Override
-    public <T, ID> EntityInformation<T, ID> getEntityInformation(@Nonnull Class<T> domainClass) {
-        return null;
+    public <T, ID> JimmerEntityInformation<T, ID> getEntityInformation(@Nonnull Class<T> domainClass) {
+        return new JimmerEntityInformation<>(new JimmerPersistentEntityImpl<>(TypeInformation.of(domainClass)));
     }
 
     @Nonnull
@@ -37,8 +40,9 @@ public class JimmerRepositoryFactory extends RepositoryFactorySupport {
         return getTargetRepository(metadata, sqlClient);
     }
 
-    protected JimmerRepository<?, ?> getTargetRepository(RepositoryInformation metadata, JSqlClientImplementor sqlClient) {
-        Class<?> repositoryInterface = metadata.getRepositoryInterface();
+    protected JimmerRepository<?, ?> getTargetRepository(RepositoryInformation information, JSqlClientImplementor sqlClient) {
+        Class<?> repositoryInterface = information.getRepositoryInterface();
+        JimmerEntityInformation<?, Object> entityInformation = getEntityInformation(information.getDomainType());
         Assert.state(JimmerRepository.class.isAssignableFrom(repositoryInterface), "Target repository is not a jimmer repository");
         if (repositoryInterface.getTypeParameters().length != 0) {
             throw new IllegalStateException(
@@ -51,7 +55,7 @@ public class JimmerRepositoryFactory extends RepositoryFactorySupport {
             );
         }
 
-        return getTargetRepositoryViaReflection(metadata, metadata, sqlClient);
+        return getTargetRepositoryViaReflection(information, entityInformation, sqlClient);
     }
 
     @Nonnull

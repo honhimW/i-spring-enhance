@@ -1,6 +1,7 @@
 package io.github.honhimw.ddd.jimmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.honhimw.ddd.jimmer.event.Callback;
 import io.github.honhimw.ddd.jimmer.support.DialectDetector;
 import io.github.honhimw.ddd.jimmer.support.SpringConnectionManager;
 import io.github.honhimw.ddd.jimmer.support.SpringMetaStringResolver;
@@ -65,7 +66,7 @@ public class JSqlClientFactoryBuilder {
 
     private MicroServiceExchange microServiceExchange;
 
-    private Collection<CacheAbandonedCallback> callbacks;
+    private Collection<CacheAbandonedCallback> cacheAbandonedCallbacks;
 
     private Collection<ScalarProvider<?, ?>> providers;
 
@@ -80,6 +81,8 @@ public class JSqlClientFactoryBuilder {
     private Collection<Customizer> customizers;
 
     private Collection<Initializer> initializers;
+
+    private Callback callback;
 
     public JSqlClientFactoryBuilder(JimmerProperties properties) {
         this.properties = properties;
@@ -185,8 +188,8 @@ public class JSqlClientFactoryBuilder {
     }
 
     @Autowired
-    public JSqlClientFactoryBuilder callbacks(ObjectProvider<CacheAbandonedCallback> provider) {
-        this.callbacks = provider.orderedStream().toList();
+    public JSqlClientFactoryBuilder cacheAbandonedCallbacks(ObjectProvider<CacheAbandonedCallback> provider) {
+        this.cacheAbandonedCallbacks = provider.orderedStream().toList();
         return this;
     }
 
@@ -231,7 +234,13 @@ public class JSqlClientFactoryBuilder {
         this.initializers = provider.orderedStream().toList();
         return this;
     }
-    
+
+    @Autowired
+    public JSqlClientFactoryBuilder callbacks(ObjectProvider<Callback> provider) {
+        this.callback = provider.getIfAvailable();
+        return this;
+    }
+
     public JSqlClientFactoryBean build() {
         return new JSqlClientFactoryBean(
             properties,
@@ -250,14 +259,15 @@ public class JSqlClientFactoryBuilder {
             cacheFactory,
             cacheOperator,
             microServiceExchange,
-            callbacks,
+            cacheAbandonedCallbacks,
             providers,
             processors,
             interceptors,
             exceptionTranslators,
             filters,
             customizers,
-            initializers
+            initializers,
+            callback
         ) {};
     }
     

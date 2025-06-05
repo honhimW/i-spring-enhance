@@ -1,6 +1,9 @@
 package io.github.honhimw.ddd.jimmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.honhimw.ddd.jimmer.event.Callback;
+import io.github.honhimw.ddd.jimmer.event.CallbackInitializer;
+import io.github.honhimw.ddd.jimmer.event.CallbackInterceptor;
 import io.github.honhimw.ddd.jimmer.support.DialectDetector;
 import io.github.honhimw.ddd.jimmer.util.RawSqlLogger;
 import jakarta.annotation.Nonnull;
@@ -13,7 +16,6 @@ import org.babyfish.jimmer.sql.cache.CacheFactory;
 import org.babyfish.jimmer.sql.cache.CacheOperator;
 import org.babyfish.jimmer.sql.di.AopProxyProvider;
 import org.babyfish.jimmer.sql.dialect.Dialect;
-import org.babyfish.jimmer.sql.event.Triggers;
 import org.babyfish.jimmer.sql.filter.Filter;
 import org.babyfish.jimmer.sql.meta.DatabaseNamingStrategy;
 import org.babyfish.jimmer.sql.meta.MetaStringResolver;
@@ -50,7 +52,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
 
     protected final DialectDetector dialectDetector;
 
-    protected final Executor executor;
+    protected Executor executor;
 
     protected final SqlFormatter sqlFormatter;
 
@@ -79,7 +81,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
     @Nullable
     protected final MicroServiceExchange microServiceExchange;
 
-    protected final Collection<CacheAbandonedCallback> callbacks;
+    protected final Collection<CacheAbandonedCallback> cacheAbandonedCallbacks;
 
     protected final Collection<ScalarProvider<?, ?>> providers;
 
@@ -94,6 +96,8 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
     protected final Collection<Customizer> customizers;
 
     protected final Collection<Initializer> initializers;
+
+    protected final Callback callback;
 
     private JSqlClient jSqlClient;
 
@@ -116,14 +120,15 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         @Nullable CacheFactory cacheFactory,
         @Nullable CacheOperator cacheOperator,
         @Nullable MicroServiceExchange microServiceExchange,
-        Collection<CacheAbandonedCallback> callbacks,
+        Collection<CacheAbandonedCallback> cacheAbandonedCallbacks,
         Collection<ScalarProvider<?, ?>> providers,
         Collection<DraftPreProcessor<?>> processors,
         Collection<DraftInterceptor<?, ?>> interceptors,
         Collection<ExceptionTranslator<?>> exceptionTranslators,
         Collection<Filter<?>> filters,
         Collection<Customizer> customizers,
-        Collection<Initializer> initializers
+        Collection<Initializer> initializers,
+        Callback callback
     ) {
         this.properties = properties;
         this.dataSource = dataSource;
@@ -141,7 +146,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         this.cacheFactory = cacheFactory;
         this.cacheOperator = cacheOperator;
         this.microServiceExchange = microServiceExchange;
-        this.callbacks = callbacks;
+        this.cacheAbandonedCallbacks = cacheAbandonedCallbacks;
         this.providers = providers;
         this.processors = processors;
         this.interceptors = interceptors;
@@ -149,6 +154,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         this.filters = filters;
         this.customizers = customizers;
         this.initializers = initializers;
+        this.callback = callback;
         this.builder = JSqlClient.newBuilder();
     }
 
@@ -180,7 +186,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
             .setDefaultSerializedTypeObjectMapper(objectMapper)
             .setCacheFactory(cacheFactory)
             .setCacheOperator(cacheOperator)
-            .addCacheAbandonedCallbacks(callbacks)
+            .addCacheAbandonedCallbacks(cacheAbandonedCallbacks)
 
             .setTriggerType(properties.getTriggerType())
             .setDefaultDissociateActionCheckable(properties.isDefaultDissociationActionCheckable())
@@ -203,6 +209,8 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         configureDialect();
         configureNamingStrategy();
         configureExtensions();
+
+        builder.setExecutor(executor);
 
         if (userIdGenerator != null) {
             builder.setIdGenerator(userIdGenerator);
@@ -232,10 +240,10 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
                 logger = LoggerFactory.getLogger(name);
             }
             JimmerProperties.Log.Kind kind = log.getKind();
-            builder.setExecutor(switch (kind) {
+            this.executor = switch (kind) {
                 case DEFAULT -> Executor.log(executor, logger);
                 case SIMPLE -> new RawSqlLogger(executor, logger);
-            });
+            };
             if (log.isCacheAbandonedEnabled()) {
                 builder.addCacheAbandonedCallback(CacheAbandonedCallback.log());
             }
@@ -283,29 +291,11 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
             .addFilters(filters)
             .addCustomizers(customizers)
             .addInitializers(initializers)
-            .addInitializers(new SpringEventInitializer(publisher))
         ;
-    }
-
-    protected static class SpringEventInitializer implements Initializer {
-
-        private final ApplicationEventPublisher publisher;
-
-        private SpringEventInitializer(ApplicationEventPublisher publisher) {
-            this.publisher = publisher;
-        }
-
-        @Override
-        public void initialize(JSqlClient sqlClient) throws Exception {
-            Triggers[] triggersArr = switch (((JSqlClientImplementor) sqlClient).getTriggerType()) {
-                case TRANSACTION_ONLY -> new Triggers[]{sqlClient.getTriggers(true)};
-                case BINLOG_ONLY -> new Triggers[]{sqlClient.getTriggers()};
-                case BOTH -> new Triggers[]{sqlClient.getTriggers(), sqlClient.getTriggers(true)};
-            };
-            for (Triggers triggers : triggersArr) {
-                triggers.addEntityListener(publisher::publishEvent);
-                triggers.addAssociationListener(publisher::publishEvent);
-            }
+        if (callback != null) {
+            builder
+                .addDraftInterceptors(new CallbackInterceptor(callback))
+                .addInitializers(new CallbackInitializer(callback));
         }
     }
 

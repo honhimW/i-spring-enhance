@@ -27,11 +27,6 @@ public class DefaultAclExecutorImpl<T> extends AbstractAclExecutor<T>{
         return false;
     }
 
-    @Override
-    protected boolean isRoot() {
-        return false;
-    }
-
     @Nonnull
     @Override
     protected Map<String, Object> getAttributes() {

@@ -2,8 +2,12 @@ package io.github.honhimw.ddd.jimmer.util;
 
 import io.github.honhimw.ddd.jimmer.support.SpringConnectionManager;
 import io.github.honhimw.ddd.jimmer.support.SpringTransientResolverProvider;
+import jakarta.annotation.Nullable;
+import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
+import org.babyfish.jimmer.meta.PropId;
+import org.babyfish.jimmer.meta.TypedProp;
 import org.babyfish.jimmer.sql.JSqlClient;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.impl.query.FilterLevel;
@@ -14,6 +18,7 @@ import org.babyfish.jimmer.sql.ast.query.OrderMode;
 import org.babyfish.jimmer.sql.ast.table.Table;
 import org.babyfish.jimmer.sql.ast.table.spi.PropExpressionImplementor;
 import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
+import org.babyfish.jimmer.sql.fetcher.Fetcher;
 import org.babyfish.jimmer.sql.meta.EmbeddedColumns;
 import org.babyfish.jimmer.sql.meta.MetadataStrategy;
 import org.babyfish.jimmer.sql.runtime.ConnectionManager;
@@ -22,9 +27,8 @@ import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @author hon_him
@@ -33,7 +37,14 @@ import java.util.List;
 
 public class Utils {
 
-    private Utils() {}
+    private Utils() {
+    }
+
+    public static <T> List<T> toList(Iterable<T> iterable) {
+        Stream.Builder<T> builder = Stream.builder();
+        iterable.forEach(builder::add);
+        return builder.build().toList();
+    }
 
     public static JSqlClientImplementor validateSqlClient(JSqlClient sqlClient) {
         JSqlClientImplementor implementor = (JSqlClientImplementor) sqlClient;
@@ -97,6 +108,60 @@ public class Utils {
 
     public static <T> MutableRootQueryImpl<Table<T>> creqteQuery(JSqlClientImplementor sqlClient, ImmutableType immutableType) {
         return new MutableRootQueryImpl<>(sqlClient, immutableType, ExecutionPurpose.QUERY, FilterLevel.DEFAULT);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> TableProxy<T> getTable(Class<T> clazz) {
+        try {
+            return (TableProxy<T>) Class.forName(clazz.getPackageName() + "." + clazz.getSimpleName() + "Table").getField("$").get(null);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("can not find Table by type.", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Fetcher<T> getFetcher(Class<T> clazz) {
+        try {
+            return (Fetcher<T>) Class.forName(clazz.getPackageName() + "." + clazz.getSimpleName() + "Fetcher").getField("$").get(null);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("can not find Table by type.", e);
+        }
+    }
+
+    @Nullable
+    public static Object get(Object immutable, PropId prop) {
+        if (ImmutableObjects.isLoaded(immutable, prop)) {
+            return ImmutableObjects.get(immutable, prop);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static Object get(Object immutable, String prop) {
+        if (ImmutableObjects.isLoaded(immutable, prop)) {
+            return ImmutableObjects.get(immutable, prop);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static Object get(Object immutable, ImmutableProp prop) {
+        if (ImmutableObjects.isLoaded(immutable, prop)) {
+            return ImmutableObjects.get(immutable, prop);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static <T, X> X get(T immutable, TypedProp<T, X> prop) {
+        if (ImmutableObjects.isLoaded(immutable, prop)) {
+            return ImmutableObjects.get(immutable, prop);
+        } else {
+            return null;
+        }
     }
 
     private static String prefix(Table<?> table) {

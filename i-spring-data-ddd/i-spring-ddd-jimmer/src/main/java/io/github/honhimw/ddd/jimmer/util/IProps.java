@@ -1,7 +1,10 @@
 package io.github.honhimw.ddd.jimmer.util;
 
+import jakarta.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
+import org.babyfish.jimmer.meta.TargetLevel;
 import org.babyfish.jimmer.sql.JoinType;
 import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.PropExpression;
@@ -27,6 +30,40 @@ public abstract class IProps {
 
     public static IProps of(PropExpression.Embedded<?> embedded) {
         return new IEmbedded(embedded);
+    }
+
+    /**
+     * Get prop expression by path
+     *
+     * @param iProps IProps
+     * @param path   e.g. "name.lastName"
+     * @param <R>    Any
+     * @return PropExpression nullable
+     */
+    @Nullable
+    public static <R> PropExpression<R> get(IProps iProps, String path) {
+        Map<String, ImmutableProp> props = iProps.props();
+        String[] split = path.split("\\.", 2);
+        for (Map.Entry<String, ImmutableProp> entry : props.entrySet()) {
+            String key = entry.getKey();
+            if (StringUtils.equals(split[0], key)) {
+                if (split.length == 2) {
+                    ImmutableProp prop = entry.getValue();
+                    IProps next;
+                    if (prop.isReference(TargetLevel.ENTITY)) {
+                        next = iProps.join(key);
+                    } else if (prop.isReference(TargetLevel.OBJECT)) {
+                        next = iProps.embed(key);
+                    } else {
+                        return null;
+                    }
+                    return get(next, split[1]);
+                } else {
+                    return iProps.get(key);
+                }
+            }
+        }
+        return null;
     }
 
     public abstract Object unwrap();

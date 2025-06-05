@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <span style="font-weight:bold;font-size:x-large;color:green">Number of bytes</span>
@@ -29,6 +31,8 @@ import java.util.Objects;
  */
 
 public class IDataSize implements Serializable, Comparable<IDataSize> {
+
+    public static final Pattern PATTERN = Pattern.compile("(?<num>\\d+(\\.\\d+))(?<unit>[a-zA-Z]{0,2})$");
 
     /**
      * The number of bytes in a kilobyte.
@@ -134,10 +138,16 @@ public class IDataSize implements Serializable, Comparable<IDataSize> {
         Objects.requireNonNull(pattern, "pattern cannot be null");
         pattern = pattern.trim();
         Unit unit = Unit.B;
-        for (Unit _unit : Unit.values()) {
-            if (pattern.endsWith(_unit.name())) {
-                pattern = pattern.substring(0, pattern.length() - _unit.name().length()).trim();
-                unit = _unit;
+        Matcher matcher = PATTERN.matcher(pattern);
+        if (matcher.find()) {
+            String num = matcher.group("num");
+            String _unit = matcher.group("unit");
+            for (Unit u : Unit.values()) {
+                if (u.name().equalsIgnoreCase(_unit)) {
+                    pattern = num;
+                    unit = u;
+                    break;
+                }
             }
         }
         return unit.of(new BigDecimal(pattern));

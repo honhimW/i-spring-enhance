@@ -1,5 +1,7 @@
 package io.github.honhimw.example.domain.jpa.player;
 
+import io.github.honhimw.ddd.common.DaoAction;
+import io.github.honhimw.ddd.common.DomainEvent;
 import io.github.honhimw.ddd.jpa.domain.AbstractLogicDeleteAR;
 import io.github.honhimw.example.domain.jpa.NameDO;
 import jakarta.persistence.*;
@@ -7,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.function.Function;
 
 /**
  * @author hon_him
@@ -54,4 +58,8 @@ public class PlayerDO extends AbstractLogicDeleteAR<PlayerDO, String> {
         private Integer deadLift;
     }
 
+    @Override
+    public Function<DaoAction, ? extends DomainEvent<PlayerDO, String>> eventBuilder() {
+        return DomainEvent::new;
+    }
 }

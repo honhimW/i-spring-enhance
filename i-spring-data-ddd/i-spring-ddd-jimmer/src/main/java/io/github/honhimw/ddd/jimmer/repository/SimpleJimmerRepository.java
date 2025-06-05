@@ -2,21 +2,24 @@ package io.github.honhimw.ddd.jimmer.repository;
 
 import io.github.honhimw.ddd.jimmer.convert.QueryByExamplePredicateBuilder;
 import io.github.honhimw.ddd.jimmer.domain.Specification;
+import io.github.honhimw.ddd.jimmer.mapping.JimmerEntityInformation;
 import io.github.honhimw.ddd.jimmer.support.SpringOrders;
 import io.github.honhimw.ddd.jimmer.support.SpringPageFactory;
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.IProps;
+import io.github.honhimw.ddd.jimmer.util.Utils;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.Input;
 import org.babyfish.jimmer.View;
+import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.meta.TypedProp;
 import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.Selection;
-import org.babyfish.jimmer.sql.ast.impl.mutation.MutableDeleteImpl;
+import org.babyfish.jimmer.sql.ast.impl.Expr;
 import org.babyfish.jimmer.sql.ast.impl.mutation.Mutations;
 import org.babyfish.jimmer.sql.ast.impl.query.FilterLevel;
 import org.babyfish.jimmer.sql.ast.impl.query.MutableRootQueryImpl;
@@ -26,8 +29,6 @@ import org.babyfish.jimmer.sql.ast.mutation.*;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.Order;
-import org.babyfish.jimmer.sql.ast.table.Table;
-import org.babyfish.jimmer.sql.ast.table.TableEx;
 import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
 import org.babyfish.jimmer.sql.fetcher.DtoMetadata;
 import org.babyfish.jimmer.sql.fetcher.Fetcher;
@@ -43,10 +44,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.FluentQuery;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -62,21 +60,18 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
     protected final ImmutableType immutableType;
 
     protected final TableProxy<E> table;
-    protected final TableEx<E> tableEx;
     protected final Fetcher<E> fetcher;
 
     private ProjectionFactory projectionFactory;
 
-    @SuppressWarnings("unchecked")
-    public SimpleJimmerRepository(RepositoryInformation metadata, JSqlClientImplementor sqlClient) {
+    public SimpleJimmerRepository(JimmerEntityInformation<E, ID> information, JSqlClientImplementor sqlClient) {
         this.sqlClient = sqlClient;
-        this.entityType = (Class<E>) metadata.getDomainType();
+        this.entityType = information.getJavaType();
         this.immutableType = ImmutableType.tryGet(this.entityType);
 
         try {
-            this.table = (TableProxy<E>) Class.forName(entityType.getPackageName() + "." + entityType.getSimpleName() + "Table").getField("$").get(null);
-            this.tableEx = (TableEx<E>) Class.forName(entityType.getPackageName() + "." + entityType.getSimpleName() + "TableEx").getField("$").get(null);
-            this.fetcher = (Fetcher<E>) Class.forName(entityType.getPackageName() + "." + entityType.getSimpleName() + "Fetcher").getField("$").get(null);
+            this.table = Utils.getTable(entityType);
+            this.fetcher = Utils.getFetcher(entityType);
         } catch (Exception e) {
             throw new IllegalStateException("jimmer annotation-processor generated class not found for: %s".formatted(this.entityType.getName()), e);
         }
@@ -84,52 +79,92 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
 
     @Override
     public ImmutableType type() {
-        return immutableType;
+        return this.immutableType;
     }
 
     @Override
     public Class<E> entityType() {
-        return entityType;
+        return this.entityType;
+    }
+
+    @Override
+    public TableProxy<E> tableProxy() {
+        return this.table;
+    }
+
+    @Override
+    public Fetcher<E> fetcher() {
+        return this.fetcher;
     }
 
     @Override
     public E findNullable(ID id) {
-        return sqlClient.getEntities().findById(entityType, id);
+        IFetcher<E> allFields = IFetcher.of(this.table, fetcher).allFields();
+        return findNullable(id, allFields.getDelegate());
     }
 
     @Override
     public E findNullable(ID id, Fetcher<E> fetcher) {
         if (fetcher == null) {
-            return findNullable(id);
+            fetcher = this.fetcher;
         }
-        return sqlClient.getEntities().findById(fetcher, id);
+        MutableRootQuery<TableProxy<E>> query = sqlClient.createQuery(table);
+        Predicate eq = table.getId().eq(id);
+        IFetcher<E> iFetcher = IFetcher.of(this.table, fetcher);
+        Predicate predicate = getPredicate(null, IProps.of(table), query, iFetcher);
+        if (predicate != null) {
+            query.where(Expr.and(eq, predicate));
+        } else {
+            query.where(eq);
+        }
+        return query.select(iFetcher.toSelection()).fetchOneOrNull();
     }
 
     @Nonnull
     @Override
     public List<E> findAllById(@Nonnull Iterable<ID> ids) {
-        return sqlClient.getEntities().findByIds(entityType, ids);
+        IFetcher<E> allFields = IFetcher.of(this.table, fetcher).allFields();
+        return findAllById(ids, allFields.getDelegate());
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public List<E> findAllById(Iterable<ID> ids, Fetcher<E> fetcher) {
         if (fetcher == null) {
-            return findAllById(ids);
+            fetcher = this.fetcher;
         }
-        return sqlClient.getEntities().findByIds(fetcher, ids);
+        MutableRootQuery<TableProxy<E>> query = sqlClient.createQuery(table);
+        List _ids = Utils.toList(ids);
+        Predicate in = table.getId().in(_ids);
+        IFetcher<E> iFetcher = IFetcher.of(this.table, fetcher);
+        Predicate predicate = getPredicate(null, IProps.of(table), query, iFetcher);
+        if (predicate != null) {
+            query.where(Expr.and(in, predicate));
+        } else {
+            query.where(in);
+        }
+        return query.select(iFetcher.toSelection()).execute();
     }
 
     @Override
     public Map<ID, E> findMapByIds(Iterable<ID> ids) {
-        return sqlClient.getEntities().findMapByIds(entityType, ids);
+        return findMapByIds(ids, this.fetcher);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map<ID, E> findMapByIds(Iterable<ID> ids, Fetcher<E> fetcher) {
         if (fetcher == null) {
-            return findMapByIds(ids);
+            fetcher = this.fetcher;
         }
-        return sqlClient.getEntities().findMapByIds(fetcher, ids);
+        List<E> allById = findAllById(ids, fetcher);
+        Map<ID, E> map = new LinkedHashMap<>(allById.size());
+        ImmutableProp idProp = table.getImmutableType().getIdProp();
+        for (E e : allById) {
+            ID id = (ID) ImmutableObjects.get(e, idProp);
+            map.put(id, e);
+        }
+        return map;
     }
 
     @Nonnull
@@ -151,7 +186,7 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
     @Nonnull
     @Override
     public List<E> findAll(@Nonnull Sort sort) {
-        return createQuery(null, (Function<?, E>) null, null, sort).execute();
+        return createQuery(null, (Function<?, E>) null, null, null).execute();
     }
 
     @Override
@@ -233,15 +268,28 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
             .saveEntitiesCommand(entities);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public int delete(@Nonnull E entity, DeleteMode mode) {
-        return sqlClient.getEntities().delete(
-            entityType,
-            ImmutableObjects.get(entity, immutableType.getIdProp().getId()),
-            mode
-        ).getAffectedRowCount(AffectedTable.of(immutableType));
+        Object id = ImmutableObjects.get(entity, immutableType.getIdProp().getId());
+        return deleteById((ID) id, mode);
     }
 
+    @Override
+    public int deleteById(@Nonnull ID id, DeleteMode mode) {
+        MutableDelete delete = sqlClient.createDelete(this.table);
+        Predicate eq = this.table.getId().eq(id);
+        Predicate predicate = getPredicate(null, IProps.of(this.table), delete);
+        if (predicate != null) {
+            delete.where(Expr.and(eq, predicate));
+        } else {
+            delete.where(eq);
+        }
+        delete.setMode(mode);
+        return delete.execute();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public int deleteAll(@Nonnull Iterable<? extends E> entities, DeleteMode mode) {
         Iterator<? extends E> iterator = entities.iterator();
@@ -250,32 +298,37 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
             E next = iterator.next();
             builder.add(ImmutableObjects.get(next, immutableType.getIdProp().getId()));
         }
-        List<Object> ids = builder.build().toList();
-        return sqlClient.getEntities().deleteAll(entityType, ids, mode).getAffectedRowCount(AffectedTable.of(immutableType));
+        List ids = builder.build().toList();
+        return deleteAllById(ids, mode);
     }
 
-    @Override
-    public int deleteById(@Nonnull ID id, DeleteMode mode) {
-        return sqlClient
-            .getEntities()
-            .delete(entityType, id, mode)
-            .getAffectedRowCount(AffectedTable.of(immutableType));
-    }
-
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public int deleteAllById(Iterable<? extends ID> ids, DeleteMode mode) {
-        return sqlClient
-            .getEntities()
-            .deleteAll(entityType, ids, mode)
-            .getAffectedRowCount(AffectedTable.of(immutableType));
+        List _ids = Utils.toList(ids);
+        MutableDelete delete = sqlClient.createDelete(this.table);
+        Predicate eq = this.table.getId().in(_ids);
+        Predicate predicate = getPredicate(null, IProps.of(this.table), delete);
+        if (predicate != null) {
+            delete.where(Expr.and(eq, predicate));
+        } else {
+            delete.where(eq);
+        }
+        delete.setMode(mode);
+        return delete.execute();
     }
 
     @Override
     public void deleteAll() {
-        Mutations
-            .createDelete(sqlClient, immutableType, (d, t) -> {
-            })
-            .execute();
+        MutableDelete delete = sqlClient.createDelete(this.table);
+        Predicate all = Expr._true();
+        Predicate predicate = getPredicate(null, IProps.of(this.table), delete);
+        if (predicate != null) {
+            delete.where(Expr.and(all, predicate));
+        } else {
+            delete.where(all);
+        }
+        delete.execute();
     }
 
     @Nonnull
@@ -327,13 +380,13 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
     }
 
     @SuppressWarnings("unchecked")
-    private <X> ConfigurableRootQuery<?, X> createQuery(
+    protected <X> ConfigurableRootQuery<?, X> createQuery(
         @Nullable Fetcher<?> fetcher,
         @Nullable Function<?, X> converter,
         @Nullable TypedProp.Scalar<?, ?>[] sortedProps,
         @Nullable Sort sort
     ) {
-        MutableRootQueryImpl<Table<?>> query =
+        MutableRootQueryImpl<TableProxy<E>> query =
             new MutableRootQueryImpl<>(sqlClient, immutableType, ExecutionPurpose.QUERY, FilterLevel.DEFAULT);
         TableImplementor<?> table = query.getTableImplementor();
         if (sortedProps != null) {
@@ -369,6 +422,10 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         if (sort != null) {
             query.orderBy(SpringOrders.toOrders(table, sort));
         }
+        Predicate predicate = getPredicate(null, IProps.of(table), query, null);
+        if (predicate != null) {
+            query.where(predicate);
+        }
         return query.select(
             fetcher != null ?
                 new FetcherSelectionImpl<>(table, fetcher, converter) :
@@ -376,7 +433,7 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         );
     }
 
-    private <S> ConfigurableRootQuery<?, S> createQuery(Example<S> example, @Nullable Sort sort) {
+    protected <S> ConfigurableRootQuery<?, S> createQuery(Example<S> example, @Nullable Sort sort) {
         try {
             Class<S> probeType = example.getProbeType();
             ImmutableType immutableType = ImmutableType.get(probeType);
@@ -388,29 +445,19 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
 
             ExampleSpecification<S> spec = new ExampleSpecification<>(example);
             IFetcher<S> allFields = IFetcher.of(_table, _fetcher).allFields();
-            Predicate predicate = spec.toPredicate(IProps.of(_table), query, allFields);
+            Predicate predicate = getPredicate(spec, IProps.of(_table), query, allFields);
             query.where(predicate);
 
             if (sort != null) {
                 query.orderBy(SpringOrders.toOrders(table, sort));
             }
-
             return query.select(allFields.toSelection());
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> TableProxy<T> getTableProxy(Class<T> type) {
-        try {
-            return (TableProxy<T>) Class.forName(type.getPackageName() + "." + type.getSimpleName() + "Table").getField("$").get(null);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("");
-        }
-    }
-
-    private class ViewerImpl<V extends View<E>> implements Viewer<E, ID, V> {
+    protected class ViewerImpl<V extends View<E>> implements Viewer<E, ID, V> {
 
         private final Class<V> viewType;
 
@@ -510,10 +557,9 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
 
     @Override
     public long delete(Specification.Delete spec) {
-        MutableDeleteImpl delete = new MutableDeleteImpl(this.sqlClient, immutableType);
-        Predicate predicate = spec.toPredicate(IProps.of(table), delete);
-        MutableDelete where = delete.where(predicate);
-        return where.execute();
+        MutableDelete delete = sqlClient.createDelete(this.table);
+        Predicate predicate = getPredicate(spec, IProps.of(this.table), delete);
+        return delete.where(predicate).execute();
     }
 
     @SuppressWarnings("unchecked")
@@ -530,13 +576,13 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         return projectionFactory;
     }
 
-    private ConfigurableRootQuery<TableProxy<E>, E> applySpecification(MutableRootQuery<TableProxy<E>> query, Specification.Query spec) {
+    protected ConfigurableRootQuery<TableProxy<E>, E> applySpecification(MutableRootQuery<TableProxy<E>> query, Specification.Query spec) {
         return applySpecification(query, spec, this.table, this.fetcher);
     }
 
-    private static <T> ConfigurableRootQuery<TableProxy<T>, T> applySpecification(MutableRootQuery<TableProxy<T>> query, Specification.Query spec, TableProxy<T> table, Fetcher<T> fetcher) {
+    protected <T> ConfigurableRootQuery<TableProxy<T>, T> applySpecification(MutableRootQuery<TableProxy<T>> query, Specification.Query spec, TableProxy<T> table, Fetcher<T> fetcher) {
         IFetcher<T> iFetcher = IFetcher.of(table, fetcher);
-        Predicate predicate = spec.toPredicate(IProps.of(table), query, iFetcher);
+        Predicate predicate = getPredicate(spec, IProps.of(table), query, iFetcher);
         // if user does not configure fields fetcher, select all fields as default behavior
         // JPA-like behavior, useful for most cases
         if (!iFetcher.isConfigured()) {
@@ -547,7 +593,25 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
             .select(iFetcher.toSelection());
     }
 
-    private static class ExampleSpecification<T> implements Specification.Query {
+    @Nullable
+    protected Predicate getPredicate(@Nullable Specification.Query spec, IProps root, MutableRootQuery<?> query, IFetcher<?> fetcher) {
+        if (spec != null) {
+            return spec.toPredicate(root, query, fetcher);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    protected Predicate getPredicate(Specification.Delete spec, IProps root, MutableDelete delete) {
+        if (spec != null) {
+            return spec.toPredicate(root, delete);
+        } else {
+            return null;
+        }
+    }
+
+    protected static class ExampleSpecification<T> implements Specification.Query {
 
         private final Example<T> example;
 

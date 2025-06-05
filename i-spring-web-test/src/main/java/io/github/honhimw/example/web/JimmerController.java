@@ -3,17 +3,15 @@ package io.github.honhimw.example.web;
 import io.github.honhimw.core.IPageRequest;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.core.PageInfoVO;
-import io.github.honhimw.ddd.jimmer.domain.Auditor;
 import io.github.honhimw.ddd.jimmer.domain.AuditorDraft;
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.PageUtils;
 import io.github.honhimw.example.domain.jimmer.*;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.SnowflakeUtils;
-import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.sql.JSqlClient;
-import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
+import org.babyfish.jimmer.sql.ast.mutation.DeleteResult;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +20,10 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author hon_him
@@ -42,6 +36,9 @@ public class JimmerController {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private NameJimmerRepository nameJimmerRepository;
 
     @GetMapping("/hello")
     public IResult<Object> hello() {
@@ -85,16 +82,50 @@ public class JimmerController {
     }
 
     @Transactional("jimmerTransactionManager")
-    @GetMapping("/update")
-    public IResult<Object> update() {
-        Player update = playerRepository.update("1", player -> PlayerDraft.$.produce(player, draft -> draft
-            .setAge(ThreadLocalRandom.current().nextInt(16, 30))
+    @PostMapping()
+    public IResult<PlayerDTO> create(@TextParam PlayerDTO playerDTO) {
+
+        playerDTO.setId(SnowflakeUtils.getInstance().nextIdStr());
+        Player player1 = PlayerMapper.MAPPER.dto2do(playerDTO);
+//        player1 = PlayerDraft.$.produce(player1, draft -> draft
+//            .setAuditor(AuditorDraft.$.produce(draft1 -> draft1
+//                .setCreatedAt(Instant.now())
+//                .setCreatedBy("")
+//                .setUpdatedAt(Instant.now())
+//                .setUpdatedBy("")
+//            )));
+        Player save = playerRepository.save(player1);
+        return IResult.ok(PlayerMapper.MAPPER.do2dto(save));
+    }
+
+    @Transactional("jimmerTransactionManager")
+    @PutMapping()
+    public IResult<Object> update(@TextParam PlayerDTO playerDTO, @RequestParam(value = "delete", defaultValue = "false") boolean delete) {
+        String id = playerDTO.getId();
+        Player update = playerRepository.update(id, player -> PlayerDraft.$.produce(player, draft -> {
+                Integer age = playerDTO.getAge();
+                draft
+                    .setAge(age)
+                    .setDeleted(delete);
+            }
         ));
         return IResult.ok(PlayerMapper.MAPPER.do2dto(update));
     }
 
     @Autowired
     private JSqlClient sqlClient;
+
+    @Transactional("jimmerTransactionManager")
+    @DeleteMapping("/{id}")
+    public IResult<Void> delete(@PathVariable("id") String id, @RequestParam(value = "soft", defaultValue = "false") boolean soft) {
+//        DeleteResult deleteResult = sqlClient.deleteById(Name.class, id);
+        if (soft) {
+            playerRepository.softDelete(id);
+        } else {
+            playerRepository.deleteById(id);
+        }
+        return IResult.ok();
+    }
 
     @GetMapping("/sql")
     public IResult<Object> sql() {

@@ -1,6 +1,6 @@
 package io.github.honhimw.example.domain.jimmer;
 
-import io.github.honhimw.ddd.jimmer.domain.SimpleRepository;
+import io.github.honhimw.ddd.jimmer.repository.SoftDeleteRepository;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,7 @@ import java.util.List;
  */
 
 @Repository
-public interface PlayerRepository extends SimpleRepository<Player, String> {
+public interface PlayerRepository extends SoftDeleteRepository<Player, String> {
 
     default List<Player> findAllByAge(Integer age) {
         return findAll((root, query, fetcher) -> Expr.eq(root.get("age"), age));

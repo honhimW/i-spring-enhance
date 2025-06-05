@@ -7,18 +7,40 @@ package io.github.honhimw.ddd.jimmer.event;
 
 public interface Callback {
 
-    void preCreate(Object entity);
+    default void preCreate(Object entity) {
 
-    void postCreate(Object entity);
+    }
 
-    boolean preUpdate(Object entity);
+    default void postCreate(Object entity) {
 
-    void postUpdate(Object entity);
+    }
 
-    void preRemove(Object entity);
+    default void preUpdate(Object entity) {
 
-    void postRemove(Object entity);
+    }
 
-    boolean postLoad(Object entity);
+    default void postUpdate(Object entity) {
+
+    }
+
+    default void preRemove(Object entity) {
+
+    }
+
+    default void postRemove(Object entity) {
+
+    }
+
+    default void preSoftRemove(Object entity) {
+
+    }
+
+    default void postSoftRemove(Object entity) {
+
+    }
+
+    default void postLoad(Object entity) {
+
+    }
 
 }

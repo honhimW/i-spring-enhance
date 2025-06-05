@@ -8,6 +8,7 @@ import org.babyfish.jimmer.impl.util.CollectionUtils;
 import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.meta.TypedProp;
 import org.babyfish.jimmer.sql.ast.mutation.*;
+import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
 import org.babyfish.jimmer.sql.fetcher.Fetcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,10 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
     ImmutableType type();
 
     Class<E> entityType();
+
+    TableProxy<E> tableProxy();
+
+    Fetcher<E> fetcher();
 
     /*
      * For consumer

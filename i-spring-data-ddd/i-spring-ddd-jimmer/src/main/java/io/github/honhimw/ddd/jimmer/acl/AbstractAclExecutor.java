@@ -1,25 +1,26 @@
-package io.github.honhimw.ddd.jpa.acl;
+package io.github.honhimw.ddd.jimmer.acl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.github.honhimw.core.ConditionColumn;
 import io.github.honhimw.core.MatchingType;
 import io.github.honhimw.ddd.common.Ace;
-import io.github.honhimw.ddd.common.AclDataDomain;
 import io.github.honhimw.ddd.common.ResourceMod;
 import io.github.honhimw.ddd.common.SudoSupports;
-import io.github.honhimw.ddd.jpa.util.IExampleSpecification;
-import io.github.honhimw.ddd.jpa.util.Specifications;
+import io.github.honhimw.ddd.jimmer.convert.IExampleSpecification;
+import io.github.honhimw.ddd.jimmer.domain.Specification;
+import io.github.honhimw.ddd.jimmer.repository.JimmerRepository;
+import io.github.honhimw.ddd.jimmer.util.Utils;
 import io.github.honhimw.util.JsonUtils;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.EntityType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.support.JpaEntityInformation;
+import org.babyfish.jimmer.sql.ast.impl.Expr;
+import org.babyfish.jimmer.sql.ast.query.MutableSubQuery;
+import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
+import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,39 +28,28 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
 /**
- * @author hon_him
- * @since 2023-12-28
+ * @author honhimW
+ * @since 2025-05-29
  */
 
 @Slf4j
-public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
+public abstract class AbstractAclExecutor<T> implements AclExecutor {
 
-    public final ResourceMod defaultMod;
+    private final JSqlClientImplementor sqlClient;
 
-    private final JpaEntityInformation<T, ?> ei;
-
-    private final EntityManager em;
+    private final TableProxy<T> tableProxy;
 
     private final String dataDomain;
 
-    private final Map<String, EntityType<?>> entityTypeMap = new ConcurrentHashMap<>();
+    public final ResourceMod defaultMod;
 
-    public AbstractAclExecutor(@Nonnull ResourceMod defaultMod, @Nonnull JpaEntityInformation<T, ?> ei, @Nonnull EntityManager em, @Nonnull String dataDomain) {
-        this.defaultMod = defaultMod;
-        this.ei = ei;
-        this.em = em;
+    private final Map<String, TableProxy<?>> entityTypeMap = new ConcurrentHashMap<>();
+
+    public AbstractAclExecutor(JSqlClientImplementor sqlClient, TableProxy<T> tableProxy, String dataDomain, ResourceMod defaultMod) {
+        this.sqlClient = sqlClient;
+        this.tableProxy = tableProxy;
         this.dataDomain = dataDomain;
-
-        if (ACLUtils.DATA_DOMAIN_ENTITY_MAP.isEmpty()) {
-            for (EntityType<?> entity : em.getMetamodel().getEntities()) {
-                Class<?> javaType = entity.getJavaType();
-                if (javaType.isAnnotationPresent(AclDataDomain.class)) {
-                    AclDataDomain annotation = javaType.getAnnotation(AclDataDomain.class);
-                    String _dataDomain = annotation.value();
-                    ACLUtils.DATA_DOMAIN_ENTITY_MAP.put(_dataDomain, entity);
-                }
-            }
-        }
+        this.defaultMod = defaultMod;
     }
 
     protected abstract boolean guard();
@@ -74,9 +64,8 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
     @Nonnull
     protected abstract List<? extends Ace> getAcl();
 
-    @Nullable
     @Override
-    public <S extends T> Specification<S> read() {
+    public @Nullable Specification.Query read() {
         if (!guard()) {
             return null;
         }
@@ -88,12 +77,12 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
             .filter(aclDTO -> StringUtils.equals(dataDomain, aclDTO.getDataDomain()))
             .toList();
 
-        Map<String, List<Specification<S>>> groupedSpecifications = new HashMap<>();
+        Map<String, List<Specification.Query>> groupedSpecifications = new HashMap<>();
 
         if (CollectionUtils.isNotEmpty(currentAcl)) {
             // If ACL is not empty, and all not allow read, the query condition is always false, that is, any permission can be read
             if (currentAcl.stream().noneMatch(aclDTO -> aclDTO.getMod().canRead())) {
-                return (root, query, cb) -> cb.isTrue(cb.literal(false));
+                return Specification.Query._false();
             } else {
                 // Otherwise, you can see the readable permission with parameters that meet the condition
                 for (Ace ace : currentAcl) {
@@ -104,7 +93,7 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
                         groupName = matcher.group("group");
                         parameterName = matcher.group("paramName");
                     }
-                    Specification<S> sSpecification = buildSpecification(ace, parameterName, attributes);
+                    Specification.Query sSpecification = buildSpecification(ace, parameterName, attributes);
                     if (Objects.nonNull(sSpecification)) {
                         groupedSpecifications.compute(groupName, (s, specifications) -> {
                             if (Objects.isNull(specifications)) {
@@ -117,24 +106,24 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
                 }
             }
         }
-        AtomicReference<Specification<S>> _ref = new AtomicReference<>();
+        AtomicReference<Specification.Query> _ref = new AtomicReference<>();
         if (MapUtils.isNotEmpty(groupedSpecifications)) {
             // Apply `or` inside groups, `and` between groups
-            List<Specification<S>> list = groupedSpecifications.values().stream().map(Specification::anyOf).toList();
+            List<Specification.Query> list = groupedSpecifications.values().stream().map(Specification::anyOf).toList();
             _ref.set(Specification.allOf(list));
         } else {
             // Default mod when ACL is empty
             if (isRoot()) {
-                _ref.set(Specifications.isTrue());
+                _ref.set(Specification.Query._true());
             } else {
-                _ref.set(defaultMod.canRead() ? Specifications.isTrue() : Specifications.isFalse());
+                _ref.set(defaultMod.canRead() ? Specification.Query._true() : Specification.Query._false());
             }
         }
         return _ref.get();
     }
 
     @Override
-    public void write() throws UnsupportedOperationException {
+    public void write() {
         if (!guard()) {
             return;
         }
@@ -155,30 +144,35 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
         }
     }
 
+    @Override
+    public @Nullable Specification.Delete delete() {
+        // TODO using readability and writability for delete check instead
+        return null;
+    }
 
     @Nullable
-    protected <S extends T> Specification<S> buildSpecification(Ace ace, String parameterName, Map<String, Object> attributes) {
+    protected <S extends T> Specification.Query buildSpecification(Ace ace, String parameterName, Map<String, Object> attributes) {
         if (StringUtils.isBlank(parameterName)) {
             if (ace.getMod().canRead()) {
-                return Specifications.isTrue();
+                return Specification.Query._true();
             } else {
-                return Specifications.isFalse();
+                return Specification.Query._false();
             }
         }
-        Specification<S> tSpecification;
+        Specification.Query subSpecification;
         if (StringUtils.isBlank(ace.getValue())) {
             return null;
         }
         Matcher subQueryV2 = ACLUtils.SUB_QUERY_PATTERN_V2.matcher(ace.getValue());
         if (subQueryV2.find()) {
             String _dataDomain = subQueryV2.group("dataDomain");
-            EntityType<?> entityType = ACLUtils.DATA_DOMAIN_ENTITY_MAP.get(_dataDomain);
-            if (Objects.isNull(entityType)) {
+            TableProxy<?> subTableProxy = ACLUtils.DATA_DOMAIN_TABLE_MAP.get(_dataDomain);
+            if (Objects.isNull(subTableProxy)) {
                 return null;
             }
-            tSpecification = new AclSubQuerySpecification<>(
-                ei,
-                entityType,
+            subSpecification = new AclSubQuerySpecification(
+                sqlClient,
+                subTableProxy,
                 parameterName,
                 subQueryV2.group("rtProperty"),
                 subQueryV2.group("property"),
@@ -190,10 +184,10 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
             Matcher subQuery = ACLUtils.SUB_QUERY_PATTERN.matcher(ace.getValue());
             if (subQuery.find()) {
                 String className = subQuery.group("className");
-                EntityType<?> entityType = entityTypeMap.computeIfAbsent(className, key -> {
+                TableProxy<?> entityType = entityTypeMap.computeIfAbsent(className, key -> {
                     try {
                         Class<?> aClass = Class.forName(className);
-                        return em.getMetamodel().entity(aClass);
+                        return Utils.getTable(aClass);
                     } catch (Exception e) {
                         log.warn("could not find entityType of: {}", className);
                         return null;
@@ -202,9 +196,9 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
                 if (Objects.isNull(entityType)) {
                     return null;
                 }
-                tSpecification = new AclSubQuerySpecification<>(
-                    ei,
-                    entityType,
+                subSpecification = new AclSubQuerySpecification(
+                    sqlClient,
+                    tableProxy,
                     parameterName,
                     subQuery.group("rtProperty"),
                     subQuery.group("property"),
@@ -235,15 +229,14 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
                     }
                 }
                 ConditionColumn condition = ConditionColumn.of(parameterName, value, ace.getMatchingType());
-                tSpecification = new IExampleSpecification<>(condition);
+                subSpecification = new IExampleSpecification(condition);
             }
         }
         if (!ace.getMod().canRead()) {
-            tSpecification = Specification.not(tSpecification);
+            subSpecification = Specification.not(subSpecification);
         }
-        return tSpecification;
+        return subSpecification;
     }
-
 
     @Nullable
     protected String tryGetAttributeName(String parameterValue) {

@@ -1,5 +1,6 @@
 package io.github.honhimw.example.domain.jimmer;
 
+import io.github.honhimw.core.AuditorDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,5 +26,7 @@ public class PlayerDTO implements Serializable {
     private NameDTO fullName;
 
     private SBDDTO sbd;
+
+    private AuditorDTO auditor;
     
 }

@@ -49,7 +49,6 @@ public class IExampleSpecification implements Specification.Query {
     @Override
     public Predicate toPredicate(IProps root, MutableRootQuery<?> query, IFetcher<?> fetcher) {
         Assert.notNull(root, "Root must not be null!");
-        Assert.notNull(query, "RootQuery must not be null!");
         Assert.notNull(iPageRequest, "iPageRequest must not be null!");
 
         Object condition = iPageRequest.getCondition();
