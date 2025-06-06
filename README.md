@@ -309,7 +309,134 @@ public class DatabaseObjectClass<ID> extends AbstractAggregateRoot<ID> {
 }
 ```
 
-#### Query
+### Jimmer implementation
+
+#### Event
+
+Define an intermediate layer interface `PlayerDomain` extends DomainEntity and override `DomainEntity#eventBuilder`.
+**Let Your Entity Extends PlayerDomain**
+```java
+// intermediate layer interface
+public interface PlayerDomain extends DomainEntity {
+  @Override
+  default Function<DaoAction, ? extends DomainEvent<?, ?>> eventBuilder() {
+    if (this instanceof Player player) {
+      return daoAction -> new PlayerEvent(daoAction, player);
+    }
+    return DomainEntity.super.eventBuilder();
+  }
+}
+
+@Entity
+@Table(name = "player")
+public interface Player extends BaseAR, PlayerDomain {
+  @Id
+  String id();
+}
+```
+
+**Subscribe Entity Event with Spring Event**
+```java
+@Component
+public class YourListener extends DomainListenerSupports {
+    @EventListener
+    public void appEvent(PlayerEvent event) {
+         afterInsert(event)
+             .ifPresent(e -> {
+                 String id = e.getId();
+                 YourEntity entity = e.getEntity();
+                 // do something
+             });
+    }
+}
+```
+
+#### Acl
+
+**Create an AclExecutor**
+```java
+public class CustomAclExecutorImpl<T> extends AbstractAclExecutor<T> {
+
+    public CustomAclExecutorImpl(
+        JSqlClientImplementor sqlClient,
+        TableProxy<T> tableProxy,
+        String dataDomain,
+        ResourceMod defaultMod) {
+      super(sqlClient, tableProxy, dataDomain, defaultMod);
+    }
+
+    @Override
+    protected boolean guard() {
+        if (SudoSupports.isSudo()) {
+            log.warn("Sudo mode, executed without ACL guard.");
+            return false;
+        }
+        return SecurityUtils.getAuthorizedUser().isPresent();
+    }
+
+    @Override
+    protected boolean isRoot() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::isRoot)
+            .orElse(false);
+    }
+
+    @Nonnull
+    @Override
+    protected Map<String, Object> getAttributes() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::getAttributes)
+            .orElseGet(HashMap::new);
+    }
+
+    @Nonnull
+    @Override
+    protected List<? extends Ace> getAcl() {
+        return SecurityUtils.getAuthorizedUser()
+            .map(AuthorizedUser::getAcl)
+            .orElseGet(ArrayList::new);
+    }
+}
+```
+
+**Register AclExecutor**
+
+```java
+@Component
+public class CustomAclProvider implements AclProvider {
+  @Override
+  @Nonnull
+  public AclExecutor getExecutor(
+          JSqlClientImplementor sqlClient,
+          TableProxy<?> tableProxy,
+          String dataDomain,
+          ResourceMod defaultMod) {
+    return new CustomAclExecutorImpl<>(sqlClient, tableProxy, dataDomain, defaultMod);
+  }
+}
+```
+
+**Enable Jimmer Repositories**
+```java
+@Configuration
+@EnableJimmerRepositories(basePackages = "repositories.package.to.scan", repositoryFactoryBeanClass = AclJimmerRepositoryFactoryBean.class)
+public class CustomConfiguration {}
+```
+
+**Naming Domain**
+```java
+@AclDataDomain(DatabaseObjectClass.TABLE_NAME)
+@Entity
+@Table(name = DatabaseObjectClass.TABLE_NAME)
+public interface DatabaseObjectClass extends BaseAR {
+    String TABLE_NAME = "table_name";
+    
+    @Id
+    private ID id;
+}
+```
+
+### Query
 
 > Suppose you have the following data object relationship structure as follows:
 ```json
