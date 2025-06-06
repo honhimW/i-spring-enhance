@@ -6,6 +6,7 @@ import io.github.honhimw.ddd.jimmer.event.CallbackInitializer;
 import io.github.honhimw.ddd.jimmer.event.CallbackInterceptor;
 import io.github.honhimw.ddd.jimmer.support.DialectDetector;
 import io.github.honhimw.ddd.jimmer.util.RawSqlLogger;
+import io.github.honhimw.ddd.jimmer.util.RuntimeDialect;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.DraftInterceptor;
@@ -251,24 +252,25 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
     }
 
     protected void configureDialect() {
+        Dialect _dialect;
         if (dialect != null) {
-            builder.setDialect(dialect);
+            _dialect = dialect;
         } else {
-            Dialect dialect;
             Class<? extends Dialect> dialectClass = properties.getDialectClass();
             if (dialectClass != null) {
                 try {
-                    dialect = dialectClass.getConstructor().newInstance();
+                    _dialect = dialectClass.getConstructor().newInstance();
                 } catch (Exception e) {
                     throw new IllegalArgumentException("unknown dialect: %s".formatted(dialectClass.getName()));
                 }
             } else if (properties.getDialect() != null) {
-                dialect = DialectDetector.getDialectFromDriver(properties.getDialect());
+                _dialect = DialectDetector.getDialectFromDriver(properties.getDialect());
             } else {
-                dialect = connectionManager.execute(dialectDetector::detectDialect);
+                _dialect = connectionManager.execute(dialectDetector::detectDialect);
             }
-            builder.setDialect(dialect);
         }
+        builder.setDialect(_dialect);
+        RuntimeDialect.setDialect(_dialect);
     }
 
     protected void configureNamingStrategy() {

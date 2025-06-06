@@ -220,4 +220,80 @@ public class Expr {
         return new ConcatExpression(literal(x), Collections.singletonList(y));
     }
 
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseNot(NumericExpression<N> x) {
+        return UnaryExpression.bitwiseNot(x);
+    }
+
+    /**
+     * In PostgreSQL, bitwise xor syntax is `1 # 2`
+     * @param x
+     * @param num
+     * @return
+     * @param <N>
+     */
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseXor(NumericExpression<N> x, N num) {
+        Class<N> type = (Class<N>) num.getClass();
+        return BitwiseBinaryExpression.xor(type, x, Literals.number(num));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseAnd(NumericExpression<N> x, N num) {
+        Class<N> type = (Class<N>) num.getClass();
+        return BitwiseBinaryExpression.and(type, x, Literals.number(num));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseOr(NumericExpression<N> x, N num) {
+        Class<N> type = (Class<N>) num.getClass();
+        return BitwiseBinaryExpression.or(type, x, Literals.number(num));
+    }
+
+    public static NumericExpression<Integer> leftShift(NumericExpression<Integer> x, int num) {
+        return BitwiseBinaryExpression.leftShift(x, num);
+    }
+
+    public static NumericExpression<Integer> rightShift(NumericExpression<Integer> x, int num) {
+        return BitwiseBinaryExpression.rightShift(x, num);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseXor(NumericExpression<N> l, NumericExpression<N> r) {
+        Class<N> type;
+        if (l instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else if (r instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else {
+            throw new IllegalArgumentException("Unsupported expression type: " + l);
+        }
+        return BitwiseBinaryExpression.xor(type, l, r);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseAnd(NumericExpression<N> l, NumericExpression<N> r) {
+        Class<N> type;
+        if (l instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else if (r instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else {
+            throw new IllegalArgumentException("Unsupported expression type: " + l);
+        }
+        return BitwiseBinaryExpression.xor(type, l, r);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseOr(NumericExpression<N> l, NumericExpression<N> r) {
+        Class<N> type;
+        if (l instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else if (r instanceof ExpressionImplementor<?> implementor) {
+            type = (Class<N>) implementor.getType();
+        } else {
+            throw new IllegalArgumentException("Unsupported expression type: " + l);
+        }
+        return BitwiseBinaryExpression.xor(type, l, r);
+    }
+
 }

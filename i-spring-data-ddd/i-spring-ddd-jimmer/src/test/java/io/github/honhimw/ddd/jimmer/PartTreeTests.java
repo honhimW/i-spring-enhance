@@ -1,6 +1,8 @@
 package io.github.honhimw.ddd.jimmer;
 
 import lombok.SneakyThrows;
+import org.babyfish.jimmer.sql.JSqlClient;
+import org.babyfish.jimmer.sql.ast.impl.Expr;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.repository.query.parser.PartTree;
 

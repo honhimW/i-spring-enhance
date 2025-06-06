@@ -10,10 +10,13 @@ import io.github.honhimw.example.domain.jimmer.*;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.SnowflakeUtils;
 import org.babyfish.jimmer.sql.JSqlClient;
+import org.babyfish.jimmer.sql.ast.Expression;
+import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
 import org.babyfish.jimmer.sql.ast.mutation.DeleteResult;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
+import org.babyfish.jimmer.sql.ast.tuple.Tuple6;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -58,12 +61,41 @@ public class JimmerController {
     }
 
     @Transactional("jimmerTransactionManager")
+    @GetMapping("/bitwise")
+    public IResult<Object> bitwise() {
+
+        ConfigurableRootQuery<PlayerTable, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>> select = sqlClient.createQuery(PlayerTable.$)
+            .where()
+            .select(
+                Expr.bitwiseXor(PlayerTable.$.age(), 100),
+                Expr.bitwiseAnd(PlayerTable.$.age(), 100),
+                Expr.bitwiseOr(PlayerTable.$.age(), 100),
+                Expr.bitwiseNot(PlayerTable.$.age()),
+                Expr.leftShift(PlayerTable.$.age(), 2),
+                Expr.rightShift(PlayerTable.$.age(), 2)
+            );
+        List<Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>> execute = select.execute();
+        List<List<Integer>> list = execute.stream().map(tuple -> List.of(
+            tuple.get_1(),
+            tuple.get_2(),
+            tuple.get_3(),
+            tuple.get_4(),
+            tuple.get_5(),
+            tuple.get_6()
+        )).toList();
+        return IResult.ok(list);
+    }
+
+    @Transactional("jimmerTransactionManager")
     @GetMapping("/spec")
     public IResult<Object> spec() {
         List<Player> age = playerRepository.findAll((root, query, fetcher) -> {
+            PropExpression.Num<Integer> expression = root.num("age");
+            Expr.lt(expression, 22);
             return Expr.and(
                 root.join("fullName").get("firstName").eq("Chris"),
-                root.<Integer>num("age").le(22)
+//                root.<Integer>num("age").le(22),
+                Expr.<Integer>bitwiseNot(root.num("age")).eq(-23)
             );
         });
         List<PlayerDTO> list = age.stream().map(PlayerMapper.MAPPER::do2dto).toList();

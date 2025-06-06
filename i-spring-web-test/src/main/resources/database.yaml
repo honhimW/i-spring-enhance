@@ -24,6 +24,6 @@ spring:
     default-enum-strategy: name
     log:
       enable: true
-      kind: simple
+      kind: default
       pretty: true
       inline-sql-variables: true
