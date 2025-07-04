@@ -9,4 +9,7 @@ dependencies {
     annotationProcessor 'org.mapstruct:mapstruct-jdk8'
 
     annotationProcessor 'org.babyfish.jimmer:jimmer-apt'
+
+    testImplementation 'com.h2database:h2'
+    testAnnotationProcessor 'org.babyfish.jimmer:jimmer-apt'
 }

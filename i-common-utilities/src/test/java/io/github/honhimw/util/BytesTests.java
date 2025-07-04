@@ -20,8 +20,8 @@ public class BytesTests {
         object.name = "foo";
         object.age = 123;
         Bytes bytes = Bytes.fromObject(object);
-        System.out.println(bytes.toBase64());
-        System.out.println(bytes.<Object>toObject());
+        System.out.println(bytes.asBase64());
+        System.out.println(bytes.<Object>asObject());
     }
 
     @ToString

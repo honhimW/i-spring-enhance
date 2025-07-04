@@ -27,7 +27,7 @@ public class CryptoUtilsTest {
         assertThatThrownBy(rsa::privateKey).isInstanceOf(NullPointerException.class);
         rsa = rsa.generateKeyPair();
         Bytes sign = rsa.signSha256("test".getBytes());
-        String x = sign.toBase64();
+        String x = sign.asBase64();
         assertThat(x).hasSize(344);
         assertThat(rsa.verifySha256(sign.unwrap(), "test".getBytes())).isTrue();
         Bytes bytes = rsa.encryptByPublicKey("test".getBytes());
@@ -43,7 +43,7 @@ public class CryptoUtilsTest {
         assertThatThrownBy(ecc::privateKey).isInstanceOf(NullPointerException.class);
         ecc = ecc.generateKeyPair();
         Bytes sign = ecc.signSha256("test".getBytes());
-        String x = sign.toBase64();
+        String x = sign.asBase64();
         assertThat(x).hasSize(96);
         assertThat(ecc.verifySha256(sign.unwrap(), "test".getBytes())).isTrue();
         Bytes bytes = ecc.encryptByPublicKey("test".getBytes());
@@ -58,12 +58,12 @@ public class CryptoUtilsTest {
         aes = aes.generateKey();
         Bytes encrypt = aes.encrypt("test".getBytes());
         Bytes decrypt = aes.decrypt(encrypt.unwrap());
-        assertThat(decrypt.toString()).isEqualTo("test");
+        assertThat(decrypt.asString()).isEqualTo("test");
 
         byte[] bytes = "hello world".getBytes(StandardCharsets.US_ASCII);
         Bytes wrap = Bytes.wrap(bytes);
-        Bytes bytes1 = Bytes.fromAscii(wrap.toAscii());
-        assertThat(bytes1.toString()).isEqualTo("hello world");
+        Bytes bytes1 = Bytes.fromAscii(wrap.asAscii());
+        assertThat(bytes1.asString()).isEqualTo("hello world");
     }
 
     @Test

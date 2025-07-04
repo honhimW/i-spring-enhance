@@ -4,10 +4,7 @@ import io.github.honhimw.ddd.jimmer.support.SpringConnectionManager;
 import io.github.honhimw.ddd.jimmer.support.SpringTransientResolverProvider;
 import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.ImmutableObjects;
-import org.babyfish.jimmer.meta.ImmutableProp;
-import org.babyfish.jimmer.meta.ImmutableType;
-import org.babyfish.jimmer.meta.PropId;
-import org.babyfish.jimmer.meta.TypedProp;
+import org.babyfish.jimmer.meta.*;
 import org.babyfish.jimmer.sql.JSqlClient;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.impl.query.FilterLevel;
@@ -26,8 +23,7 @@ import org.babyfish.jimmer.sql.runtime.ExecutionPurpose;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.data.domain.Sort;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**

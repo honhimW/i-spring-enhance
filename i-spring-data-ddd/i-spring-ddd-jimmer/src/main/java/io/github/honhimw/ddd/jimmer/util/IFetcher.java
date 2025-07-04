@@ -176,15 +176,17 @@ public class IFetcher<E> {
         for (Map.Entry<String, ImmutableProp> entry : props.entrySet()) {
             String name = entry.getKey();
             ImmutableProp immutableProp = entry.getValue();
-            if (immutableProp.isAssociation(TargetLevel.OBJECT)) {
-                ImmutableType targetType = immutableProp.getTargetType();
-                if (targetType != null) {
-                    Fetcher<?> nextFetcher = new FetcherImpl<>(targetType.getJavaClass());
-                    nextFetcher = findAndAddFields(nextFetcher);
-                    fetcher = fetcher.add(name, nextFetcher);
+            if (immutableProp.isColumnDefinition()) {
+                if (immutableProp.isAssociation(TargetLevel.OBJECT)) {
+                    ImmutableType targetType = immutableProp.getTargetType();
+                    if (targetType != null) {
+                        Fetcher<?> nextFetcher = new FetcherImpl<>(targetType.getJavaClass());
+                        nextFetcher = findAndAddFields(nextFetcher);
+                        fetcher = fetcher.add(name, nextFetcher);
+                    }
+                } else {
+                    fetcher = fetcher.add(name);
                 }
-            } else {
-                fetcher = fetcher.add(name);
             }
         }
         return fetcher;

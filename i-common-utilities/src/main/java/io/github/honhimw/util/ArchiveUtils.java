@@ -220,7 +220,7 @@ public class ArchiveUtils {
         void decompress(InputStream ips, OutputStream ops) throws IOException;
 
         default Bytes compress(Bytes bytes) {
-            InputStream inputStream = bytes.toInputStream();
+            InputStream inputStream = bytes.asInputStream();
             ByteArrayOutputStream ops = new ByteArrayOutputStream();
             try {
                 compress(inputStream, ops);
@@ -231,7 +231,7 @@ public class ArchiveUtils {
         }
 
         default Bytes decompress(Bytes bytes) {
-            InputStream inputStream = bytes.toInputStream();
+            InputStream inputStream = bytes.asInputStream();
             ByteArrayOutputStream ops = new ByteArrayOutputStream();
             try {
                 decompress(inputStream, ops);

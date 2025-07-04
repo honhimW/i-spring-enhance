@@ -2,6 +2,16 @@ plugins {
     alias libs.plugins.multi.release.jar
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+multiRelease {
+    targetVersions 17, 21
+}
+
 configurations {
     java21CompileClasspath { extendsFrom using }
     java21RuntimeClasspath { extendsFrom using }
@@ -9,6 +19,15 @@ configurations {
     java21TestCompileClasspath { extendsFrom using }
     java21TestRuntimeClasspath { extendsFrom using }
     java21TestAnnotationProcessor { extendsFrom using }
+}
+
+configurations {
+    java21CompileOnly { extendsFrom compileOnly }
+}
+
+compileJava21Java {
+    sourceCompatibility '21'
+    targetCompatibility '21'
 }
 
 dependencies {
@@ -24,25 +43,4 @@ dependencies {
     compileOnly 'io.micrometer:context-propagation'
     compileOnly 'org.springdoc:springdoc-openapi-starter-common'
     compileOnly 'redis.clients:jedis'
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    java21CompileOnly {
-        extendsFrom compileOnly
-    }
-}
-
-multiRelease {
-    targetVersions 17, 21
-}
-
-compileJava21Java {
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
 }

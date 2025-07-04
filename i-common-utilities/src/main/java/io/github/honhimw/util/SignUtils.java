@@ -48,7 +48,7 @@ public class SignUtils {
         return Base64.encodeBase64String(signed);
     }
 
-    public boolean verify(String type, String content, String sign, String publicKey) throws GeneralSecurityException {
+    public boolean verify(String type, String content, String sign, String publicKey) {
         if (type == null || content == null || sign == null || publicKey == null) {
             return false;
         }
