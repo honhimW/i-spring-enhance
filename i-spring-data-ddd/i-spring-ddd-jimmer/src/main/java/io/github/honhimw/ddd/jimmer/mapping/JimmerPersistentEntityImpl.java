@@ -22,7 +22,6 @@ public class JimmerPersistentEntityImpl<T> extends BasicPersistentEntity<T, Jimm
 
     public JimmerPersistentEntityImpl(TypeInformation<T> information) {
         super(information, null);
-        information.getType();
         this.immutableType = ImmutableType.tryGet(information.getType());
         this.addProperties();
     }

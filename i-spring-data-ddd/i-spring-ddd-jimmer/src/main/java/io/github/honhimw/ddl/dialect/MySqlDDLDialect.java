@@ -97,4 +97,20 @@ public class MySqlDDLDialect extends DefaultDDLDialect {
     public String getTableTypeString() {
         return "engine=InnoDB";
     }
+
+    @Override
+    public String getDropForeignKeyString() {
+        return "drop foreign key";
+    }
+
+    @Override
+    public boolean supportsIfExistsBeforeConstraintName() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsIfExistsAfterDropSequence() {
+        return false;
+    }
+
 }

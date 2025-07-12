@@ -77,4 +77,19 @@ public class OracleDDLDialect extends DefaultDDLDialect {
     public String getCascadeConstraintsString() {
         return "cascade constraints";
     }
+
+    @Override
+    public boolean supportsIfExistsAfterAlterTable() {
+        return isSameOrAfter(23);
+    }
+
+    @Override
+    public boolean supportsIfExistsBeforeConstraintName() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsIfExistsAfterDropSequence() {
+        return isSameOrAfter(23);
+    }
 }

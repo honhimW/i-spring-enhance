@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.GZipUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -84,7 +84,7 @@ public class YamlJacksonNodeReactiveCustomizer implements JacksonNodeReactiveCus
 
     protected byte[] tryDecompressGzip(TextParam annotation, ServerHttpRequest request, byte[] body) {
         String contentEncoding = request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
-        if (annotation.gzip() && StringUtils.equals(contentEncoding, "gzip")) {
+        if (annotation.gzip() && Strings.CS.equals(contentEncoding, "gzip")) {
             try {
                 return GZipUtils.decompress(body);
             } catch (IOException e) {

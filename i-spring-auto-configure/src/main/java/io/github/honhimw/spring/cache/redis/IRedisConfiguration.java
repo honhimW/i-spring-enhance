@@ -7,6 +7,7 @@ import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactor
 import io.github.honhimw.spring.cache.redis.reactive.R2edisUtils;
 import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -49,13 +50,13 @@ public class IRedisConfiguration {
         if (StringUtils.isBlank(prefix)) {
             return new StringRedisSerializer();
         }
-        final String _prefix = StringUtils.appendIfMissing(prefix, ":");
+        final String _prefix = Strings.CS.appendIfMissing(prefix, ":");
         return new StringRedisSerializer() {
             @Nullable
             @Override
             public String deserialize(@Nullable byte[] bytes) {
                 String saveKey = super.deserialize(bytes);
-                return StringUtils.removeStart(saveKey, _prefix);
+                return Strings.CS.removeStart(saveKey, _prefix);
             }
 
             @Nullable

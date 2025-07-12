@@ -51,6 +51,8 @@ public @interface ColumnDef {
      */
     String definition() default "";
 
+    ForeignKey foreignKey() default @ForeignKey;
+
     enum Nullable {
         TRUE, FALSE, NULL
     }

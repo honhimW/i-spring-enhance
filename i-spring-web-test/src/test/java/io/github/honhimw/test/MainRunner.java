@@ -29,6 +29,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
@@ -296,7 +297,7 @@ public class MainRunner {
         public TokenFilter includeElement(int index) {
             Set<JsonPointer> next = new HashSet<>();
             for (JsonPointer pointer : _includes) {
-                if (StringUtils.equals(pointer.getMatchingProperty(), ANY_INDEX)) {
+                if (Strings.CS.equals(pointer.getMatchingProperty(), ANY_INDEX)) {
                     next.add(pointer.matchProperty(ANY_INDEX));
                 } else {
                     JsonPointer _next = pointer.matchElement(index);

@@ -2,7 +2,7 @@ package io.github.honhimw.spring.cache.memory;
 
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.util.Assert;
 
@@ -57,7 +57,7 @@ public abstract class AbstractRefreshableCache implements RefreshableCache {
                     // ensure that the cache is updated after the last method call
                     while (true) {
                         _cache(ctx);
-                        if (!StringUtils.equals(invokeId, lastInvoke.get())) {
+                        if (!Strings.CS.equals(invokeId, lastInvoke.get())) {
                             invokeId = lastInvoke.get();
                             if (log.isDebugEnabled()) {
                                 log.debug("re-cache again, cause cache-method has been invoked during last refreshing.");

@@ -85,8 +85,9 @@ public abstract class ExtendJimmerRepositoryFactoryBean<T extends Repository<S, 
             return (JimmerRepositoryImplementation<?, ?>) repository;
         }
 
+        @Nonnull
         @Override
-        protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+        protected Class<?> getRepositoryBaseClass(@Nonnull RepositoryMetadata metadata) {
             if (Objects.nonNull(baseClass)) {
                 return baseClass;
             }

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 
@@ -85,7 +86,7 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
         List<? extends Ace> acl = getAcl();
 
         List<? extends Ace> currentAcl = acl.stream()
-            .filter(aclDTO -> StringUtils.equals(dataDomain, aclDTO.getDataDomain()))
+            .filter(aclDTO -> Strings.CS.equals(dataDomain, aclDTO.getDataDomain()))
             .toList();
 
         Map<String, List<Specification<S>>> groupedSpecifications = new HashMap<>();
@@ -140,7 +141,7 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
         }
         List<? extends Ace> acl = getAcl();
         List<? extends Ace> currentACLs = acl.stream()
-            .filter(aclDTO -> StringUtils.equals(dataDomain, aclDTO.getDataDomain()))
+            .filter(aclDTO -> Strings.CS.equals(dataDomain, aclDTO.getDataDomain()))
             .toList();
         if (CollectionUtils.isNotEmpty(currentACLs)) {
             // TODO Not yet supported row-level data write control
@@ -225,8 +226,8 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
                     }
                 }
                 if (ace.getMatchingType() == MatchingType.IN
-                    && StringUtils.startsWith(parameterValue, "[")
-                    && StringUtils.endsWith(parameterValue, "]")) {
+                    && Strings.CS.startsWith(parameterValue, "[")
+                    && Strings.CS.endsWith(parameterValue, "]")) {
                     try {
                         value = JsonUtils.mapper().readerFor(List.class).readValue(parameterValue);
                     } catch (JsonProcessingException e) {

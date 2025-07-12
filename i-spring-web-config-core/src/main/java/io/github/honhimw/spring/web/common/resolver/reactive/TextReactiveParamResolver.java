@@ -9,7 +9,7 @@ import io.github.honhimw.spring.ResolvableTypes;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.GZipUtils;
 import jakarta.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapter;
@@ -90,7 +90,7 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
         if (MediaType.APPLICATION_JSON.isCompatibleWith(request.getHeaders().getContentType())) {
             Flux<DataBuffer> body = request.getBody();
             String contentEncoding = request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
-            if (parameterAnnotation.gzip() && StringUtils.equals(contentEncoding, "gzip")) {
+            if (parameterAnnotation.gzip() && Strings.CS.equals(contentEncoding, "gzip")) {
                 body = body.handle((dataBuffer, sink) -> {
                     byte[] bytes = IDataBufferUtils.dataBuffer2Bytes(dataBuffer);
                     try {
@@ -148,7 +148,7 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
 
     protected byte[] tryDecompressGzip(TextParam annotation, ServerHttpRequest request, byte[] body) {
         String contentEncoding = request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
-        if (annotation.gzip() && StringUtils.equals(contentEncoding, "gzip")) {
+        if (annotation.gzip() && Strings.CS.equals(contentEncoding, "gzip")) {
             try {
                 return GZipUtils.decompress(body);
             } catch (IOException e) {

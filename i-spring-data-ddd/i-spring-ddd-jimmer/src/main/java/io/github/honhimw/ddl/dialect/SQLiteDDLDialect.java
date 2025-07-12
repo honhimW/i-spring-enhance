@@ -48,4 +48,15 @@ public class SQLiteDDLDialect extends DefaultDDLDialect {
     public String getIdentityColumnString(int type) {
         return "integer";
     }
+
+    @Override
+    public boolean supportsIfExistsBeforeConstraintName() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsIfExistsAfterDropSequence() {
+        return false;
+    }
+
 }

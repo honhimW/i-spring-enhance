@@ -1,14 +1,17 @@
-package org.babyfish.jimmer.sql.ast.impl;
+package io.github.honhimw.ddd.jimmer.expr;
 
 import io.github.honhimw.ddd.jimmer.util.RuntimeDialect;
 import org.babyfish.jimmer.sql.ast.Expression;
+import org.babyfish.jimmer.sql.ast.impl.ExpressionPrecedences;
+import org.babyfish.jimmer.sql.ast.impl.Literals;
+import org.babyfish.jimmer.sql.ast.impl.OpenBinaryExpression;
 
 /**
  * @author honhimW
  * @since 2025-06-06
  */
 
-public class BitwiseBinaryExpression<N extends Number & Comparable<N>> extends BinaryExpression<N> {
+public class BitwiseBinaryExpression<N extends Number & Comparable<N>> extends OpenBinaryExpression<N> {
 
     private final String operator;
 
@@ -42,7 +45,7 @@ public class BitwiseBinaryExpression<N extends Number & Comparable<N>> extends B
 
     @Override
     public int precedence() {
-        return 1;
+        return ExpressionPrecedences.PLUS;
     }
 
     @Override

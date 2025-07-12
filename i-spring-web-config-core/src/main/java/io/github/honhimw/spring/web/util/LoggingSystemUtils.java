@@ -2,6 +2,7 @@ package io.github.honhimw.spring.web.util;
 
 import io.github.honhimw.spring.SpringBeanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -28,7 +29,7 @@ public class LoggingSystemUtils {
 
     public static void setLevel(String logger, LogLevel level) {
         LoggingSystem loggingSystem = loggingSystem();
-        if (StringUtils.equalsIgnoreCase(logger, LoggingSystem.ROOT_LOGGER_NAME)) {
+        if (Strings.CI.equals(logger, LoggingSystem.ROOT_LOGGER_NAME)) {
             logger = null;
         }
         loggingSystem.setLogLevel(logger, level);

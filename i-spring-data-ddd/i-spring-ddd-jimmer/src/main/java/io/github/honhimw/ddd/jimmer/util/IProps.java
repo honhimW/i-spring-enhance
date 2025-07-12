@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.util;
 
 import jakarta.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.meta.TargetLevel;
@@ -46,7 +46,7 @@ public abstract class IProps {
         String[] split = path.split("\\.", 2);
         for (Map.Entry<String, ImmutableProp> entry : props.entrySet()) {
             String key = entry.getKey();
-            if (StringUtils.equals(split[0], key)) {
+            if (Strings.CS.equals(split[0], key)) {
                 if (split.length == 2) {
                     ImmutableProp prop = entry.getValue();
                     IProps next;

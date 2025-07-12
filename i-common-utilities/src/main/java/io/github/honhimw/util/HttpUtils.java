@@ -10,6 +10,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.hc.client5.http.HttpRoute;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpDelete;
@@ -933,7 +934,7 @@ public class HttpUtils {
 
         @Override
         public void preFilter(FilterContext ctx) throws Exception {
-            if (StringUtils.equalsAnyIgnoreCase(ctx.requestBuilder.getMethod(), HttpPost.METHOD_NAME, HttpPut.METHOD_NAME) && Objects.nonNull(ctx.configurer.httpEntity)) {
+            if (Strings.CI.equalsAny(ctx.requestBuilder.getMethod(), HttpPost.METHOD_NAME, HttpPut.METHOD_NAME) && Objects.nonNull(ctx.configurer.httpEntity)) {
                 ctx.requestBuilder.setEntity(ctx.configurer.httpEntity);
             }
         }
@@ -1198,7 +1199,7 @@ public class HttpUtils {
         }
 
         public List<Cookie> getCookie(String name) {
-            return cookieStore.getCookies().stream().filter(cookie -> StringUtils.equals(cookie.getName(), name)).toList();
+            return cookieStore.getCookies().stream().filter(cookie -> Strings.CS.equals(cookie.getName(), name)).toList();
         }
 
         public byte[] content() {

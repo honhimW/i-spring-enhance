@@ -55,4 +55,10 @@ public class PostgresDDLDialect extends DefaultDDLDialect {
     public String getCascadeConstraintsString() {
         return "cascade";
     }
+
+    @Override
+    public boolean supportsIfExistsAfterAlterTable() {
+        return true;
+    }
+
 }

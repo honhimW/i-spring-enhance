@@ -3,6 +3,7 @@ package io.github.honhimw.spring.cloud.dev;
 import io.github.honhimw.util.IpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
@@ -38,13 +39,13 @@ class DevLoadBalancerConfig {
 
             DevLoadBalancerSelector.PROFILE_MAP.forEach((profile, testServerRecord) -> {
                 String preferHost = testServerRecord.preferHost();
-                if (StringUtils.equalsIgnoreCase(preferHost, "#runtime")) {
+                if (Strings.CI.equals(preferHost, "#runtime")) {
                     preferHost = Objects.isNull(IpUtils.firstLocalIP()) ? IpUtils.localIPv4() : IpUtils.firstLocalIP();
                 }
                 final String _preferHost = preferHost;
                 Map<String, ServiceInstance> instances = testServerRecord.instances();
                 instances.forEach((serviceId, serviceInstance) -> {
-                    if (StringUtils.equals(clientName, serviceId)) {
+                    if (Strings.CS.equals(clientName, serviceId)) {
                         instancesMap.putIfAbsent(clientName, serviceInstance);
                         runtimePreferHost.putIfAbsent(clientName, _preferHost);
                     }

@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.Assert;
 
@@ -29,7 +30,7 @@ public class JsonWhereClause {
                 String name = conditionColumn.getName();
                 Object value = conditionColumn.getValue();
                 MatchingType type = conditionColumn.getType();
-                String key = StringUtils.removeStart(name, fieldName + ".");
+                String key = Strings.CS.removeStart(name, fieldName + ".");
                 Assert.state(StringUtils.isNotBlank(key), "key can not be blank");
                 String[] split = key.split("\\.");
                 Expression<?>[] expressions = new Expression[split.length + 1];

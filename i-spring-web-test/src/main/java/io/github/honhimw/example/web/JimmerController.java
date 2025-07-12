@@ -91,7 +91,6 @@ public class JimmerController {
     public IResult<Object> spec() {
         List<Player> age = playerRepository.findAll((root, query, fetcher) -> {
             PropExpression.Num<Integer> expression = root.num("age");
-            Expr.lt(expression, 22);
             return Expr.and(
                 root.join("fullName").get("firstName").eq("Chris"),
 //                root.<Integer>num("age").le(22),

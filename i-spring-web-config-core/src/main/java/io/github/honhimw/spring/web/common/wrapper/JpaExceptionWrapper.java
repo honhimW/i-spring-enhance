@@ -3,7 +3,7 @@ package io.github.honhimw.spring.web.common.wrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.PersistenceException;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.http.HttpStatus;
 
 import java.sql.SQLException;
@@ -19,7 +19,7 @@ public class JpaExceptionWrapper implements ExceptionWrapper.MessageExceptionWra
     public boolean support(@Nonnull Throwable e) {
         return e instanceof PersistenceException
                || e instanceof SQLException
-               || (StringUtils.startsWith(e.getClass().getPackage().getName(), "jakarta.persistence"))
+               || (Strings.CS.startsWith(e.getClass().getPackage().getName(), "jakarta.persistence"))
             ;
     }
 

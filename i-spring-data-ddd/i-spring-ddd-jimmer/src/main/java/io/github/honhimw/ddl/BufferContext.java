@@ -1,16 +1,13 @@
 package io.github.honhimw.ddl;
 
 import io.github.honhimw.ddl.annotations.TableDef;
+import io.github.honhimw.ddl.fake.FakeImmutableTypeImpl;
 import lombok.Getter;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
-import org.babyfish.jimmer.sql.ast.table.Table;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author honhimW
@@ -23,55 +20,61 @@ public class BufferContext {
 
     public final JSqlClientImplementor client;
 
-    public final Table<?> table;
-
     public final ImmutableType tableType;
 
     @Getter
-    private Map<String, ImmutableProp> allDinfitionProps;
+    private Map<String, ImmutableProp> allDefinitionProps;
 
     @Getter
-    private List<ImmutableProp> scalarProps;
+    private List<ImmutableProp> definitionProps;
 
     public final String tableName;
 
     public final List<String> commentStatements;
 
     private TableDef tableDef;
+    
+    private final Map<Class<? extends ConstraintNamingStrategy>, ConstraintNamingStrategy> namingStrategies;
 
-    public BufferContext(JSqlClientImplementor client, Table<?> table) {
+    public BufferContext(JSqlClientImplementor client, ImmutableType tableType) {
         this.buf = new StringBuilder();
         this.client = client;
-        this.table = table;
-        this.tableType = table.getImmutableType();
+        this.tableType = tableType;
         this.tableName = tableType.getTableName(client.getMetadataStrategy());
         this.commentStatements = new ArrayList<>();
+        this.namingStrategies = new HashMap<>();
         this.init();
     }
 
     private void init() {
-        this.scalarProps = new ArrayList<>();
-        this.allDinfitionProps = DDLUtils.allDefinitionProps(tableType);
-        this.scalarProps.addAll(this.allDinfitionProps.values());
-//        Map<String, ImmutableProp> selectableScalarProps = tableType.getSelectableScalarProps();
-//        for (Map.Entry<String, ImmutableProp> entry : selectableScalarProps.entrySet()) {
-//            ImmutableProp prop = entry.getValue();
-//            if (prop.isEmbedded(EmbeddedLevel.BOTH)) {
-//                ImmutableType targetType = prop.getTargetType();
-//                Map<String, ImmutableProp> allScalarProps = Utils.allScalarProps(targetType);
-//                scalarProps.addAll(allScalarProps.values());
-//            } else {
-//                scalarProps.add(prop);
-//            }
-//        }
-        Class<?> javaClass = tableType.getJavaClass();
-        if (javaClass.isAnnotationPresent(TableDef.class)) {
-            tableDef = javaClass.getAnnotation(TableDef.class);
+        this.definitionProps = new ArrayList<>();
+        this.allDefinitionProps = DDLUtils.allDefinitionProps(tableType);
+        this.definitionProps.addAll(this.allDefinitionProps.values());
+        if (tableType instanceof FakeImmutableTypeImpl fake) {
+            tableDef = fake.tableDef;
+        } else {
+            Class<?> javaClass = tableType.getJavaClass();
+            if (javaClass.isAnnotationPresent(TableDef.class)) {
+                tableDef = javaClass.getAnnotation(TableDef.class);
+            }
         }
     }
 
     public Optional<TableDef> getTableDef() {
         return Optional.ofNullable(tableDef);
+    }
+
+    public ConstraintNamingStrategy getNamingStrategy(Class<? extends ConstraintNamingStrategy> namingStrategy) {
+        return this.namingStrategies.compute(namingStrategy, (aClass, ns) -> {
+            if (ns == null) {
+                try {
+                    ns = aClass.getConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("NamingStrategy doesn't have a no-arg constructor");
+                }
+            }
+            return ns;
+        });
     }
 
 }

@@ -2,7 +2,7 @@ package io.github.honhimw.spring.cache.memory;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.annotation.Order;
@@ -25,7 +25,7 @@ public interface RefreshableCache extends Ordered, Comparable<RefreshableCache> 
      */
     default boolean hasChanged(String version) {
         String current = version();
-        return !StringUtils.equals(current, version);
+        return !Strings.CS.equals(current, version);
     }
 
     /**

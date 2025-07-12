@@ -52,8 +52,7 @@ public abstract class InMemoryBaseTest {
             try {
                 return fn.apply(connection);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
-                return null;
+                throw new RuntimeException(e);
             }
         });
     }

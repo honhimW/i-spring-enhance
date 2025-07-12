@@ -51,4 +51,9 @@ public class H2DDLDialect extends DefaultDDLDialect {
     public String getCascadeConstraintsString() {
         return "cascade";
     }
+
+    @Override
+    public boolean supportsIfExistsAfterAlterTable() {
+        return isSameOrAfter(1, 4);
+    }
 }

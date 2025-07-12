@@ -1,5 +1,8 @@
 package org.babyfish.jimmer.sql.ast.impl;
 
+import io.github.honhimw.ddd.jimmer.expr.BitwiseBinaryExpression;
+import io.github.honhimw.ddd.jimmer.expr.FunctionExpression;
+import io.github.honhimw.ddd.jimmer.expr.UnaryExpression;
 import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.ast.*;
 
@@ -10,6 +13,7 @@ import java.util.*;
  * @since 2025-03-14
  */
 
+@SuppressWarnings({"SuspiciousNameCombination", "unchecked", "unused"})
 public class Expr {
 
     private Expr() {
@@ -226,10 +230,6 @@ public class Expr {
 
     /**
      * In PostgreSQL, bitwise xor syntax is `1 # 2`
-     * @param x
-     * @param num
-     * @return
-     * @param <N>
      */
     @SuppressWarnings("unchecked")
     public static <N extends Number & Comparable<N>> NumericExpression<N> bitwiseXor(NumericExpression<N> x, N num) {

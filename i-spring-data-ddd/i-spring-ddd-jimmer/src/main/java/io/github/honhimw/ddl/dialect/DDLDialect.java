@@ -47,7 +47,6 @@ public interface DDLDialect extends Dialect {
      * `name" -> "name"
      * foo bar -> "foo bar"
      * column_name -> column_name
-     * @return
      */
     default String quote(String name) {
         if (name == null) {
@@ -67,7 +66,7 @@ public interface DDLDialect extends Dialect {
     }
 
     default String toQuotedIdentifier(String name) {
-        if ( name == null ) {
+        if (name == null) {
             return null;
         }
 
@@ -183,6 +182,61 @@ public interface DDLDialect extends Dialect {
 
     default String getCreateIndexString(boolean unique) {
         return unique ? "create unique index" : "create index";
+    }
+
+    default String getCreateSequenceString(String sequenceName) {
+        return "create sequence " + sequenceName;
+    }
+
+    default String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
+        if (incrementSize == 0) {
+            throw new IllegalArgumentException("Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0");
+        }
+        return getCreateSequenceString(sequenceName)
+               + startingValue(initialValue, incrementSize)
+               + " start with " + initialValue
+               + " increment by " + incrementSize;
+    }
+
+    default String getDropSequenceString(String sequenceName) {
+        StringBuilder sb = new StringBuilder("drop sequence ");
+        if (supportsIfExistsAfterDropSequence()) {
+            sb.append("if exists ");
+        }
+        sb.append(sequenceName);
+        return sb.toString();
+    }
+
+    default boolean supportsIfExistsAfterDropSequence() {
+        return true;
+    }
+
+    default boolean needsStartingValue() {
+        return false;
+    }
+
+    default String startingValue(int initialValue, int incrementSize) {
+        if (needsStartingValue()) {
+            if (incrementSize > 0 && initialValue <= 0) {
+                return " minvalue " + initialValue;
+            }
+            if (incrementSize < 0 && initialValue >= 0) {
+                return " maxvalue " + initialValue;
+            }
+        }
+        return "";
+    }
+
+    default boolean supportsIfExistsAfterAlterTable() {
+        return false;
+    }
+
+    default String getDropForeignKeyString() {
+        return "drop constraint";
+    }
+
+    default boolean supportsIfExistsBeforeConstraintName() {
+        return true;
     }
 
 }

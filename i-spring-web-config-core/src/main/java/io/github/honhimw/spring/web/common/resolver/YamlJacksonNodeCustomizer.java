@@ -10,6 +10,7 @@ import io.github.honhimw.util.GZipUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -84,7 +85,7 @@ public class YamlJacksonNodeCustomizer implements JacksonNodeCustomizer {
 
     protected byte[] tryDecompressGzip(TextParam annotation, HttpServletRequest request, byte[] body) {
         String contentEncoding = request.getHeader(HttpHeaders.CONTENT_ENCODING);
-        if (annotation.gzip() && StringUtils.equals(contentEncoding, "gzip")) {
+        if (annotation.gzip() && Strings.CS.equals(contentEncoding, "gzip")) {
             try {
                 return GZipUtils.decompress(body);
             } catch (IOException e) {

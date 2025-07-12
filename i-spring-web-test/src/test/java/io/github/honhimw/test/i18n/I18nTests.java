@@ -4,7 +4,7 @@ import io.github.honhimw.core.IResult;
 import io.github.honhimw.example.WebApp;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,14 +47,14 @@ public class I18nTests {
             LocaleContextHolder.setLocale(Locale.ENGLISH);
             I18nUtils.i18n(result);
             log.info(result.toString());
-            Assert.state(StringUtils.equals(result.msg(), "id: {} is not present"), "message should match");
+            Assert.state(Strings.CS.equals(result.msg(), "id: {} is not present"), "message should match");
         }
         {
             IResult<Object> result = IResult.okWithMsg("{common.missing}");
             LocaleContextHolder.setLocale(Locale.CHINESE);
             I18nUtils.i18n(result);
             log.info(result.toString());
-            Assert.state(StringUtils.equals(result.msg(), "id: {} 不存在"), "message should match");
+            Assert.state(Strings.CS.equals(result.msg(), "id: {} 不存在"), "message should match");
         }
     }
 

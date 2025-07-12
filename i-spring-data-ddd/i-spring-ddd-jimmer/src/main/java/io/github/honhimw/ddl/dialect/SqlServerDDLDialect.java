@@ -85,4 +85,10 @@ public class SqlServerDDLDialect extends DefaultDDLDialect {
         // when the column is nullable, so safe to infer unique => nullable
         return unique ? "create unique nonclustered index" : "create index";
     }
+
+    @Override
+    public boolean supportsIfExistsBeforeConstraintName() {
+        return isSameOrAfter(16);
+    }
+
 }

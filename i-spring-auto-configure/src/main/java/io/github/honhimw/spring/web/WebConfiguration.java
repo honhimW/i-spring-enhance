@@ -11,7 +11,7 @@ import io.github.honhimw.spring.web.common.i18n.I18nUtils;
 import io.github.honhimw.spring.web.mvc.*;
 import io.github.honhimw.spring.web.reactive.*;
 import jakarta.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.autoconfigure.context.MessageSourceProperties;
@@ -93,7 +93,7 @@ abstract class WebConfiguration {
                 }
                 resourceBundleMessageSource.setAlwaysUseMessageFormat(properties.isAlwaysUseMessageFormat());
                 resourceBundleMessageSource.setUseCodeAsDefaultMessage(properties.isUseCodeAsDefaultMessage());
-                if (messageSource instanceof DelegatingMessageSource emptyMessageSource && StringUtils.equalsIgnoreCase(String.valueOf(messageSource), "Empty MessageSource")) {
+                if (messageSource instanceof DelegatingMessageSource emptyMessageSource && Strings.CI.equals(String.valueOf(messageSource), "Empty MessageSource")) {
                     emptyMessageSource.setParentMessageSource(resourceBundleMessageSource);
                 } else {
                     I18nUtils i18nUtils = new I18nUtils();

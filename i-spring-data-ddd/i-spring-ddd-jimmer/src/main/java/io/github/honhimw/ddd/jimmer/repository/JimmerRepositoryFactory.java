@@ -4,7 +4,6 @@ import io.github.honhimw.ddd.jimmer.mapping.JimmerEntityInformation;
 import io.github.honhimw.ddd.jimmer.mapping.JimmerPersistentEntityImpl;
 import jakarta.annotation.Nonnull;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
-import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;

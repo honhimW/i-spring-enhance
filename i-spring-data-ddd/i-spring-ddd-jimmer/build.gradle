@@ -11,5 +11,6 @@ dependencies {
     annotationProcessor 'org.babyfish.jimmer:jimmer-apt'
 
     testImplementation 'com.h2database:h2'
+    testImplementation 'org.postgresql:postgresql'
     testAnnotationProcessor 'org.babyfish.jimmer:jimmer-apt'
 }

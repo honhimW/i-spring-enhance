@@ -3,6 +3,7 @@ package io.github.honhimw.util;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -227,14 +228,14 @@ public class FtpUtils {
                 case ".":
                     return pwd;
                 case "..":
-                    if (StringUtils.equals("/", pwd))
+                    if (Strings.CS.equals("/", pwd))
                         return "/";
                     ftpClient.changeToParentDirectory();
                     String parentPath = ftpClient.printWorkingDirectory();
                     ftpClient.changeWorkingDirectory(pwd);
                     return parentPath;
                 default:
-                    if (StringUtils.startsWith(path, "/")) {
+                    if (Strings.CS.startsWith(path, "/")) {
                         return path;
                     } else {
                         return pwd + "/" + path;

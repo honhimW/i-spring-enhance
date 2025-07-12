@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.cloud.dev;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.DefaultResponse;
@@ -71,7 +71,7 @@ public class ReactiveDevLoadBalancer implements ReactorServiceInstanceLoadBalanc
             return Objects.nonNull(defaultInstance) ? new DefaultResponse(defaultInstance) : new EmptyResponse();
         } else {
             ServiceInstance instance =
-                instances.stream().filter(serviceInstance -> StringUtils.equals(preferHost,
+                instances.stream().filter(serviceInstance -> Strings.CS.equals(preferHost,
                     serviceInstance.getHost())).findAny().orElse(null);
             if (Objects.isNull(instance)) {
                 int index = ThreadLocalRandom.current().nextInt(instances.size());

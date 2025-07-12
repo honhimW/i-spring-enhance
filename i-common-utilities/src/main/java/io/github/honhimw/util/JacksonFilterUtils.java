@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.filter.TokenFilter;
 import com.fasterxml.jackson.core.io.SegmentedStringWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -105,7 +105,7 @@ public class JacksonFilterUtils {
         public TokenFilter includeElement(int index) {
             Set<JsonPointer> next = new HashSet<>(_includes.size());
             for (JsonPointer pointer : _includes) {
-                if (StringUtils.equals(pointer.getMatchingProperty(), WILDCARD)) {
+                if (Strings.CS.equals(pointer.getMatchingProperty(), WILDCARD)) {
                     next.add(pointer.matchProperty(WILDCARD));
                 } else {
                     JsonPointer _next = pointer.matchElement(index);
@@ -129,7 +129,7 @@ public class JacksonFilterUtils {
         public TokenFilter includeProperty(String name) {
             Set<JsonPointer> next = new HashSet<>(_includes.size());
             for (JsonPointer pointer : _includes) {
-                if (StringUtils.equals(pointer.getMatchingProperty(), WILDCARD)) {
+                if (Strings.CS.equals(pointer.getMatchingProperty(), WILDCARD)) {
                     next.add(pointer.matchProperty(WILDCARD));
                 } else {
                     JsonPointer _next = pointer.matchProperty(name);
@@ -180,7 +180,7 @@ public class JacksonFilterUtils {
         public TokenFilter includeElement(int index) {
             Set<JsonPointer> next = new HashSet<>(_excludes.size());
             for (JsonPointer pointer : _excludes) {
-                if (StringUtils.equals(pointer.getMatchingProperty(), WILDCARD)) {
+                if (Strings.CS.equals(pointer.getMatchingProperty(), WILDCARD)) {
                     next.add(pointer.matchProperty(WILDCARD));
                 } else {
                     JsonPointer _next = pointer.matchElement(index);
@@ -206,7 +206,7 @@ public class JacksonFilterUtils {
         public TokenFilter includeProperty(String name) {
             Set<JsonPointer> next = new HashSet<>(_excludes.size());
             for (JsonPointer pointer : _excludes) {
-                if (StringUtils.equals(pointer.getMatchingProperty(), WILDCARD)) {
+                if (Strings.CS.equals(pointer.getMatchingProperty(), WILDCARD)) {
                     next.add(pointer.matchProperty(WILDCARD));
                 } else {
                     JsonPointer _next = pointer.matchProperty(name);

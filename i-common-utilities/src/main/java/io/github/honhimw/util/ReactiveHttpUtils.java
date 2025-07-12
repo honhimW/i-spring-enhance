@@ -34,6 +34,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1892,8 +1893,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
                         String[] split = contentType.split(";");
                         Arrays.stream(split).map(String::trim)
                             .filter(StringUtils::isNotBlank)
-                            .filter(s -> StringUtils.startsWithIgnoreCase(s, "charset"))
-                            .map(s -> StringUtils.removeStartIgnoreCase(s, "charset="))
+                            .filter(s -> Strings.CI.startsWith(s, "charset"))
+                            .map(s -> Strings.CI.removeStart(s, "charset="))
                             .findFirst()
                             .ifPresent(this::setCharset);
                     }
@@ -2042,8 +2043,8 @@ public class ReactiveHttpUtils implements AutoCloseable {
                 String[] split = contentType.split(";");
                 return Arrays.stream(split).map(String::trim)
                     .filter(StringUtils::isNotBlank)
-                    .filter(s -> StringUtils.startsWithIgnoreCase(s, "charset"))
-                    .map(s -> StringUtils.removeStartIgnoreCase(s, "charset="))
+                    .filter(s -> Strings.CI.startsWith(s, "charset"))
+                    .map(s -> Strings.CI.removeStart(s, "charset="))
                     .findFirst()
                     .map(Charset::forName);
             })

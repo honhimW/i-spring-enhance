@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
@@ -81,8 +82,8 @@ public class AclSubQuerySpecification implements Specification.Query {
             }
         }
         if (matchingType == MatchingType.IN
-            && StringUtils.startsWith(value, "[")
-            && StringUtils.endsWith(value, "]")) {
+            && Strings.CS.startsWith(value, "[")
+            && Strings.CS.endsWith(value, "]")) {
             try {
                 finalValue = JsonUtils.mapper().readerFor(List.class).readValue(value);
             } catch (JsonProcessingException e) {

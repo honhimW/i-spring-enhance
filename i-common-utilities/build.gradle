@@ -23,7 +23,7 @@ dependencies {
 
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     testImplementation 'org.apache.commons:commons-compress'
-    testImplementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.17'
+    testImplementation 'com.squareup.okhttp3:okhttp'
     testRuntimeOnly 'com.github.luben:zstd-jni'
     testRuntimeOnly 'org.tukaani:xz'
 

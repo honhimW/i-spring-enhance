@@ -11,7 +11,6 @@ import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.meta.TargetLevel;
 import org.babyfish.jimmer.sql.EnumType;
 import org.babyfish.jimmer.sql.GeneratedValue;
-import org.babyfish.jimmer.sql.ast.table.Table;
 import org.babyfish.jimmer.sql.meta.EmbeddedColumns;
 import org.babyfish.jimmer.sql.meta.SingleColumn;
 import org.babyfish.jimmer.sql.meta.Storage;
@@ -31,19 +30,17 @@ import java.util.stream.Collectors;
  */
 
 @Slf4j
-public class StandardTableExporter implements Exporter<Table<?>> {
+public class StandardTableExporter implements Exporter<ImmutableType> {
 
     protected final JSqlClientImplementor client;
 
     protected final DDLDialect dialect;
 
-    protected final DatabaseVersion databaseVersion;
-
     private EnumType.Strategy defaultEnumStrategy;
 
     public StandardTableExporter(JSqlClientImplementor client) {
         this.client = client;
-        this.databaseVersion = client.getConnectionManager().execute(connection -> {
+        DatabaseVersion databaseVersion = client.getConnectionManager().execute(connection -> {
             try {
                 DatabaseMetaData metaData = connection.getMetaData();
                 int databaseMajorVersion = metaData.getDatabaseMajorVersion();
@@ -55,22 +52,28 @@ public class StandardTableExporter implements Exporter<Table<?>> {
                 return new DatabaseVersion(Integer.MAX_VALUE, Integer.MAX_VALUE, "unknown");
             }
         });
-        this.dialect = DDLDialect.of(client.getDialect(), this.databaseVersion);
+        this.dialect = DDLDialect.of(client.getDialect(), databaseVersion);
+    }
+
+    public StandardTableExporter(JSqlClientImplementor client, DatabaseVersion version) {
+        this.client = client;
+        this.dialect = DDLDialect.of(client.getDialect(), version);
     }
 
     @Override
-    public List<String> getSqlCreateStrings(Table<?> exportable) {
+    public List<String> getSqlCreateStrings(ImmutableType exportable) {
         BufferContext bufferContext = new BufferContext(client, exportable);
+        final List<String> statements = new ArrayList<>();
 
         bufferContext.buf.append("create table ").append(bufferContext.tableName).append(" (");
         if (isPretty()) {
             bufferContext.buf.append('\n').append(client.getSqlFormatter().getIndent());
         }
 
-        appendColumns(bufferContext, bufferContext.tableType);
+        appendColumns(bufferContext);
 
         // Jimmer always has primary-key
-        appendPrimaryKey(bufferContext, bufferContext.tableType.getIdProp());
+        appendPrimaryKey(bufferContext);
 
         appendUniqueConstraints(bufferContext);
 
@@ -85,7 +88,6 @@ public class StandardTableExporter implements Exporter<Table<?>> {
 
         appendTableType(bufferContext);
 
-        final List<String> statements = new ArrayList<>();
         statements.add(bufferContext.buf.toString());
 
         applyComments(bufferContext, statements);
@@ -96,7 +98,7 @@ public class StandardTableExporter implements Exporter<Table<?>> {
     }
 
     @Override
-    public List<String> getSqlDropStrings(Table<?> exportable) {
+    public List<String> getSqlDropStrings(ImmutableType exportable) {
         BufferContext bufferContext = new BufferContext(client, exportable);
         bufferContext.buf.append("drop table ");
         if (dialect.supportsIfExistsBeforeTableName()) {
@@ -128,9 +130,14 @@ public class StandardTableExporter implements Exporter<Table<?>> {
             Index[] indexes = tableDef.indexes();
             for (Index index : indexes) {
                 StringBuilder buf = new StringBuilder();
+                buf.append(dialect.getCreateIndexString(index.unique())).append(' ');
+                if (StringUtils.isNotBlank(index.name())) {
+                    buf.append(index.name());
+                } else {
+                    ConstraintNamingStrategy namingStrategy = bufferContext.getNamingStrategy(index.naming());
+                    buf.append(namingStrategy.determineIndexName(bufferContext.tableName, index.columns()));
+                }
                 buf
-                    .append(dialect.getCreateIndexString(index.unique())).append(' ')
-                    .append(index.name())
                     .append(" on ")
                     .append(bufferContext.tableName)
                     .append(" (");
@@ -154,7 +161,7 @@ public class StandardTableExporter implements Exporter<Table<?>> {
             }
             switch (kind) {
                 case PATH -> {
-                    ImmutableProp immutableProp = bufferContext.getAllDinfitionProps().get(column);
+                    ImmutableProp immutableProp = bufferContext.getAllDefinitionProps().get(column);
                     if (immutableProp != null) {
                         idxBuf.append(dialect.quote(DDLUtils.getName(immutableProp, client.getMetadataStrategy())));
                     } else {
@@ -231,8 +238,8 @@ public class StandardTableExporter implements Exporter<Table<?>> {
         return list;
     }
 
-    private void appendColumns(BufferContext bufferContext, ImmutableType table) {
-        Map<String, ImmutableProp> selectableProps = table.getSelectableProps();
+    private void appendColumns(BufferContext bufferContext) {
+        Map<String, ImmutableProp> selectableProps = bufferContext.tableType.getSelectableProps();
         boolean isFirst = true;
         for (Map.Entry<String, ImmutableProp> entry : selectableProps.entrySet()) {
             ImmutableProp selectableProp = entry.getValue();
@@ -258,25 +265,25 @@ public class StandardTableExporter implements Exporter<Table<?>> {
                     }
                 }
                 if (prop.isId()) {
-                    ImmutableProp idProp = table.getIdProp();
+                    ImmutableProp idProp = bufferContext.tableType.getIdProp();
                     GeneratedValue annotation = idProp.getAnnotation(GeneratedValue.class);
                     if (annotation != null) {
                         if (annotation.generatorType() == UserIdGenerator.None.class) {
-                            appendColumn(bufferContext, table, prop, true);
+                            appendColumn(bufferContext, prop, true);
                             continue;
                         }
                     }
                 }
-                appendColumn(bufferContext, table, prop, false);
+                appendColumn(bufferContext, prop, false);
             }
 
         }
     }
 
-    private void appendColumn(BufferContext bufferContext, ImmutableType table, ImmutableProp prop, boolean isId) {
+    private void appendColumn(BufferContext bufferContext, ImmutableProp prop, boolean isId) {
         if (prop.isColumnDefinition()) {
             appendColumnDefinition(bufferContext, prop, isId);
-            appendComment(bufferContext, table, prop);
+            appendComment(bufferContext, prop);
             appendConstraints(bufferContext, prop);
         }
     }
@@ -335,7 +342,7 @@ public class StandardTableExporter implements Exporter<Table<?>> {
         }
     }
 
-    private void appendComment(BufferContext bufferContext, ImmutableType table, ImmutableProp prop) {
+    private void appendComment(BufferContext bufferContext, ImmutableProp prop) {
         ColumnDef colDef = prop.getAnnotation(ColumnDef.class);
         if (colDef != null) {
             String comment = colDef.comment();
@@ -344,7 +351,7 @@ public class StandardTableExporter implements Exporter<Table<?>> {
                 if (StringUtils.isNotBlank(columnComment)) {
                     bufferContext.buf.append(columnComment);
                 } else {
-                    bufferContext.commentStatements.add("comment on column %s.%s is '%s'".formatted(table.getTableName(client.getMetadataStrategy()), dialect.quote(getName(prop)), comment));
+                    bufferContext.commentStatements.add("comment on column %s.%s is '%s'".formatted(bufferContext.tableType.getTableName(client.getMetadataStrategy()), dialect.quote(getName(prop)), comment));
                 }
             }
         }
@@ -374,7 +381,8 @@ public class StandardTableExporter implements Exporter<Table<?>> {
         }
     }
 
-    private void appendPrimaryKey(BufferContext bufferContext, ImmutableProp idProp) {
+    private void appendPrimaryKey(BufferContext bufferContext) {
+        ImmutableProp idProp = bufferContext.tableType.getIdProp();
         bufferContext.buf.append(',');
         if (isPretty()) {
             bufferContext.buf.append('\n').append(client.getSqlFormatter().getIndent());
@@ -421,7 +429,14 @@ public class StandardTableExporter implements Exporter<Table<?>> {
         } else {
             bufferContext.buf.append(' ');
         }
-        bufferContext.buf.append("constraint ").append(unique.name()).append(" unique (");
+        bufferContext.buf.append("constraint ");
+        if (StringUtils.isNotBlank(unique.name())) {
+            bufferContext.buf.append(unique.name());
+        } else {
+            ConstraintNamingStrategy namingStrategy = bufferContext.getNamingStrategy(unique.naming());
+            bufferContext.buf.append(namingStrategy.determineUniqueKeyName(bufferContext.tableName, unique.columns()));
+        }
+        bufferContext.buf.append(" unique (");
         Kind kind = unique.kind();
         String[] columns = unique.columns();
         boolean isFirst = true;
@@ -433,7 +448,7 @@ public class StandardTableExporter implements Exporter<Table<?>> {
             }
             switch (kind) {
                 case PATH -> {
-                    ImmutableProp immutableProp = bufferContext.getAllDinfitionProps().get(column);
+                    ImmutableProp immutableProp = bufferContext.getAllDefinitionProps().get(column);
                     if (immutableProp != null) {
                         bufferContext.buf.append(dialect.quote(getName(immutableProp)));
                     } else {

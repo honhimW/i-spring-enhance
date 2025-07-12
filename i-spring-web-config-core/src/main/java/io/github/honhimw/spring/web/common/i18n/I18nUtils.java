@@ -8,6 +8,7 @@ import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceAware;
 import org.springframework.context.i18n.LocaleContext;
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * @author hon_him
@@ -82,7 +82,7 @@ public class I18nUtils implements MessageSourceAware {
                 Optional<String> first = msg.lines().findFirst();
                 if (first.isPresent()) {
                     String firstLine = first.get();
-                    if (StringUtils.startsWith(firstLine, "{") && StringUtils.endsWith(firstLine, "}")) {
+                    if (Strings.CS.startsWith(firstLine, "{") && Strings.CS.endsWith(firstLine, "}")) {
                         if (ArrayUtils.isEmpty(args)) {
                             args = msg.lines().skip(1).toArray();
                         }

@@ -88,25 +88,36 @@ tasks.register('checkLibrariesUpdate') {
             'spring-boot-dependencies'         : buildModel('org.springframework.boot', 'spring-boot-dependencies', 'spring-boot-dependencies', libs.versions.spring.boot.dependencies.get()),
             'spring-cloud-dependencies'        : buildModel('org.springframework.cloud', 'spring-cloud-dependencies', 'spring-cloud-dependencies', libs.versions.spring.cloud.dependencies.get()),
             'spring-cloud-alibaba-dependencies': buildModel('com.alibaba.cloud', 'spring-cloud-alibaba-dependencies', 'spring-cloud-alibaba-dependencies', libs.versions.spring.cloud.alibaba.dependencies.get()),
-            'springdoc-openapi'                : buildModel('org.springdoc', 'springdoc-openapi', 'springdoc-openapi', libs.versions.springdoc.openapi.get()),
+            'springdoc-openapi'                : buildModel('org.springdoc', 'springdoc-openapi-bom', 'springdoc-openapi-bom', libs.versions.springdoc.openapi.get()),
+            'spring-ai-bom'                    : buildModel('org.springframework.ai', 'spring-ai-bom', 'spring-ai-bom', libs.versions.spring.ai.bom.get()),
+            'junit-bom'                        : buildModel('org.junit', 'junit-bom', 'junit-bom', libs.versions.junit.bom.get()),
     ]
 
     libsDef.putAll(defInLibs())
     def countDownLatch = new CountDownLatch(libsDef.size())
 
-    println "Start check libraries update, libraries count: ${libsDef.size()}"
+    def red = '\u001B[31m'
+    def green = '\u001B[32m'
+    def magenta = '\u001B[35m'
+    def cyan = '\u001B[36m'
+    def stop = '\u001B[0m'
+
+    println "$cyan### Start check libraries update, libraries count: ${libsDef.size()} ###$stop"
     libsDef.each {
         def dependency = it.value
         pool.execute {
             def latestVersion = getLatestVersion(dependency.group, dependency.name)
             if (dependency.version.requiredVersion != latestVersion) {
-                println "$dependency.versionRef = \"${dependency.version.requiredVersion}\" -> \"${latestVersion}\""
+                def versionRef = dependency.versionRef.replace '.', '-'
+                println """$magenta# $dependency.group:$dependency.name$stop
+$red- $versionRef = "${dependency.version.requiredVersion}"$stop
+$green+ $versionRef = "$latestVersion"$stop"""
             }
             countDownLatch.countDown()
         }
     }
     countDownLatch.await()
-    println 'Finish check libraries update'
+    println "$cyan### Finish check libraries update ###$stop"
     pool.shutdown()
 }
 

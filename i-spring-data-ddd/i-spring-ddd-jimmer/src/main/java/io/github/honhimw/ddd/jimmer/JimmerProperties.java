@@ -81,6 +81,8 @@ public class JimmerProperties {
 
     private ErrorTranslator errorTranslator = new ErrorTranslator();
 
+    private DDLAuto ddlAuto = DDLAuto.NONE;
+
     @Getter
     @Setter
     @ToString
@@ -136,6 +138,25 @@ public class JimmerProperties {
          * Upper case with underscore
          */
         UPPER_CASE,
+    }
+
+    public enum DDLAuto {
+        /**
+         * Create the schema.
+         */
+        CREATE,
+        /**
+         * Create and then destroy the schema at the end of the session.
+         */
+        CREATE_DROP,
+        /**
+         * Drop the schema at the end of the session.
+         */
+        DROP,
+        /**
+         * Disable DDL handling.
+         */
+        NONE,
     }
     
 }

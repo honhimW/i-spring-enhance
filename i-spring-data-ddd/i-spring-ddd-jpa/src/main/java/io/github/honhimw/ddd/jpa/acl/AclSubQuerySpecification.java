@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 
@@ -86,8 +87,8 @@ public class AclSubQuerySpecification<T, S extends T> implements Specification<S
             }
         }
         if (matchingType == MatchingType.IN
-            && StringUtils.startsWith(value, "[")
-            && StringUtils.endsWith(value, "]")) {
+            && Strings.CS.startsWith(value, "[")
+            && Strings.CS.endsWith(value, "]")) {
             try {
                 finalValue = JsonUtils.mapper().readerFor(List.class).readValue(value);
             } catch (JsonProcessingException e) {

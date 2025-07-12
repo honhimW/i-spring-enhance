@@ -16,7 +16,7 @@ import java.util.List;
 @Table(name = Author.TABLE_NAME)
 @TableDef(
     indexes = {
-        @Index(name = "idx_age_gender", columns = {"age", "gender"}),
+        @Index(columns = {"age", "gender"}),
         @Index(name = "idx_pen_name", columns = {"name.nestedName.penName"}),
     },
     uniques = {
@@ -40,6 +40,7 @@ public interface Author extends BaseAR {
     String TABLE_NAME = "author";
 
     @Id
+    @GeneratedValue(sequenceName = "")
     int id();
 
     @Nullable
@@ -48,6 +49,7 @@ public interface Author extends BaseAR {
     @Key
     @Nullable
     @ColumnDef(length = 3)
+    @GeneratedValue(sequenceName = "age_gen")
     Integer age();
 
     @Nullable
@@ -66,5 +68,6 @@ public interface Author extends BaseAR {
 
     @OneToMany(mappedBy = "author")
     List<Book> books();
+
 
 }

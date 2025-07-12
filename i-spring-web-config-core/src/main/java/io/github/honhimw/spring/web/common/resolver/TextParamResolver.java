@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
@@ -75,7 +76,7 @@ public class TextParamResolver extends BaseParamResolver {
 
         if (MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.parseMediaType(servletRequest.getContentType()))) {
             byte[] byteArray = IOUtils.toByteArray(servletRequest.getInputStream());
-            if (parameterAnnotation.gzip() && StringUtils.equals(servletRequest.getHeader(HttpHeaders.CONTENT_ENCODING), "gzip")) {
+            if (parameterAnnotation.gzip() && Strings.CS.equals(servletRequest.getHeader(HttpHeaders.CONTENT_ENCODING), "gzip")) {
                 byteArray = GZipUtils.decompress(byteArray);
             }
             String body = new String(byteArray, charset);

@@ -4,6 +4,7 @@ import io.github.honhimw.util.IDataSize;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -337,7 +338,7 @@ public class HttpLog implements Serializable {
 
     public static String snapshot(String s) {
         String string = StringUtils.abbreviateMiddle(s, "...", 2048);
-        string = StringUtils.remove(string, "\r\n");
+        string = Strings.CS.remove(string, "\r\n");
         string = StringUtils.remove(string, '\n');
         string = StringUtils.remove(string, '\r');
         return string;
