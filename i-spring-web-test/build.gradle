@@ -45,6 +45,10 @@ dependencies {
     testImplementation('org.springframework.cloud:spring-cloud-starter-openfeign')
 
     testCompileOnly 'org.jetbrains:annotations'
+
+    testAnnotationProcessor 'org.mapstruct:mapstruct'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-jdk8'
 }
 
 bootJar {
