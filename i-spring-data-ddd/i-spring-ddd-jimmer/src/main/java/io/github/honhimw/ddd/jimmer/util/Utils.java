@@ -2,7 +2,7 @@ package io.github.honhimw.ddd.jimmer.util;
 
 import io.github.honhimw.ddd.jimmer.support.SpringConnectionManager;
 import io.github.honhimw.ddd.jimmer.support.SpringTransientResolverProvider;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.meta.*;
 import org.babyfish.jimmer.sql.JSqlClient;

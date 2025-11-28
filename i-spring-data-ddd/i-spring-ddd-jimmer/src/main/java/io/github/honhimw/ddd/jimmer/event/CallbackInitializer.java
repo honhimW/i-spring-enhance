@@ -1,6 +1,5 @@
 package io.github.honhimw.ddd.jimmer.event;
 
-import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.sql.JSqlClient;
 import org.babyfish.jimmer.sql.event.EntityEvent;
 import org.babyfish.jimmer.sql.event.Triggers;

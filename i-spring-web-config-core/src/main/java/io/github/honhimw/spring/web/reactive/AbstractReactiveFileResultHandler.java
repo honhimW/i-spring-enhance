@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.reactive;
 
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.ContentDisposition;
@@ -33,13 +33,13 @@ public abstract class AbstractReactiveFileResultHandler extends AbstractMessageW
     }
 
     @Override
-    public boolean supports(@Nonnull HandlerResult result) {
+    public boolean supports(@NonNull HandlerResult result) {
         return result.getReturnTypeSource().hasMethodAnnotation(FileReturn.class);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> handleResult(@Nonnull ServerWebExchange exchange, @Nonnull HandlerResult result) {
+    public Mono<Void> handleResult(@NonNull ServerWebExchange exchange, @NonNull HandlerResult result) {
         Object body = result.getReturnValue();
         MethodParameter bodyTypeParameter = result.getReturnTypeSource();
         ServerHttpResponse response = exchange.getResponse();

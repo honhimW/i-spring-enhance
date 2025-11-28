@@ -3,7 +3,7 @@ package io.github.honhimw.spring.web.reactive;
 import io.github.honhimw.spring.web.common.AbstractFallbackHandler;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.core.Ordered;
@@ -35,9 +35,9 @@ public class FallbackErrorWebExceptionHandler extends AbstractFallbackHandler im
         this.httpMessageEncoder = httpMessageEncoder;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> handle(@Nonnull ServerWebExchange exchange, @Nonnull Throwable ex) {
+    public Mono<Void> handle(@NonNull ServerWebExchange exchange, @NonNull Throwable ex) {
         log(ex);
         ServerHttpResponse response = exchange.getResponse();
         response.getHeaders().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

@@ -1,9 +1,9 @@
 package io.github.honhimw.ddd.jimmer.entities;
 
 import io.github.honhimw.ddd.jimmer.domain.BaseAR;
-import io.github.honhimw.ddl.annotations.*;
-import jakarta.annotation.Nullable;
+import io.github.honhimw.jddl.anno.*;
 import org.babyfish.jimmer.sql.*;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -30,8 +30,8 @@ import java.util.List;
         ),
     },
     checks = {
-        @Check(name = "update_time_must_later_than_create_time", constraint = "created_at <= updated_at"),
-        @Check(name = "created_by_1", constraint = "created_by = '1'"),
+        @Check(name = "update_time_must_later_than_create_time", value = "created_at <= updated_at"),
+        @Check(name = "created_by_1", value = "created_by = '1'"),
     },
     comment = "作者"
 )

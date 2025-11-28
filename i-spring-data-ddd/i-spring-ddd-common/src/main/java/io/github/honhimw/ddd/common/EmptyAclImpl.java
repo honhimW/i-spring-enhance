@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.common;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +21,7 @@ public class EmptyAclImpl implements Acl {
         return false;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Collection<Ace> getAces() {
         return Collections.emptyList();

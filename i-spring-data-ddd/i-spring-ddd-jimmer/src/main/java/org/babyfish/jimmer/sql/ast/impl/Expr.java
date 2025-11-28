@@ -3,7 +3,7 @@ package org.babyfish.jimmer.sql.ast.impl;
 import io.github.honhimw.ddd.jimmer.expr.BitwiseBinaryExpression;
 import io.github.honhimw.ddd.jimmer.expr.FunctionExpression;
 import io.github.honhimw.ddd.jimmer.expr.UnaryExpression;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.sql.ast.*;
 
 import java.util.*;

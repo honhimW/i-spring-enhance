@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jpa.acl;
 
 import io.github.honhimw.ddd.jpa.util.ExtendJpaRepositoryFactoryBean;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;

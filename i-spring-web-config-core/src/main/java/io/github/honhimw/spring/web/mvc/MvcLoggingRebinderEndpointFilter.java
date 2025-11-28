@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.web.util.LoggingSystemUtils;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -47,7 +47,7 @@ public class MvcLoggingRebinderEndpointFilter extends OncePerRequestFilter imple
     }
 
     @Override
-    protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
         if (_pathPatterns.stream().anyMatch(pathPattern -> pathPattern.matches(PathContainer.parsePath(servletPath)))) {
             if (HttpMethod.PUT.matches(request.getMethod())) {

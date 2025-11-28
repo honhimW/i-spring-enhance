@@ -1,13 +1,18 @@
 package io.github.honhimw.ddd.jimmer.util;
 
+import org.babyfish.jimmer.sql.ast.SqlTimeUnit;
+import org.babyfish.jimmer.sql.ast.impl.Ast;
+import org.babyfish.jimmer.sql.ast.impl.query.ForUpdate;
+import org.babyfish.jimmer.sql.ast.impl.render.AbstractSqlBuilder;
 import org.babyfish.jimmer.sql.dialect.Dialect;
 import org.babyfish.jimmer.sql.dialect.PaginationContext;
 import org.babyfish.jimmer.sql.dialect.UpdateJoin;
 import org.babyfish.jimmer.sql.runtime.Reader;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 /**
  * @author hon_him
@@ -225,5 +230,60 @@ public class DialectDelegate implements Dialect {
     @Override
     public String sqlType(Class<?> elementType) {
         return delegate.sqlType(elementType);
+    }
+
+    @Override
+    public String jdbcParameter(Class<?> sqlType) {
+        return delegate.jdbcParameter(sqlType);
+    }
+
+    @Override
+    public void renderLPad(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expression, Ast length, Ast padString) {
+        delegate.renderLPad(builder, currentPrecedence, expression, length, padString);
+    }
+
+    @Override
+    public void renderRPad(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expression, Ast length, Ast padString) {
+        delegate.renderRPad(builder, currentPrecedence, expression, length, padString);
+    }
+
+    @Override
+    public void renderPosition(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast subStrAst, Ast expressionAst, @org.jetbrains.annotations.Nullable Ast startAst) {
+        delegate.renderPosition(builder, currentPrecedence, subStrAst, expressionAst, startAst);
+    }
+
+    @Override
+    public void renderLeft(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expressionAst, Ast lengthAst) {
+        delegate.renderLeft(builder, currentPrecedence, expressionAst, lengthAst);
+    }
+
+    @Override
+    public void renderRight(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expressionAst, Ast lengthAst) {
+        delegate.renderRight(builder, currentPrecedence, expressionAst, lengthAst);
+    }
+
+    @Override
+    public void renderSubString(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expressionAst, Ast startAst, @org.jetbrains.annotations.Nullable Ast lengthAst) {
+        delegate.renderSubString(builder, currentPrecedence, expressionAst, startAst, lengthAst);
+    }
+
+    @Override
+    public void renderTimePlus(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expressionAst, Ast valueAst, SqlTimeUnit timeUnit) {
+        delegate.renderTimePlus(builder, currentPrecedence, expressionAst, valueAst, timeUnit);
+    }
+
+    @Override
+    public void renderTimeDiff(AbstractSqlBuilder<?> builder, int currentPrecedence, Ast expressionAst, Ast otherAst, SqlTimeUnit timeUnit) {
+        delegate.renderTimeDiff(builder, currentPrecedence, expressionAst, otherAst, timeUnit);
+    }
+
+    @Override
+    public Timestamp getTimestamp(ResultSet rs, int col) throws SQLException {
+        return delegate.getTimestamp(rs, col);
+    }
+
+    @Override
+    public void renderForUpdate(AbstractSqlBuilder<?> builder, ForUpdate forUpdate) {
+        delegate.renderForUpdate(builder, forUpdate);
     }
 }

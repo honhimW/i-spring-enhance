@@ -4,14 +4,13 @@ import io.github.honhimw.example.domain.jpa.NameDO;
 import io.github.honhimw.example.domain.jpa.NameRepository;
 import io.github.honhimw.spring.BuildIn;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author hon_him
  * @since 2024-11-29
  */
 
-@Component
+//@Component
 public class BuildInPlayer implements BuildIn {
 
     @Autowired
@@ -33,6 +32,7 @@ public class BuildInPlayer implements BuildIn {
             player.setFullName(name);
             player.setAge(29);
             player.setSbd(new PlayerDO.SBD(100, 200, 300));
+            player.setBigflags(0b111);
             playerRepository.save(player);
         }
         {

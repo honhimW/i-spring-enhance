@@ -5,7 +5,7 @@ import io.github.honhimw.ddd.jimmer.support.SpringOrders;
 import io.github.honhimw.ddd.jimmer.support.SpringPageFactory;
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.IProps;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
@@ -54,19 +54,19 @@ public class FetchableFluentQueryBySpecification<S, R> implements FluentQuery.Fe
         this.projectionFactory = projectionFactory;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public FetchableFluentQuery<R> sortBy(@Nonnull Sort sort) {
+    public FetchableFluentQuery<R> sortBy(@NonNull Sort sort) {
         return new FetchableFluentQueryBySpecification<>(spec, fetcher, sort, entityType, resultType, tableProxy, sqlClient, projectionFactory);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <R1> FetchableFluentQuery<R1> as(@Nonnull Class<R1> resultType) {
+    public <R1> FetchableFluentQuery<R1> as(@NonNull Class<R1> resultType) {
         return new FetchableFluentQueryBySpecification<>(spec, fetcher, sort, entityType, resultType, tableProxy, sqlClient, projectionFactory);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public FetchableFluentQuery<R> project(Collection<String> properties) {
         Fetcher<S> fetcher = this.fetcher;
@@ -98,7 +98,7 @@ public class FetchableFluentQueryBySpecification<S, R> implements FluentQuery.Fe
         return results.isEmpty() ? null : getConversionFunction().apply(results.get(0));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<R> all() {
         List<S> results = createSortedAndProjectedQuery(sort)
@@ -112,7 +112,7 @@ public class FetchableFluentQueryBySpecification<S, R> implements FluentQuery.Fe
         return mapped;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Page<R> page(Pageable pageable) {
         Page<S> results = createSortedAndProjectedQuery(sort)
@@ -121,7 +121,7 @@ public class FetchableFluentQueryBySpecification<S, R> implements FluentQuery.Fe
         return results.map(conversionFunction);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Stream<R> stream() {
         return all().stream();

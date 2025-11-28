@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.acl;
 
 import io.github.honhimw.ddd.jimmer.domain.Specification;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author honhimW
@@ -10,12 +10,10 @@ import jakarta.annotation.Nullable;
 
 public interface AclExecutor {
 
-    @Nullable
-    Specification.Query read();
+    Specification.@Nullable Query read();
 
     void write();
 
-    @Nullable
-    Specification.Delete delete();
+    Specification.@Nullable Delete delete();
 
 }

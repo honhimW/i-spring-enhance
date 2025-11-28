@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.cache.memory;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.apache.commons.lang3.Strings;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -17,7 +17,7 @@ public interface RefreshableCache extends Ordered, Comparable<RefreshableCache> 
     /**
      * @return id for current cache
      */
-    @Nonnull
+    @NonNull
     String version();
 
     /**
@@ -64,7 +64,7 @@ public interface RefreshableCache extends Ordered, Comparable<RefreshableCache> 
      * @see Ordered
      */
     @Override
-    default int compareTo(@Nonnull RefreshableCache o) {
+    default int compareTo(@NonNull RefreshableCache o) {
         return AnnotationAwareOrderComparator.INSTANCE.compare(this, o);
     }
 

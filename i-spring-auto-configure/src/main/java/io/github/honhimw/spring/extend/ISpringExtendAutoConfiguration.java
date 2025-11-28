@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -22,6 +23,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  */
 
 @AutoConfiguration(before = {JacksonAutoConfiguration.class})
+@EnableConfigurationProperties(IExtendProperties.class)
 public class ISpringExtendAutoConfiguration {
 
     @Bean(name = "buildInConfig")
@@ -54,7 +56,7 @@ public class ISpringExtendAutoConfiguration {
     @Bean
     @Primary
     @ConditionalOnClass(ObjectMapper.class)
-    @ConditionalOnProperty(value = "i.spring.json.enable", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(value = "i.spring.json.enabled", havingValue = "true", matchIfMissing = true)
     ObjectMapper extendObjectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper mapper = JsonUtils.mapper().copy();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

@@ -34,7 +34,7 @@ public class HttpClientAsyncTests {
         AsyncEntityProducer asyncEntityProducer = AsyncEntityProducers.create("{}", ContentType.APPLICATION_JSON);
         post.setEntity(asyncEntityProducer);
         AsyncRequestProducer build = post.build();
-        Future<SimpleHttpResponse> execute = http.execute(build, SimpleResponseConsumer.create(), new FutureCallback<SimpleHttpResponse>() {
+        Future<SimpleHttpResponse> execute = http.execute(build, SimpleResponseConsumer.create(), new FutureCallback<>() {
             @Override
             public void completed(SimpleHttpResponse result) {
 

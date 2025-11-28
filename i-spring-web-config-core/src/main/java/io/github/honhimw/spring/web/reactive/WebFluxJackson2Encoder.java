@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.CodecException;
@@ -48,16 +48,16 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
     }
 
     @Override
-    public boolean canEncode(@Nonnull ResolvableType elementType, MimeType mimeType) {
+    public boolean canEncode(@NonNull ResolvableType elementType, MimeType mimeType) {
         if (STRING.isAssignableFrom(elementType)) {
             return false;
         }
         return super.canEncode(elementType, mimeType);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Flux<DataBuffer> encode(@Nonnull Publisher<?> inputStream, @Nonnull DataBufferFactory bufferFactory, @Nonnull ResolvableType elementType, MimeType mimeType, Map<String, Object> hints) {
+    public Flux<DataBuffer> encode(@NonNull Publisher<?> inputStream, @NonNull DataBufferFactory bufferFactory, @NonNull ResolvableType elementType, MimeType mimeType, Map<String, Object> hints) {
         Assert.notNull(inputStream, "'inputStream' must not be null");
         Assert.notNull(bufferFactory, "'bufferFactory' must not be null");
         Assert.notNull(elementType, "'elementType' must not be null");
@@ -114,9 +114,9 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
         }
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public DataBuffer encodeValue(@Nonnull Object value, @Nonnull DataBufferFactory bufferFactory, @Nonnull ResolvableType valueType, MimeType mimeType, Map<String, Object> hints) {
+    public DataBuffer encodeValue(@NonNull Object value, @NonNull DataBufferFactory bufferFactory, @NonNull ResolvableType valueType, MimeType mimeType, Map<String, Object> hints) {
         Class<?> jsonView = null;
         FilterProvider filters = null;
         if (value instanceof MappingJacksonValue container) {
@@ -182,14 +182,14 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
         return customizeWriter(writer, mimeType, valueType, hints);
     }
 
-    @Nonnull
-    protected ObjectWriter customizeWriter(@Nonnull ObjectWriter writer, ResolvableType type, Object object) {
+    @NonNull
+    protected ObjectWriter customizeWriter(@NonNull ObjectWriter writer, ResolvableType type, Object object) {
         return writer;
     }
 
-    @Nonnull
-    protected ObjectWriter customizeWriter(@Nonnull ObjectWriter writer, @Nullable MimeType mimeType,
-                                           @Nonnull ResolvableType elementType, @Nullable Map<String, Object> hints) {
+    @NonNull
+    protected ObjectWriter customizeWriter(@NonNull ObjectWriter writer, @Nullable MimeType mimeType,
+                                           @NonNull ResolvableType elementType, @Nullable Map<String, Object> hints) {
         return writer;
     }
 
@@ -234,7 +234,7 @@ public class WebFluxJackson2Encoder extends FetcherJackson2Encoder {
         }
     }
 
-    @Nonnull
+    @NonNull
     protected Charset getCharset(@Nullable MimeType contentType) {
         if (contentType != null && contentType.getCharset() != null) {
             return contentType.getCharset();

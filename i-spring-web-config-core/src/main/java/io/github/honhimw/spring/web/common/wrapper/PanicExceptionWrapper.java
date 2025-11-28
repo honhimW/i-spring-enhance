@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -12,15 +12,15 @@ import org.springframework.http.HttpStatus;
 public class PanicExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
-    public boolean support(@Nonnull Throwable e) {
+    public boolean support(@NonNull Throwable e) {
         return e instanceof NullPointerException
             || e instanceof IndexOutOfBoundsException
             || e instanceof Error;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public String wrap(@Nonnull Throwable e) {
+    public String wrap(@NonNull Throwable e) {
         return "{panic}";
     }
 

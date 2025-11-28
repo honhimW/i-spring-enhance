@@ -17,7 +17,7 @@ public class ReactiveHttpUtilsTests {
     @SneakyThrows
     void overrideContentType() {
         ReactiveHttpUtils.HttpResult post = ReactiveHttpUtils.getInstance().post("http://127.0.0.1:11451/form-url-encoded", configurer -> configurer
-                .charset(Charset.forName("GBK"))
+            .charset(Charset.forName("GBK"))
             .body(body -> body.formUrlEncoded(formUrlEncoded -> formUrlEncoded
                 .text("foo", "bar")
             ))

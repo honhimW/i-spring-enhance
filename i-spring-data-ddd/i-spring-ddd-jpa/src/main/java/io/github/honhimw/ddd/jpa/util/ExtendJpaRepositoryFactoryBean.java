@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jpa.util;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.ObjectProvider;
@@ -58,12 +58,12 @@ public abstract class ExtendJpaRepositoryFactoryBean<T extends Repository<S, ID>
 
     @Autowired
     @Override
-    public void setEntityPathResolver(@Nonnull ObjectProvider<EntityPathResolver> resolver) {
+    public void setEntityPathResolver(@NonNull ObjectProvider<EntityPathResolver> resolver) {
         super.setEntityPathResolver(resolver);
         this.entityPathResolver = resolver.getIfAvailable(() -> SimpleEntityPathResolver.INSTANCE);
     }
 
-    @Autowired
+    @Autowired(required = false)
     @Override
     public void setQueryMethodFactory(@Nullable JpaQueryMethodFactory factory) {
         super.setQueryMethodFactory(factory);
@@ -72,12 +72,13 @@ public abstract class ExtendJpaRepositoryFactoryBean<T extends Repository<S, ID>
         }
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected RepositoryFactorySupport createRepositoryFactory(@Nonnull EntityManager entityManager) {
+    protected RepositoryFactorySupport createRepositoryFactory(@NonNull EntityManager entityManager) {
         ExtendConstructorRepositoryFactory jpaRepositoryFactory = new ExtendConstructorRepositoryFactory(entityManager, getExtendArgs(), overrideRepositoryBaseClass());
         jpaRepositoryFactory.setEntityPathResolver(entityPathResolver);
         jpaRepositoryFactory.setEscapeCharacter(escapeCharacter);
+
 
         if (queryMethodFactory != null) {
             jpaRepositoryFactory.setQueryMethodFactory(queryMethodFactory);
@@ -103,9 +104,9 @@ public abstract class ExtendJpaRepositoryFactoryBean<T extends Repository<S, ID>
             this.baseClass = baseClass;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        protected JpaRepositoryImplementation<?, ?> getTargetRepository(RepositoryInformation information, @Nonnull EntityManager entityManager) {
+        protected JpaRepositoryImplementation<?, ?> getTargetRepository(RepositoryInformation information, @NonNull EntityManager entityManager) {
             JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
             Object[] args = {entityInformation, entityManager};
             if (ArrayUtils.isNotEmpty(extendArgs)) {

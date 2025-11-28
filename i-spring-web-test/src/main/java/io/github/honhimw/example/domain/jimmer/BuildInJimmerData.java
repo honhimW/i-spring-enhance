@@ -2,7 +2,6 @@ package io.github.honhimw.example.domain.jimmer;
 
 import io.github.honhimw.spring.BuildIn;
 import lombok.extern.slf4j.Slf4j;
-import org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +32,14 @@ public class BuildInJimmerData implements BuildIn {
             .setAge(18)
             .setFullName(chambers)
             .setFullNameId("111")
+            .applySbd(draft1 -> draft1
+                .setSquat(135)
+                .setBenchPress(102)
+                .setDeadLift(175)
+            )
+            .setBitflags(0b111)
         ));
         log.info("player: {}", save);
+        save.print();
     }
 }

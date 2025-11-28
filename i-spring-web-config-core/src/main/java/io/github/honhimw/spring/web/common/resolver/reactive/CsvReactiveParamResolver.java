@@ -13,7 +13,7 @@ import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.ValidatorUtils;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
 import io.github.honhimw.util.GZipUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapter;
 import org.springframework.core.ReactiveAdapterRegistry;
@@ -58,16 +58,16 @@ public class CsvReactiveParamResolver extends HandlerMethodArgumentResolverSuppo
     }
 
     @Override
-    public boolean supportsParameter(@Nonnull MethodParameter parameter) {
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
         return parameter.hasParameterAnnotation(PartParam.class) &&
                checkParameterType(parameter, Collection.class::isAssignableFrom);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Object> resolveArgument(@Nonnull MethodParameter parameter,
-                                        @Nonnull BindingContext bindingContext,
-                                        @Nonnull ServerWebExchange exchange) {
+    public Mono<Object> resolveArgument(@NonNull MethodParameter parameter,
+                                        @NonNull BindingContext bindingContext,
+                                        @NonNull ServerWebExchange exchange) {
         PartParam partParam = parameter.getParameterAnnotation(PartParam.class);
         Assert.notNull(partParam, "argument resolver annotation should not be null.");
 

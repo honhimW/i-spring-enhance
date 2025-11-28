@@ -1,6 +1,7 @@
-apply plugin: 'java-platform'
-apply plugin: 'maven-publish'
-apply from: rootProject.file('buildSrc/maven.gradle')
+plugins {
+    id 'java-platform'
+    id 'i.spring.publishing'
+}
 
 javaPlatform {
     allowDependencies()
@@ -10,9 +11,11 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.dependencies.get()}")
     api platform("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.dependencies.get()}")
     api platform("com.alibaba.cloud:spring-cloud-alibaba-dependencies:${libs.versions.spring.cloud.alibaba.dependencies.get()}")
-    api platform("org.springdoc:springdoc-openapi-bom:${libs.versions.springdoc.openapi.get()}")
+    api platform("org.springdoc:springdoc-openapi-bom:${libs.versions.springdoc.openapi.bom.get()}")
     api platform("org.springframework.ai:spring-ai-bom:${libs.versions.spring.ai.bom.get()}")
-    constraints {dpHandler ->
+    api platform("software.amazon.awssdk:bom:${libs.versions.aws.sdk.get()}")
+    api platform("org.babyfish.jimmer:jimmer-bom:${libs.versions.jimmer.bom.get()}")
+    constraints { dpHandler ->
         add('api', project(':i-core'))
         add('api', project(':i-common-utilities'))
         add('api', project(':i-spring-web-config-core'))
@@ -25,9 +28,11 @@ dependencies {
         add('api', project(':i-spring-data-ddd:i-spring-ddd-common'))
         add('api', project(':i-spring-data-ddd:i-spring-ddd-jpa'))
         add('api', project(':i-spring-data-ddd:i-spring-ddd-starter'))
+        add('api', project(':i-spring-data-ddd:i-spring-ddd-jimmer'))
+        add('api', project(':i-spring-data-ddd:i-spring-ddd-starter-jimmer'))
         def versionCatalogsExtension = project.extensions.getByType(VersionCatalogsExtension)
         versionCatalogsExtension.forEach { versionCatalog ->
-            versionCatalog.libraryAliases.each {alias ->
+            versionCatalog.libraryAliases.each { alias ->
                 def library = versionCatalog.findLibrary(alias).get().get()
                 dpHandler.add('api', library)
             }

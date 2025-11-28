@@ -11,9 +11,9 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.github.honhimw.spring.ValidatorUtils;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
 import io.github.honhimw.util.GZipUtils;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
@@ -55,16 +55,16 @@ public class CsvParamResolver extends BaseParamResolver implements HandlerMethod
     }
 
     @Override
-    public boolean supportsParameter(@Nonnull MethodParameter parameter) {
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
         return parameter.hasParameterAnnotation(PartParam.class) &&
                Collection.class.isAssignableFrom(parameter.getParameterType());
     }
 
     @Nullable
     @Override
-    public Object resolveArgument(@Nonnull MethodParameter parameter,
+    public Object resolveArgument(@NonNull MethodParameter parameter,
                                   @Nullable ModelAndViewContainer mavContainer,
-                                  @Nonnull NativeWebRequest webRequest,
+                                  @NonNull NativeWebRequest webRequest,
                                   @Nullable WebDataBinderFactory binderFactory) throws Exception {
         PartParam partParam = parameter.getParameterAnnotation(PartParam.class);
         Assert.notNull(partParam, "argument resolver annotation should not be null.");

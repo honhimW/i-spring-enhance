@@ -5,7 +5,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.openjdk.jmh.annotations.*;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
 
 /**
  * @author hon_him

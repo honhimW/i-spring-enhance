@@ -1,6 +1,7 @@
 package io.github.honhimw.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.*;
@@ -28,9 +29,10 @@ public class ThreadUtils {
         }
     }
 
-    public static <T, R> List<R> block(Executor executor, int parallel, Collection<T> tList,
-                                       Duration timeout,
-                                       Function<T, Stream<R>> mapper) {
+    public static <T, R> List<R> block(Executor executor, int parallel,
+                                       Collection<@Nullable T> tList,
+                                       @Nullable Duration timeout,
+                                       Function<@Nullable T, Stream<R>> mapper) {
         CompletionService<Stream<R>> completionService = new ExecutorCompletionService<>(executor);
         int times = tList.size();
         final boolean willTimeout = Objects.nonNull(timeout);
@@ -95,8 +97,9 @@ public class ThreadUtils {
         }
     }
 
-    public static void execute(Executor executor, int parallel, int times, Duration timeout, Consumer<Integer> consumer) {
+    public static void execute(Executor executor, int parallel, int times, @Nullable Duration timeout, Consumer<Integer> consumer) {
         block(executor, parallel, IntStream.range(0, times).boxed().collect(Collectors.toList()), timeout, integer -> {
+            assert integer != null;
             consumer.accept(integer);
             return Stream.empty();
         });
@@ -111,7 +114,7 @@ public class ThreadUtils {
         }
     }
 
-    public static <T> void execute(Executor executor, int parallel, List<T> tList, Duration timeout, Consumer<T> consumer) {
+    public static <T> void execute(Executor executor, int parallel, List<T> tList, @Nullable Duration timeout, Consumer<@Nullable T> consumer) {
         block(executor, parallel, tList, timeout, t -> {
             consumer.accept(t);
             return Stream.empty();

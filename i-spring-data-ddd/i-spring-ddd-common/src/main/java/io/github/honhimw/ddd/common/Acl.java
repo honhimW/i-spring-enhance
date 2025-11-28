@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.common;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
@@ -13,7 +13,7 @@ public interface Acl {
 
     boolean isRoot();
 
-    @Nonnull
+    @NonNull
     Collection<Ace> getAces();
 
 

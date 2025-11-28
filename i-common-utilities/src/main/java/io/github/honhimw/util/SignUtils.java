@@ -37,9 +37,6 @@ public class SignUtils {
     }
 
     public String sign(String type, String content, String privateKey) throws GeneralSecurityException {
-        if (content == null) {
-            return null;
-        }
         PrivateKey priKey = KeyUtils.getPrivateKeyFromPKCS8(algorithm, privateKey);
         Signature signature = Signature.getInstance(type);
         signature.initSign(priKey);
@@ -49,9 +46,6 @@ public class SignUtils {
     }
 
     public boolean verify(String type, String content, String sign, String publicKey) {
-        if (type == null || content == null || sign == null || publicKey == null) {
-            return false;
-        }
         try {
             PublicKey pubKey = KeyUtils.getPublicKeyFromX509(algorithm, publicKey);
             byte[] signed = Base64.decodeBase64(sign);

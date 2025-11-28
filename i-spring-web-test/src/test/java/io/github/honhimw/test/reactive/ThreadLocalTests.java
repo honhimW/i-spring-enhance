@@ -32,16 +32,14 @@ public class ThreadLocalTests {
         MockServerWebExchange exchange = MockServerWebExchange.builder(request).build();
         ExchangeContextFilter filter = new ExchangeContextFilter("test");
         ReactorThreadLocalConfig.initialize();
-        WebFilter webFilter = (exchange12, chain) -> {
-            return Mono.just(exchange12)
-                .doOnNext(unused -> {
-                    ServerWebExchange exchange1 = ExchangeHolder.getExchange();
-                    System.out.println(exchange1);
-                    assert exchange1 != null : "Thread local exchange should not be null";
-                })
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
-        };
+        WebFilter webFilter = (exchange12, chain) -> Mono.just(exchange12)
+            .doOnNext(unused -> {
+                ServerWebExchange exchange1 = ExchangeHolder.getExchange();
+                System.out.println(exchange1);
+                assert exchange1 != null : "Thread local exchange should not be null";
+            })
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
         DefaultWebFilterChain chain = new DefaultWebFilterChain(exchange1 -> Mono.just(exchange1).then(), List.of(filter, webFilter));
         StepVerifier.create(chain.filter(exchange))
             .verifyComplete();

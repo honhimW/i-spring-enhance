@@ -7,24 +7,27 @@ import io.github.honhimw.ddd.jimmer.JimmerTransactionManager;
 import io.github.honhimw.ddd.jimmer.domain.AuditInterceptor;
 import io.github.honhimw.ddd.jimmer.event.CRUDCallback;
 import io.github.honhimw.ddd.jimmer.event.Callback;
-import io.github.honhimw.ddd.jimmer.repository.JimmerRepository;
+import io.github.honhimw.ddd.jimmer.persist.PersistenceManagedTypes;
+import io.github.honhimw.ddd.jimmer.persist.PersistenceManagedTypesScanner;
 import io.github.honhimw.ddd.jimmer.util.PageUtils;
-import io.github.honhimw.ddl.DDLAutoRunner;
 import jakarta.transaction.TransactionManager;
 import org.babyfish.jimmer.sql.JSqlClient;
-import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScanPackages;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -79,27 +82,25 @@ class JimmerConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "spring.jimmer.ddl-auto")
-    DDLAutoRunner jimmerDdlAutoRunner(JSqlClient sqlClient, Environment environment, ObjectProvider<JimmerRepository<?, ?>> repositoryProvider) {
-        return new DDLAutoRunner((JSqlClientImplementor) sqlClient, environment, repositoryProvider);
+    EnvironmentAware initializingPageUtilsFirstPageNo() {
+        return environment -> {
+            Boolean flag = environment.getProperty("spring.data.web.pageable.one-indexed-parameters", boolean.class, true);
+            if (flag) {
+                PageUtils.setFirstPageNo(1);
+            } else {
+                PageUtils.setFirstPageNo(0);
+            }
+        };
     }
 
     @Bean
-    @ConditionalOnProperty(value = "spring.data.web.pageable.one-indexed-parameters", havingValue = "true", matchIfMissing = true)
-    InitializingBean initializingPageUtilsFirstPageNo() {
-        return () -> PageUtils.setFirstPageNo(1);
+    @ConditionalOnMissingBean
+    PersistenceManagedTypes jimmerPersistenceManagedTypes(BeanFactory beanFactory, ResourceLoader resourceLoader) {
+        List<String> packages = EntityScanPackages.get(beanFactory).getPackageNames();
+        if (packages.isEmpty() && AutoConfigurationPackages.has(beanFactory)) {
+            packages = AutoConfigurationPackages.get(beanFactory);
+        }
+        return new PersistenceManagedTypesScanner(resourceLoader).scan(StringUtils.toStringArray(packages));
     }
-
-//    @Value("${spring.data.web.pageable.one-indexed-parameters:true}")
-//    private Boolean firstPageNo;
-//
-//    @PostConstruct
-//    void setupPageUtils() {
-//        if (firstPageNo) {
-//            PageUtils.setFirstPageNo(1);
-//        } else {
-//            PageUtils.setFirstPageNo(0);
-//        }
-//    }
 
 }

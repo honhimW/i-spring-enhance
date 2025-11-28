@@ -3,7 +3,7 @@ package io.github.honhimw.spring.web.common.i18n;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.SpringBeanUtils;
 import io.github.honhimw.spring.web.reactive.ExchangeHolder;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -30,7 +30,7 @@ public class I18nUtils implements MessageSourceAware {
     @Getter
     private static MessageSource messageSource;
 
-    @Nonnull
+    @NonNull
     public static Locale getLocale() {
         LocaleContext localeContext = null;
         if (SpringBeanUtils.isWebFlux()) {
@@ -96,7 +96,7 @@ public class I18nUtils implements MessageSourceAware {
     }
 
     @Override
-    public void setMessageSource(@Nonnull MessageSource messageSource) {
+    public void setMessageSource(@NonNull MessageSource messageSource) {
         I18nUtils.messageSource = messageSource;
     }
 }

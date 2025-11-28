@@ -1,8 +1,8 @@
 package io.github.honhimw.ddd.common;
 
 import io.github.honhimw.core.MatchingType;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Access-Control-Entry
@@ -15,13 +15,13 @@ import jakarta.annotation.Nullable;
 
 public interface Ace {
 
-    @Nonnull
+    @NonNull
     String getDataDomain();
 
-    @Nonnull
+    @NonNull
     String getTargetValue();
 
-    @Nonnull
+    @NonNull
     ResourceMod getMod();
 
     @Nullable

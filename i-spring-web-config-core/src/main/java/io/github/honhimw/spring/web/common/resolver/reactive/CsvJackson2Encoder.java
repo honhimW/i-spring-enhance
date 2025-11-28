@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import io.github.honhimw.spring.ResolvableTypes;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
 import org.springframework.util.MimeType;
@@ -33,12 +33,12 @@ public class CsvJackson2Encoder extends AbstractFileJackson2Encoder {
     }
 
     @Override
-    public boolean canEncode(@Nonnull ResolvableType elementType, MimeType mimeType) {
+    public boolean canEncode(@NonNull ResolvableType elementType, MimeType mimeType) {
         return super.canEncode(elementType, mimeType) && ResolvableTypes.COLLECTION_TYPE.isAssignableFrom(elementType);
     }
 
-    @Nonnull
-    protected ObjectWriter customizeWriter(@Nonnull ObjectWriter writer, ResolvableType type, Object object) {
+    @NonNull
+    protected ObjectWriter customizeWriter(@NonNull ObjectWriter writer, ResolvableType type, Object object) {
         CsvSchema schema = getSchema(type.getGeneric(0), (Collection<?>) object);
         return writer.with(schema);
     }

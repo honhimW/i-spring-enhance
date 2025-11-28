@@ -2,7 +2,7 @@ package io.github.honhimw.ddd.jpa.acl;
 
 import io.github.honhimw.ddd.common.Ace;
 import io.github.honhimw.ddd.common.ResourceMod;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 
@@ -27,13 +27,13 @@ public class DefaultAclExecutorImpl<T> extends AbstractAclExecutor<T>{
         return false;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Map<String, Object> getAttributes() {
         return new HashMap<>();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected List<Ace> getAcl() {
         return new ArrayList<>();

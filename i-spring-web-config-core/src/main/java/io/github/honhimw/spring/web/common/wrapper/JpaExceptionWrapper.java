@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.persistence.PersistenceException;
 import org.apache.commons.lang3.Strings;
 import org.springframework.http.HttpStatus;
@@ -16,16 +16,16 @@ import java.sql.SQLException;
 public class JpaExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
-    public boolean support(@Nonnull Throwable e) {
+    public boolean support(@NonNull Throwable e) {
         return e instanceof PersistenceException
                || e instanceof SQLException
                || (Strings.CS.startsWith(e.getClass().getPackage().getName(), "jakarta.persistence"))
             ;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public String wrap(@Nonnull Throwable e) {
+    public String wrap(@NonNull Throwable e) {
         return "{database.persistence.error}";
     }
 

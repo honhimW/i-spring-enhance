@@ -1,72 +1,67 @@
 package io.github.honhimw.util;
 
-import org.apache.commons.lang3.time.FastDateFormat;
-
-import java.text.*;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
-
-/**
- * @author hon_him
- * @since 2024-11-22
- */
 
 public class SafeDateFormat extends DateFormat {
 
-    private FastDateFormat fastDateFormat;
+    private final DateTimeFormatter formatter;
 
-    public SafeDateFormat(FastDateFormat fastDateFormat) {
-        new SimpleDateFormat();
-        this.fastDateFormat = fastDateFormat;
-        calendar = Calendar.getInstance(fastDateFormat.getTimeZone());
-        numberFormat = NumberFormat.getInstance(fastDateFormat.getLocale());
+    private SafeDateFormat(DateTimeFormatter formatter) {
+        this.formatter = formatter;
+        this.calendar = Calendar.getInstance(TimeZone.getTimeZone(formatter.getZone()), formatter.getLocale());
+        this.numberFormat = NumberFormat.getInstance(formatter.getLocale());
+    }
+
+    private SafeDateFormat(String pattern, Locale locale, TimeZone timeZone) {
+        this(DateTimeFormatter.ofPattern(pattern, locale).withZone(timeZone.toZoneId()));
+    }
+
+    public static SafeDateFormat create(DateTimeFormatter formatter) {
+        return new SafeDateFormat(formatter);
     }
 
     public static SafeDateFormat create(String pattern) {
-        return new SafeDateFormat(FastDateFormat.getInstance(pattern));
+        return create(pattern, Locale.getDefault());
+    }
+
+    public static SafeDateFormat create(String pattern, Locale locale) {
+        return create(pattern, locale, TimeZone.getDefault());
+    }
+
+    public static SafeDateFormat create(String pattern, Locale locale, TimeZone timeZone) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, locale).withZone(timeZone.toZoneId());
+        return new SafeDateFormat(formatter);
     }
 
     @Override
     public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
-        return fastDateFormat.format(date, toAppendTo, fieldPosition);
+        LocalDateTime localDateTime = Instant.ofEpochMilli(date.getTime()).atZone(formatter.getZone()).toLocalDateTime();
+        toAppendTo.append(formatter.format(localDateTime));
+        return toAppendTo;
     }
 
     @Override
     public Date parse(String text, ParsePosition pos) {
-        return fastDateFormat.parse(text, pos);
+        LocalDateTime localDateTime = LocalDateTime.parse(text, formatter);
+        Instant instant = localDateTime.atZone(formatter.getZone()).toInstant();
+        pos.setIndex(text.length());
+        return Date.from(instant);
     }
 
-    @Override
-    public Date parse(String text) throws ParseException {
-        return fastDateFormat.parse(text);
-    }
-
-    @Override
-    public Object parseObject(String text, ParsePosition pos) {
-        return fastDateFormat.parseObject(text, pos);
-    }
-
-    @Override
-    public Object parseObject(String text) throws ParseException {
-        return fastDateFormat.parseObject(text);
-    }
-
-    @SuppressWarnings({"all"})
+    @SuppressWarnings("all")
     @Override
     public Object clone() {
-        return create(fastDateFormat.getPattern());
+        return new SafeDateFormat(this.formatter);
     }
 
-    @Override
-    public void setCalendar(Calendar newCalendar) {
-        super.setCalendar(newCalendar);
-        this.fastDateFormat = FastDateFormat.getInstance(fastDateFormat.getPattern(), newCalendar.getTimeZone());
-    }
-
-    @Override
-    public void setTimeZone(TimeZone zone) {
-        super.setTimeZone(zone);
-        this.fastDateFormat = FastDateFormat.getInstance(fastDateFormat.getPattern(), zone);
-    }
 }

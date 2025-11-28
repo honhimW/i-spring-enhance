@@ -1,9 +1,9 @@
 package io.github.honhimw.ddd.jimmer.domain;
 
-import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.Column;
 import org.babyfish.jimmer.sql.Embeddable;
-import org.babyfish.jimmer.sql.Version;
+//import org.jspecify.annotations.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.time.Instant;
 

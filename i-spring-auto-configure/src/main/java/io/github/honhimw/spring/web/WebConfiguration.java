@@ -10,7 +10,7 @@ import io.github.honhimw.spring.web.common.OpenApiCustomConfiguration;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
 import io.github.honhimw.spring.web.mvc.*;
 import io.github.honhimw.spring.web.reactive.*;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.*;
@@ -30,6 +30,7 @@ import org.springframework.http.codec.json.AbstractJackson2Decoder;
 import org.springframework.http.codec.json.AbstractJackson2Encoder;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.HttpHandlerDecoratorFactory;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
@@ -110,9 +111,9 @@ abstract class WebConfiguration {
     @ConditionalOnWebApplication(type = SERVLET)
     static class IMvcConfiguration {
 
-        @Fallback
         @Bean("mvcJackson2HttpMessageConverter")
         @ConditionalOnMissingBean(name = "mvcJackson2HttpMessageConverter")
+        @ConditionalOnProperty(value = "i.spring.json.enabled", havingValue = "true", matchIfMissing = true)
         MvcJackson2HttpMessageConverter mvcJackson2HttpMessageConverter(ObjectMapper objectMapper) {
             return new MvcJackson2HttpMessageConverter(objectMapper, MediaType.APPLICATION_JSON);
         }
@@ -123,9 +124,13 @@ abstract class WebConfiguration {
         WebMvcConfigurer mvcExtendConfig(ObjectProvider<MvcJackson2HttpMessageConverter> mvcJackson2HttpMessageConverters) {
             return new WebMvcConfigurer() {
                 @Override
-                public void extendMessageConverters(@Nonnull List<HttpMessageConverter<?>> converters) {
+                public void extendMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
                     for (int i = 0; i < converters.size(); i++) {
-                        if (converters.get(i) instanceof MappingJackson2HttpMessageConverter) {
+                        HttpMessageConverter<?> httpMessageConverter = converters.get(i);
+                        if (httpMessageConverter instanceof MvcJackson2HttpMessageConverter) {
+                            return;
+                        }
+                        if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter) {
                             converters.set(i, mvcJackson2HttpMessageConverters.getIfAvailable());
                             return;
                         }
@@ -141,7 +146,7 @@ abstract class WebConfiguration {
         WebMvcConfigurer mvcCorsConfig() {
             return new WebMvcConfigurer() {
                 @Override
-                public void addCorsMappings(@Nonnull CorsRegistry registry) {
+                public void addCorsMappings(@NonNull CorsRegistry registry) {
                     registry
                         .addMapping("/**")
                         .allowedOriginPatterns("*")
@@ -167,8 +172,8 @@ abstract class WebConfiguration {
 
         @Bean("mvcHttpLogFilter")
         @ConditionalOnMissingBean(name = "mvcHttpLogFilter")
-        MvcHttpLogFilter mvcHttpLogFilter() {
-            return new MvcHttpLogFilter();
+        MvcHttpLogFilter mvcHttpLogFilter(ObjectProvider<MvcHttpLogCondition> conditions) {
+            return new MvcHttpLogFilter(conditions);
         }
 
         @Bean("mvcTraceFilter")
@@ -197,12 +202,14 @@ abstract class WebConfiguration {
 
         @Bean("webFluxJackson2Decoder")
         @ConditionalOnMissingBean(name = "webFluxJackson2Decoder")
+        @ConditionalOnProperty(value = "i.spring.json.enabled", havingValue = "true", matchIfMissing = true)
         AbstractJackson2Decoder webFluxJackson2Decoder(ObjectMapper objectMapper) {
             return new WebFluxJackson2Decoder(objectMapper, MediaType.APPLICATION_JSON);
         }
 
         @Bean("webFluxJackson2Encoder")
         @ConditionalOnMissingBean(name = "webFluxJackson2Encoder")
+        @ConditionalOnProperty(value = "i.spring.json.enabled", havingValue = "true", matchIfMissing = true)
         AbstractJackson2Encoder webFluxJackson2Encoder(ObjectMapper objectMapper) {
             return new WebFluxJackson2Encoder(objectMapper, MediaType.APPLICATION_JSON);
         }
@@ -212,7 +219,7 @@ abstract class WebConfiguration {
         WebFluxConfigurer reactiveExtendConfig(AbstractJackson2Decoder decoder, AbstractJackson2Encoder encoder) {
             return new WebFluxConfigurer() {
                 @Override
-                public void configureHttpMessageCodecs(@Nonnull ServerCodecConfigurer configurer) {
+                public void configureHttpMessageCodecs(@NonNull ServerCodecConfigurer configurer) {
                     ServerCodecConfigurer.ServerDefaultCodecs serverDefaultCodecs = configurer.defaultCodecs();
                     serverDefaultCodecs.jackson2JsonDecoder(decoder);
                     serverDefaultCodecs.jackson2JsonEncoder(encoder);
@@ -226,7 +233,7 @@ abstract class WebConfiguration {
         WebFluxConfigurer reactiveCorsConfig() {
             return new WebFluxConfigurer() {
                 @Override
-                public void addCorsMappings(@Nonnull org.springframework.web.reactive.config.CorsRegistry registry) {
+                public void addCorsMappings(org.springframework.web.reactive.config.@NonNull CorsRegistry registry) {
                     registry
                         .addMapping("/**")
                         .allowedOriginPatterns("*")
@@ -270,8 +277,8 @@ abstract class WebConfiguration {
         @Order(ReactiveHttpLogHandler.DEFAULT_HANDLER_ORDERED)
         @Bean(value = "reactiveHttpLogHandlerDecoratorFactory")
         @ConditionalOnMissingBean(name = "reactiveHttpLogHandlerDecoratorFactory")
-        HttpHandlerDecoratorFactory reactiveHttpLogHandlerDecoratorFactory() {
-            return ReactiveHttpLogHandler::new;
+        HttpHandlerDecoratorFactory reactiveHttpLogHandlerDecoratorFactory(ObjectProvider<ReactiveHttpLogCondition> conditions) {
+            return httpHandler -> new ReactiveHttpLogHandler(httpHandler, ReactiveHttpLogHandler.DEFAULT_HANDLER_ORDERED, conditions);
         }
 
         @Order(ReactiveTraceHandler.DEFAULT_HANDLER_ORDERED)

@@ -3,7 +3,6 @@ package io.github.honhimw.spring.cache;
 import io.github.honhimw.spring.cache.memory.CacheAlreadyRefreshEvent;
 import io.github.honhimw.spring.cache.memory.CacheContext;
 import io.github.honhimw.spring.cache.memory.RefreshableCache;
-import jakarta.annotation.Nonnull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEvent;
@@ -37,7 +36,7 @@ class RefreshableCacheHandler implements SmartApplicationListener, ApplicationEv
     }
 
     @Override
-    public boolean supportsEventType(@Nonnull Class<? extends ApplicationEvent> eventType) {
+    public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
         Set<Class<? extends ApplicationEvent>> refreshOnEvent = iCacheProperties.getRefreshOnEvent();
         if (CollectionUtils.isNotEmpty(refreshOnEvent)) {
             return refreshOnEvent.stream().anyMatch(aClass -> aClass.isAssignableFrom(eventType) && !CacheAlreadyRefreshEvent.class.isAssignableFrom(aClass));
@@ -47,7 +46,7 @@ class RefreshableCacheHandler implements SmartApplicationListener, ApplicationEv
     }
 
     @Override
-    public void onApplicationEvent(@Nonnull ApplicationEvent event) {
+    public void onApplicationEvent(ApplicationEvent event) {
         synchronized (this) {
             CacheContext context = new CacheContext(event);
             try {

@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.extend;
 
 import io.github.honhimw.util.tool.NamingThreadFactory;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.web.reactive.config.BlockingExecutionConfigurer;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadFactory;
 public class AsyncBlockingExecutionConfig implements WebFluxConfigurer {
 
     @Override
-    public void configureBlockingExecution(@Nonnull BlockingExecutionConfigurer configurer) {
+    public void configureBlockingExecution(@NonNull BlockingExecutionConfigurer configurer) {
         configurer.setExecutor(new VirtualThreadTaskExecutor("loom-rx-"));
     }
 
@@ -35,7 +35,7 @@ public class AsyncBlockingExecutionConfig implements WebFluxConfigurer {
             return this.virtualThreadFactory;
         }
 
-        public void execute(@Nonnull Runnable task) {
+        public void execute(@NonNull Runnable task) {
             this.virtualThreadFactory.newThread(task).start();
         }
     }

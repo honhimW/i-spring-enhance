@@ -1,7 +1,7 @@
 package io.github.honhimw.spring;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -24,11 +24,11 @@ public class SpringBeanUtils implements ApplicationContextAware {
     private static ApplicationContext _context;
 
     @Override
-    public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
+    public void setApplicationContext(@NonNull ApplicationContext context) throws BeansException {
         SpringBeanUtils._context = context;
     }
 
-    @Nonnull
+    @NonNull
     public static ApplicationContext getApplicationContext() {
         if (_context == null) {
             throw new IllegalStateException("Spring context is not available, either this is not a Spring application or the context has not yet been initialized.");
@@ -73,7 +73,7 @@ public class SpringBeanUtils implements ApplicationContextAware {
      * @param <T>   bean type
      * @return bean provider
      */
-    @Nonnull
+    @NonNull
     public static <T> ObjectProvider<T> getBeanProvider(Class<T> clazz) {
         if (_context == null) {
             return EmptyObjectProvider.getInstance();

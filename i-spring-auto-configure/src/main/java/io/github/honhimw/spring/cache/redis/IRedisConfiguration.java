@@ -5,7 +5,7 @@ import io.github.honhimw.spring.cache.ICacheProperties;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactory;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisJacksonTemplateFactoryImpl;
 import io.github.honhimw.spring.cache.redis.reactive.R2edisUtils;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

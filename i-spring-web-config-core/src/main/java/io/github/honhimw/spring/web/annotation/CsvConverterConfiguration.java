@@ -7,7 +7,7 @@ import io.github.honhimw.spring.web.common.resolver.CsvPartMessageConverterProce
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvJackson2Encoder;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveFileResultHandler;
 import io.github.honhimw.spring.web.common.resolver.reactive.CsvReactiveParamResolver;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -49,17 +49,17 @@ class CsvConverterConfiguration {
             CsvPartMessageConverterProcessor csvPartMessageConverterProcessor = new CsvPartMessageConverterProcessor(List.of(converter));
             return new WebMvcConfigurer() {
                 @Override
-                public void addArgumentResolvers(@Nonnull List<HandlerMethodArgumentResolver> resolvers) {
+                public void addArgumentResolvers(@NonNull List<HandlerMethodArgumentResolver> resolvers) {
                     resolvers.add(csvPartMessageConverterProcessor);
                 }
 
                 @Override
-                public void addReturnValueHandlers(@Nonnull List<HandlerMethodReturnValueHandler> handlers) {
+                public void addReturnValueHandlers(@NonNull List<HandlerMethodReturnValueHandler> handlers) {
                     handlers.add(csvPartMessageConverterProcessor);
                 }
 
                 @Override
-                public void extendMessageConverters(@Nonnull List<HttpMessageConverter<?>> converters) {
+                public void extendMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
                     converters.add(converter);
                 }
             };
@@ -83,12 +83,12 @@ class CsvConverterConfiguration {
         WebFluxConfigurer webFluxCsvConverterConfiguration(ObjectMapper objectMapper) {
             return new WebFluxConfigurer() {
                 @Override
-                public void configureArgumentResolvers(@Nonnull ArgumentResolverConfigurer configurer) {
+                public void configureArgumentResolvers(@NonNull ArgumentResolverConfigurer configurer) {
                     configurer.addCustomResolver(new CsvReactiveParamResolver(objectMapper));
                 }
 
                 @Override
-                public void configureHttpMessageCodecs(@Nonnull ServerCodecConfigurer configurer) {
+                public void configureHttpMessageCodecs(@NonNull ServerCodecConfigurer configurer) {
                     configurer.customCodecs().registerWithDefaultConfig(new CsvJackson2Encoder(objectMapper));
                 }
             };

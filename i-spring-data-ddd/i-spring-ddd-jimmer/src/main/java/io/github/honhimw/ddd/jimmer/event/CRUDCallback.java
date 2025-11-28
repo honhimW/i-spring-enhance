@@ -1,11 +1,12 @@
 package io.github.honhimw.ddd.jimmer.event;
 
-import io.github.honhimw.ddd.common.*;
+import io.github.honhimw.ddd.common.DaoAction;
+import io.github.honhimw.ddd.common.DomainEvent;
+import io.github.honhimw.ddd.common.LogicDelete;
+import io.github.honhimw.ddd.common.SelectEvent;
 import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.meta.ImmutableType;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.util.Optional;
 
 /**
  * @author honhimW
@@ -33,7 +34,7 @@ public class CRUDCallback implements Callback {
     @Override
     public void preUpdate(Object entity) {
         if (entity instanceof LogicDelete logicDeleteEntity) {
-            if (logicDeleteEntity.isDeleted()) {
+            if (ImmutableObjects.isLoaded(entity, "deleted") && logicDeleteEntity.isDeleted()) {
                 publishPreEvent(entity, DaoAction.LOGIC_DELETE);
                 return;
             }
@@ -44,7 +45,7 @@ public class CRUDCallback implements Callback {
     @Override
     public void postUpdate(Object entity) {
         if (entity instanceof LogicDelete logicDeleteEntity) {
-            if (logicDeleteEntity.isDeleted()) {
+            if (ImmutableObjects.isLoaded(entity, "deleted") && logicDeleteEntity.isDeleted()) {
                 publishPostEvent(entity, DaoAction.LOGIC_DELETE);
                 return;
             }

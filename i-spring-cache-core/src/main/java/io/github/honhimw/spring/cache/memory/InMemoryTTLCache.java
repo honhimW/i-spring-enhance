@@ -1,8 +1,8 @@
 package io.github.honhimw.spring.cache.memory;
 
 import io.github.honhimw.spring.cache.TTLCache;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -90,7 +90,7 @@ public final class InMemoryTTLCache<K, V> implements Map<K, V>, TTLCache<K, V> {
             _map.compute(key, (k, vEntry) -> {
                 cancelPrevTask(k, vEntry);
                 AtomicReference<ScheduledFuture<?>> futureReference = new AtomicReference<>(NoOpScheduledFuture.getInstance());
-                return new Entry<V>(expireAt, value, futureReference);
+                return new Entry<>(expireAt, value, futureReference);
             });
         }
     }
@@ -196,7 +196,7 @@ public final class InMemoryTTLCache<K, V> implements Map<K, V>, TTLCache<K, V> {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public Set<K> keySet() {
         return _map.keySet();
     }

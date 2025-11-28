@@ -1,9 +1,7 @@
 plugins {
     id 'org.springframework.boot' version libs.versions.spring.boot.dependencies
+    id 'i.spring.library'
 }
-
-apply from: rootProject.file('buildSrc/library.gradle')
-apply plugin: 'org.springframework.boot'
 
 dependencies {
     implementation platform(project(':i-spring-enhance-bom'))
@@ -27,12 +25,13 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-toml'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     runtimeOnly 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     runtimeOnly 'org.springframework.cloud:spring-cloud-starter-bootstrap'
     runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-config'
-    runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery' exclude group: 'commons-logging', module: 'commons-logging'
+    runtimeOnly 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
     implementation 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
 
@@ -40,7 +39,7 @@ dependencies {
     annotationProcessor 'org.mapstruct:mapstruct-processor'
     annotationProcessor 'org.mapstruct:mapstruct-jdk8'
 
-    annotationProcessor 'org.babyfish.jimmer:jimmer-apt'
+    annotationProcessor 'io.github.honhimw:jimmer-apt'
 
     implementation('ch.qos.logback:logback-classic')
     testImplementation('org.springframework.cloud:spring-cloud-starter-openfeign')

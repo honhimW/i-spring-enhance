@@ -2,7 +2,7 @@ package io.github.honhimw.spring.extend;
 
 import io.github.honhimw.spring.BuildIn;
 import io.github.honhimw.spring.ReBuildInEvent;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationEvent;
@@ -28,19 +28,19 @@ class BuildInConfig implements SmartApplicationListener, ApplicationEventPublish
     }
 
     @Override
-    public boolean supportsEventType(@Nonnull Class<? extends ApplicationEvent> eventType) {
+    public boolean supportsEventType(@NonNull Class<? extends ApplicationEvent> eventType) {
         return ReBuildInEvent.class.isAssignableFrom(eventType);
     }
 
     @Override
-    public void onApplicationEvent(@Nonnull ApplicationEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationEvent event) {
         synchronized (this) {
             setup();
         }
     }
 
     @Override
-    public void setApplicationEventPublisher(@Nonnull ApplicationEventPublisher applicationEventPublisher) {
+    public void setApplicationEventPublisher(@NonNull ApplicationEventPublisher applicationEventPublisher) {
         publisher = applicationEventPublisher;
     }
 

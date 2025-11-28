@@ -2,7 +2,7 @@ package io.github.honhimw.ddd.jpa.acl;
 
 import io.github.honhimw.ddd.common.AclDataDomain;
 import io.github.honhimw.ddd.common.ResourceMod;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.Path;
@@ -63,9 +63,9 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      * ===================================================================================================
      */
 
-    @Nonnull
+    @NonNull
     @Override
-    protected <S extends T> TypedQuery<S> getQuery(Specification<S> spec, @Nonnull Class<S> domainClass, @Nonnull Sort sort) {
+    protected <S extends T> TypedQuery<S> getQuery(Specification<S> spec, @NonNull Class<S> domainClass, @NonNull Sort sort) {
         if (read) {
             Specification<S> aclReadSpec = aclExecutor.read();
             if (Objects.nonNull(aclReadSpec)) {
@@ -75,9 +75,9 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
         return super.getQuery(spec, domainClass, sort);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected <S extends T> TypedQuery<Long> getCountQuery(Specification<S> spec, @Nonnull Class<S> domainClass) {
+    protected <S extends T> TypedQuery<Long> getCountQuery(Specification<S> spec, @NonNull Class<S> domainClass) {
         if (read) {
             Specification<S> aclReadSpec = aclExecutor.read();
             if (Objects.nonNull(aclReadSpec)) {
@@ -95,9 +95,9 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      * ===================================================================================================
      */
 
-    @Nonnull
+    @NonNull
     @Override
-    public Optional<T> findById(@Nonnull ID id) {
+    public Optional<T> findById(@NonNull ID id) {
         if (read) {
             Specification<T> spec = (root, query, criteriaBuilder) -> {
                 Path<?> path = root.get(ei.getIdAttribute());
@@ -119,7 +119,7 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      */
 
     @Override
-    public boolean exists(@Nonnull Specification<T> spec) {
+    public boolean exists(@NonNull Specification<T> spec) {
         if (read) {
             Specification<T> aclReadSpec = aclExecutor.read();
             if (Objects.nonNull(aclReadSpec)) {
@@ -130,7 +130,7 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
     }
 
     @Override
-    public boolean existsById(@Nonnull ID id) {
+    public boolean existsById(@NonNull ID id) {
         if (read) {
             Specification<T> spec = (root, query, criteriaBuilder) -> {
                 Path<?> path = root.get(ei.getIdAttribute());
@@ -150,9 +150,9 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      * ===================================================================================================
      */
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends T> S save(@Nonnull S entity) {
+    public <S extends T> S save(@NonNull S entity) {
         if (write) {
             aclExecutor.write();
         }
@@ -184,7 +184,7 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      */
 
     @Override
-    public void deleteById(@Nonnull ID id) {
+    public void deleteById(@NonNull ID id) {
         if (write) {
             aclExecutor.write();
         }
@@ -203,12 +203,12 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      * @param entity must not be {@literal null}.
      */
     @Override
-    public void delete(@Nonnull T entity) {
+    public void delete(@NonNull T entity) {
         super.delete(entity);
     }
 
     @Override
-    public void deleteAllByIdInBatch(@Nonnull Iterable<ID> ids) {
+    public void deleteAllByIdInBatch(@NonNull Iterable<ID> ids) {
         if (write) {
             aclExecutor.write();
         }
@@ -231,7 +231,7 @@ public class AclJpaRepositoryImpl<T, ID> extends SimpleJpaRepository<T, ID> {
      * @param entities entities to be deleted. Must not be {@literal null}.
      */
     @Override
-    public void deleteAllInBatch(@Nonnull Iterable<T> entities) {
+    public void deleteAllInBatch(@NonNull Iterable<T> entities) {
         super.deleteAllInBatch(entities);
     }
 

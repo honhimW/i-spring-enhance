@@ -158,20 +158,16 @@ public class FtpUtils {
         public void read(String ftpFile, OutputStream ops) throws IOException {
             checkConnection();
             ftpFile = rencode2ISO(ftpFile);
-            try {
+            try (ops) {
                 ftpClient.retrieveFile(ftpFile, ops);
-            } finally {
-                ops.close();
             }
         }
 
         public void write(String ftpFile, InputStream ips) throws IOException {
             checkConnection();
             ftpFile = rencode2ISO(ftpFile);
-            try {
+            try (ips) {
                 ftpClient.storeFile(ftpFile, ips);
-            } finally {
-                ips.close();
             }
         }
 

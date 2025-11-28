@@ -3,7 +3,7 @@ package io.github.honhimw.example.domain.jimmer;
 import io.github.honhimw.ddd.common.ResourceMod;
 import io.github.honhimw.ddd.jimmer.acl.AclExecutor;
 import io.github.honhimw.ddd.jimmer.acl.AclProvider;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class TestAclProvider implements AclProvider {
     @Override
-    @Nonnull
+    @NonNull
     public AclExecutor getExecutor(
         JSqlClientImplementor sqlClient,
         TableProxy<?> tableProxy,

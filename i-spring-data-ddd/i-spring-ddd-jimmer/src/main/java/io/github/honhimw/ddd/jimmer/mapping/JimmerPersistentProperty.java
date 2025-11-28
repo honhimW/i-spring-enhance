@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.mapping;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.springframework.data.mapping.PersistentProperty;
 

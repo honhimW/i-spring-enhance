@@ -2,7 +2,7 @@ package io.github.honhimw.ddd.jimmer.domain;
 
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.IProps;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
 import org.babyfish.jimmer.sql.ast.mutation.MutableDelete;
@@ -53,7 +53,7 @@ public interface Specification {
 
     }
 
-    static Specification.Query where(@Nullable Specification.Query spec) {
+    static Specification.Query where(Specification.@Nullable Query spec) {
         return spec == null ? (root, query, fetcher) -> null : spec;
     }
 

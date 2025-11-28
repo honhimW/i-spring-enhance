@@ -2,7 +2,7 @@ package io.github.honhimw.spring.web.common.resolver.reactive;
 
 import io.github.honhimw.spring.web.reactive.AbstractReactiveFileResultHandler;
 import io.github.honhimw.spring.web.util.MimeTypeSupports;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapter;
 import org.springframework.http.codec.HttpMessageWriter;
@@ -26,7 +26,7 @@ public class CsvReactiveFileResultHandler extends AbstractReactiveFileResultHand
     }
 
     @Override
-    public boolean supports(@Nonnull HandlerResult result) {
+    public boolean supports(@NonNull HandlerResult result) {
         return super.supports(result) &&
                checkParameterType(result, Collection.class::isAssignableFrom);
     }

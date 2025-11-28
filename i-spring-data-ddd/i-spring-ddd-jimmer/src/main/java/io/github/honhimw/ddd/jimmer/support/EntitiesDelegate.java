@@ -7,7 +7,7 @@ import org.babyfish.jimmer.sql.Entities;
 import org.babyfish.jimmer.sql.ast.mutation.*;
 import org.babyfish.jimmer.sql.ast.query.Example;
 import org.babyfish.jimmer.sql.fetcher.Fetcher;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +29,7 @@ public class EntitiesDelegate implements Entities {
         this.delegate = delegate;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Entities forUpdate() {
         return delegate.forUpdate();

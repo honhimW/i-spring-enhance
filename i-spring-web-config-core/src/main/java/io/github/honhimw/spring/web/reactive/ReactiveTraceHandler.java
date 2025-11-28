@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.reactive;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,9 +56,9 @@ public class ReactiveTraceHandler extends AbstractThreadLocalHttpHandler<Map<Str
         this.traceKey = traceKey;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> handle(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response) {
+    public Mono<Void> handle(@NonNull ServerHttpRequest request, @NonNull ServerHttpResponse response) {
         String traceId = StringUtils.getIfBlank(request.getHeaders().getFirst(traceHeader), () -> RandomStringUtils.secureStrong().nextAlphanumeric(length));
         final ServerHttpRequest _request = request.mutate().headers(httpHeaders -> httpHeaders.add(traceHeader, traceId)).build();
         response.getHeaders().add(traceHeader, traceId);
@@ -66,19 +66,19 @@ public class ReactiveTraceHandler extends AbstractThreadLocalHttpHandler<Map<Str
             .contextWrite(context -> contextWriter.apply(context, Map.of(traceKey, traceId)));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Supplier<Map<String, String>> doGet() {
         return MDC::getCopyOfContextMap;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Consumer<Map<String, String>> doSet() {
         return MDC::setContextMap;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Runnable doRemove() {
         return MDC::clear;

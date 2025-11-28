@@ -2,6 +2,7 @@ package io.github.honhimw.ddd.jimmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.ddd.jimmer.event.Callback;
+import io.github.honhimw.ddd.jimmer.persist.PersistenceManagedTypes;
 import io.github.honhimw.ddd.jimmer.support.DialectDetector;
 import io.github.honhimw.ddd.jimmer.support.SpringConnectionManager;
 import io.github.honhimw.ddd.jimmer.support.SpringMetaStringResolver;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.config.EmbeddedValueResolver;
 
 import javax.sql.DataSource;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -83,6 +85,8 @@ public class JSqlClientFactoryBuilder {
     private Collection<Initializer> initializers;
 
     private Callback callback;
+
+    private PersistenceManagedTypes persistenceManagedTypes;
 
     public JSqlClientFactoryBuilder(JimmerProperties properties) {
         this.properties = properties;
@@ -241,6 +245,12 @@ public class JSqlClientFactoryBuilder {
         return this;
     }
 
+    @Autowired
+    public JSqlClientFactoryBuilder persistenceManagedTypes(ObjectProvider<PersistenceManagedTypes> provider) {
+        this.persistenceManagedTypes = provider.getIfAvailable(() -> new PersistenceManagedTypes(Collections.emptyList(), Collections.emptyList()));
+        return this;
+    }
+
     public JSqlClientFactoryBean build() {
         return new JSqlClientFactoryBean(
             properties,
@@ -267,8 +277,9 @@ public class JSqlClientFactoryBuilder {
             filters,
             customizers,
             initializers,
-            callback
-        ) {};
+            callback,
+            persistenceManagedTypes
+        );
     }
     
 }

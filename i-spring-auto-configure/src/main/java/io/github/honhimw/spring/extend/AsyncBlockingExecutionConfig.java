@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.extend;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.reactive.config.BlockingExecutionConfigurer;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
@@ -12,7 +12,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 public class AsyncBlockingExecutionConfig implements WebFluxConfigurer {
 
     @Override
-    public void configureBlockingExecution(@Nonnull BlockingExecutionConfigurer configurer) {
+    public void configureBlockingExecution(@NonNull BlockingExecutionConfigurer configurer) {
     }
 
 }

@@ -1,5 +1,6 @@
 package io.github.honhimw.spring.web.common;
 
+import io.github.honhimw.util.tool.ErrorStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,11 @@ public abstract class AbstractFallbackHandler {
 
     private boolean printStacktrace = true;
 
+    protected int maxStackTraceDepth = 20;
+
     protected void log(Throwable throwable) {
+        ErrorStack errorStack = new ErrorStack(throwable, this.maxStackTraceDepth);
+        log.warn("Debug Stack: {}", errorStack);
         if (printStacktrace()) {
             log.warn(throwable.toString(), throwable);
         } else {

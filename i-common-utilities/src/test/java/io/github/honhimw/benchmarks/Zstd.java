@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Require implementation 'com.github.luben:zstd-jni'
+ *
  * @author hon_him
  * @since 2024-12-20
  */
@@ -31,7 +32,7 @@ public class Zstd extends ApacheBase {
 
     @Override
     protected CompressorOutputStream<?> createCompressorOutputStream(ByteArrayOutputStream baops) throws Exception {
-        return new ZstdCompressorOutputStream(baops, level, true);
+        return ZstdCompressorOutputStream.builder().setOutputStream(baops).setLevel(level).setCloseFrameOnFlush(true).get();
     }
 
 }

@@ -1,6 +1,6 @@
 package io.github.honhimw.util.tool;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.ThreadFactory;
 
@@ -18,7 +18,7 @@ public class DelegateThreadFactory implements ThreadFactory {
     }
 
     @Override
-    public Thread newThread(@Nonnull Runnable r) {
+    public Thread newThread(@NonNull Runnable r) {
         return delegate.newThread(r);
     }
 

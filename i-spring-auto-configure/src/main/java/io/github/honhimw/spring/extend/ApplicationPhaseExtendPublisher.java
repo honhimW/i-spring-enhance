@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.extend;
 
 import io.github.honhimw.spring.event.ApplicationBeanReadyEvent;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationContext;
@@ -22,7 +22,7 @@ public class ApplicationPhaseExtendPublisher implements ApplicationContextAware,
     }
 
     @Override
-    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
         this.context = applicationContext;
     }
 }

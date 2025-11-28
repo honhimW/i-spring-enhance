@@ -1,5 +1,8 @@
 package io.github.honhimw.util;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
+
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -14,6 +17,7 @@ import java.util.function.Function;
  * @since 2022-06-28
  */
 @SuppressWarnings("unused")
+@NullUnmarked
 public interface TypeMapping {
 
     TypeMapping INSTANCE = new TypeMapping() {
@@ -64,7 +68,7 @@ public interface TypeMapping {
     }
 
 
-    default <T, R> R nullSafety(T t, Function<T, R> function) {
+    default <T, R> R nullSafety(T t, @NonNull Function<T, R> function) {
         return Optional.ofNullable(t).map(function).orElse(null);
     }
 

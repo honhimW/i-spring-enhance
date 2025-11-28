@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * @author hon_him
@@ -120,6 +121,11 @@ public class Bytes {
         byte[] newBytes = new byte[stop - start];
         System.arraycopy(this.bytes, start, newBytes, start, stop - start);
         return wrap(newBytes);
+    }
+
+    public Bytes map(Function<byte[], byte[]> mapper) {
+        byte[] bytes = mapper.apply(this.bytes);
+        return wrap(bytes);
     }
 
     public String asString() {

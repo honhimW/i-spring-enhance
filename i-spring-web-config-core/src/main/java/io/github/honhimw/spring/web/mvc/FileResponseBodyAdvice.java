@@ -2,8 +2,8 @@ package io.github.honhimw.spring.web.mvc;
 
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.web.util.BodyWithReturnType;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -25,11 +25,11 @@ public class FileResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     @Nullable
     @Override
     public Object beforeBodyWrite(@Nullable Object body,
-                                  @Nonnull MethodParameter returnType,
-                                  @Nonnull MediaType selectedContentType,
-                                  @Nonnull Class<? extends HttpMessageConverter<?>> selectedConverterType,
-                                  @Nonnull ServerHttpRequest request,
-                                  @Nonnull ServerHttpResponse response) {
+                                  @NonNull MethodParameter returnType,
+                                  @NonNull MediaType selectedContentType,
+                                  @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                  @NonNull ServerHttpRequest request,
+                                  @NonNull ServerHttpResponse response) {
         if (body instanceof BodyWithReturnType) {
             return body;
         } else {

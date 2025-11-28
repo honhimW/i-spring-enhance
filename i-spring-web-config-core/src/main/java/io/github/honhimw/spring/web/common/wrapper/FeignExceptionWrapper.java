@@ -2,7 +2,7 @@ package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
 import feign.FeignException;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -12,14 +12,14 @@ import org.springframework.http.HttpStatus;
 
 public class FeignExceptionWrapper extends SingleExceptionWrapper<FeignException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull FeignException e) {
+    protected String _wrap(@NonNull FeignException e) {
         return "{feign.error}";
     }
 
     @Override
-    protected int _httpCode(@Nonnull FeignException e) {
+    protected int _httpCode(@NonNull FeignException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

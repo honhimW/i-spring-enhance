@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.apache.commons.lang3.Strings;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -14,16 +14,16 @@ import org.springframework.http.HttpStatus;
 public class SpringDataExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
-    public boolean support(@Nonnull Throwable e) {
+    public boolean support(@NonNull Throwable e) {
         return e instanceof DataAccessException
             || (Strings.CS.startsWith(e.getClass().getPackage().getName(), "org.springframework.dao"))
             || (Strings.CS.startsWith(e.getClass().getPackage().getName(), "org.springframework.transaction"))
             ;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public String wrap(@Nonnull Throwable e) {
+    public String wrap(@NonNull Throwable e) {
         return "{database.error}";
     }
 

@@ -19,8 +19,8 @@ import java.util.function.Function;
 
 @Getter
 @Setter
-@Entity(name = "player")
-@Table(name = "player")
+//@Entity(name = "player")
+//@Table(name = "player")
 public class PlayerDO extends AbstractLogicDeleteAR<PlayerDO, String> {
 
     @Id
@@ -38,6 +38,9 @@ public class PlayerDO extends AbstractLogicDeleteAR<PlayerDO, String> {
 
     @Column(name = "age")
     private Integer age;
+
+    @Column(name = "bigflags")
+    private Integer bigflags;
 
     @Embedded
     private SBD sbd;

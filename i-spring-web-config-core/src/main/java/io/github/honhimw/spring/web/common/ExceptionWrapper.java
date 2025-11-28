@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.common;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public interface ExceptionWrapper extends Ordered {
      * @param e Exception
      * @return wrap if true, pass if false
      */
-    boolean support(@Nonnull Throwable e);
+    boolean support(@NonNull Throwable e);
 
     /**
      * Wrap exception as an result
@@ -30,8 +30,8 @@ public interface ExceptionWrapper extends Ordered {
      * @param e the very exception that supported
      * @return the wrapped result should contain exception information
      */
-    @Nonnull
-    Object wrap(@Nonnull Throwable e);
+    @NonNull
+    Object wrap(@NonNull Throwable e);
 
     /**
      * Only the supported exception by current ExceptionWrapper would be invoke,
@@ -71,13 +71,13 @@ public interface ExceptionWrapper extends Ordered {
 
     ExceptionWrapper DEFAULT = new ExceptionWrapper.MessageExceptionWrapper() {
         @Override
-        public boolean support(@Nonnull Throwable e) {
+        public boolean support(@NonNull Throwable e) {
             return true;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        public String wrap(@Nonnull Throwable e) {
+        public String wrap(@NonNull Throwable e) {
             return Optional.ofNullable(MDC.get("traceId"))
                 .map(traceId -> UNKNOWN_ERROR + ", TRACE: " + traceId)
                 .orElse(UNKNOWN_ERROR);
@@ -94,9 +94,9 @@ public interface ExceptionWrapper extends Ordered {
      * Marker interface
      */
     interface MessageExceptionWrapper extends ExceptionWrapper {
-        @Nonnull
+        @NonNull
         @Override
-        default String wrap(@Nonnull Throwable e) {
+        default String wrap(@NonNull Throwable e) {
             return e.getMessage();
         }
     }
@@ -112,8 +112,8 @@ public interface ExceptionWrapper extends Ordered {
      * </pre>
      */
     interface MessageFormatter {
-        @Nonnull
-        Object format(int httpCode, @Nonnull String message);
+        @NonNull
+        Object format(int httpCode, @NonNull String message);
     }
 
 }

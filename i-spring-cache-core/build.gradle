@@ -5,11 +5,9 @@ dependencies {
     compileOnly('javax.cache:cache-api')
     compileOnly('com.github.ben-manes.caffeine:caffeine')
 
-    testImplementation('org.projectlombok:lombok')
     testImplementation(project(':i-common-utilities'))
     testImplementation 'org.springframework.boot:spring-boot-starter-websocket'
     testImplementation('org.springframework.boot:spring-boot-starter-web')
     testImplementation('org.springframework.boot:spring-boot-starter-data-redis')
     testImplementation('org.slf4j:slf4j-simple')
-    testAnnotationProcessor 'org.projectlombok:lombok'
 }

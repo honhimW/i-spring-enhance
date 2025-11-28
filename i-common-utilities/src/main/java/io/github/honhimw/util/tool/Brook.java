@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import io.github.honhimw.util.tool.Lambdas.*;
 
 /**
  * Allow non-runtime exception and no return value operation of {@link Optional}
@@ -17,27 +18,6 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 @Slf4j
 public final class Brook<O> {
-
-    @FunctionalInterface
-    public interface Fun<T, R, E extends Exception> {
-        R apply(T t) throws E;
-    }
-
-    @FunctionalInterface
-    public interface Sup<R, E extends Exception> {
-        R get() throws E;
-    }
-
-    @FunctionalInterface
-    public interface Con<T, E extends Exception> {
-        void accept(T t) throws E;
-    }
-
-
-    @FunctionalInterface
-    public interface BiFun<T, U, R, E extends Exception> {
-        R apply(T t, U u) throws E;
-    }
 
     public static <T> Brook<T> with(T value) {
         return new Brook<>(value, null);
@@ -89,40 +69,40 @@ public final class Brook<O> {
         return new Brook<>(this.value, this.exception);
     }
 
-    public <R, E extends Exception> Brook<R> map(Fun<O, R, E> fun) {
-        Objects.requireNonNull(fun);
+    public <R, E extends Exception> Brook<R> map(Fn<O, R, E> fn) {
+        Objects.requireNonNull(fn);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                return constructNext(fun.apply(value));
+                return constructNext(fn.apply(value));
             } catch (Exception e) {
                 return constructError(e);
             }
         }
     }
 
-    public <R, E extends Exception> Brook<R> flatMap(Fun<O, Brook<R>, E> fun) {
-        Objects.requireNonNull(fun);
+    public <R, E extends Exception> Brook<R> flatMap(Fn<O, Brook<R>, E> fn) {
+        Objects.requireNonNull(fn);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                return fun.apply(value);
+                return fn.apply(value);
             } catch (Exception e) {
                 return constructError(e);
             }
         }
     }
 
-    public <R, E extends Exception> Brook<R> mapAndThrow(Fun<O, R, Exception> fun, Fun<Exception, E, E> boxErr) throws E {
-        Objects.requireNonNull(fun);
+    public <R, E extends Exception> Brook<R> mapAndThrow(Fn<O, R, Exception> fn, Fn<Exception, E, E> boxErr) throws E {
+        Objects.requireNonNull(fn);
         Objects.requireNonNull(boxErr);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                return constructNext(fun.apply(value));
+                return constructNext(fn.apply(value));
             } catch (Exception e) {
                 throw boxErr.apply(e);
             }
@@ -130,16 +110,16 @@ public final class Brook<O> {
     }
 
     /**
-     * If the condition does not meet, the data will be lost, combined with {@link #fissionFuns(Fun[])}
+     * If the condition does not meet, the data will be lost, combined with {@link #fissionFuns(Fn[])}
      */
-    public <R, E extends Exception> Brook<R> mapWhen(Predicate<O> p, Fun<O, R, Exception> fun) {
+    public <R, E extends Exception> Brook<R> mapWhen(Predicate<O> p, Fn<O, R, Exception> fn) {
         Objects.requireNonNull(p);
-        Objects.requireNonNull(fun);
+        Objects.requireNonNull(fn);
         if (!isPresent()) {
             return empty();
         } else {
             if (p.test(value)) {
-                return map(fun);
+                return map(fn);
             } else {
                 return empty();
             }
@@ -159,13 +139,13 @@ public final class Brook<O> {
         }
     }
 
-    public <R, E extends Exception> Brook<R> flatOptional(Fun<O, Optional<R>, E> fun) {
-        Objects.requireNonNull(fun);
+    public <R, E extends Exception> Brook<R> flatOptional(Fn<O, Optional<R>, E> fn) {
+        Objects.requireNonNull(fn);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                return fromOptional(fun.apply(value));
+                return fromOptional(fn.apply(value));
             } catch (Exception e) {
                 return constructError(e);
             }
@@ -182,13 +162,13 @@ public final class Brook<O> {
         return empty();
     }
 
-    public <E extends Exception> Brook<O> exec(Con<O, E> con) {
-        Objects.requireNonNull(con);
+    public <E extends Exception> Brook<O> exec(Cs<O, E> cs) {
+        Objects.requireNonNull(cs);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                con.accept(value);
+                cs.accept(value);
                 return this;
             } catch (Exception e) {
                 return constructError(e);
@@ -196,15 +176,15 @@ public final class Brook<O> {
         }
     }
 
-    public <E extends Exception> Brook<O> execWhen(Predicate<O> predicate, Con<O, E> con) {
+    public <E extends Exception> Brook<O> execWhen(Predicate<O> predicate, Cs<O, E> cs) {
         Objects.requireNonNull(predicate);
-        Objects.requireNonNull(con);
+        Objects.requireNonNull(cs);
         if (!isPresent()) {
             return empty();
         } else {
             try {
                 if (predicate.test(value)) {
-                    con.accept(value);
+                    cs.accept(value);
                 }
                 return this;
             } catch (Exception e) {
@@ -214,14 +194,14 @@ public final class Brook<O> {
     }
 
     @SafeVarargs
-    public final <E extends Exception> Brook<O> fissionCons(Con<Brook<O>, E>... cons) {
-        Objects.requireNonNull(cons);
+    public final <E extends Exception> Brook<O> fissionCons(Cs<Brook<O>, E>... css) {
+        Objects.requireNonNull(css);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                for (Con<Brook<O>, E> con : cons) {
-                    con.accept(this);
+                for (Cs<Brook<O>, E> cs : css) {
+                    cs.accept(this);
                 }
                 return this;
             } catch (Exception e) {
@@ -230,13 +210,13 @@ public final class Brook<O> {
         }
     }
 
-    public <R, E extends Exception> Brook<R> fission(Fun<Brook<O>, Brook<R>, E> fun) {
-        Objects.requireNonNull(fun);
+    public <R, E extends Exception> Brook<R> fission(Fn<Brook<O>, Brook<R>, E> fn) {
+        Objects.requireNonNull(fn);
         if (!isPresent()) {
             return empty();
         } else {
             try {
-                Brook<R> apply = fun.apply(this);
+                Brook<R> apply = fn.apply(this);
                 return Objects.isNull(apply) ? empty() : apply;
             } catch (Exception e) {
                 return constructError(e);
@@ -248,15 +228,15 @@ public final class Brook<O> {
      * Switch like operation, return the value or error once it is obtained
      */
     @SafeVarargs
-    public final <R, E extends Exception> Brook<R> fissionFuns(Fun<Brook<O>, Brook<? extends R>, E>... funs) {
-        Objects.requireNonNull(funs);
+    public final <R, E extends Exception> Brook<R> fissionFuns(Fn<Brook<O>, Brook<? extends R>, E>... fns) {
+        Objects.requireNonNull(fns);
         if (!isPresent()) {
             return empty();
         } else {
             try {
                 Brook<? extends R> apply = null;
-                for (Fun<Brook<O>, Brook<? extends R>, E> fun : funs) {
-                    apply = fun.apply(this);
+                for (Fn<Brook<O>, Brook<? extends R>, E> fn : fns) {
+                    apply = fn.apply(this);
                     if (apply.isPresent() || apply.isErr()) {
                         break;
                     }
@@ -268,41 +248,41 @@ public final class Brook<O> {
         }
     }
 
-    public <R extends Exception, E extends Exception> Brook<O> breakPoint(Fun<Exception, R, E> fun) throws R, E {
+    public <R extends Exception, E extends Exception> Brook<O> breakPoint(Fn<Exception, R, E> fn) throws R, E {
         if (isPresent()) {
             return this;
         } else {
             if (isErr()) {
-                throw fun.apply(exception);
+                throw fn.apply(exception);
             } else {
-                throw fun.apply(new NoSuchElementException("No value present"));
+                throw fn.apply(new NoSuchElementException("No value present"));
             }
         }
     }
 
-    public <R extends Exception, E extends Exception> Brook<O> breakPoint(Predicate<O> predicate, Fun<O, R, E> fun) throws R, E {
+    public <R extends Exception, E extends Exception> Brook<O> breakPoint(Predicate<O> predicate, Fn<O, R, E> fn) throws R, E {
         Objects.requireNonNull(predicate);
-        Objects.requireNonNull(fun);
+        Objects.requireNonNull(fn);
         if (isPresent()) {
             if (predicate.test(value)) {
-                throw fun.apply(value);
+                throw fn.apply(value);
             }
         }
         return this;
     }
 
-    public Brook<O> errExec(Con<Exception, Exception> con) {
-        Objects.requireNonNull(con);
+    public Brook<O> errExec(Cs<Exception, Exception> cs) {
+        Objects.requireNonNull(cs);
         if (isErr()) {
             try {
-                con.accept(exception);
+                cs.accept(exception);
             } catch (Exception ignored) {
             }
         }
         return this;
     }
 
-    public Brook<O> errReset(Fun<Exception, O, Exception> errMap) {
+    public Brook<O> errReset(Fn<Exception, O, Exception> errMap) {
         Objects.requireNonNull(errMap);
         if (isErr()) {
             try {
@@ -314,7 +294,7 @@ public final class Brook<O> {
         return this;
     }
 
-    public <E extends Exception> Brook<O> errReset(Class<E> errType, Fun<E, O, Exception> errMap) {
+    public <E extends Exception> Brook<O> errReset(Class<E> errType, Fn<E, O, Exception> errMap) {
         Objects.requireNonNull(errType);
         Objects.requireNonNull(errMap);
         if (isErr()) {
@@ -364,42 +344,42 @@ public final class Brook<O> {
         }
     }
 
-    public O orElse(Sup<O, RuntimeException> sup) {
+    public O orElse(Sp<O, RuntimeException> sp) {
         if (Objects.nonNull(value)) {
             return value;
         } else {
-            return sup.get();
+            return sp.get();
         }
     }
 
-    public <E extends Exception> O errElse(Fun<Exception, O, E> fun) throws E {
+    public <E extends Exception> O errElse(Fn<Exception, O, E> fn) throws E {
         if (isPresent()) {
             return value;
         } else {
             if (isErr()) {
-                return fun.apply(exception);
+                return fn.apply(exception);
             } else {
-                return fun.apply(new NoSuchElementException("No value present"));
+                return fn.apply(new NoSuchElementException("No value present"));
             }
         }
     }
 
-    public <R extends Exception, E extends Exception> O orElseThrow(Sup<R, E> sup) throws E, R {
+    public <R extends Exception, E extends Exception> O orElseThrow(Sp<R, E> sp) throws E, R {
         if (isPresent()) {
             return value;
         } else {
-            throw sup.get();
+            throw sp.get();
         }
     }
 
-    public <R extends Exception, E extends Exception> O errElseThrow(Fun<Exception, R, E> fun) throws E, R {
+    public <R extends Exception, E extends Exception> O errElseThrow(Fn<Exception, R, E> fn) throws E, R {
         if (isPresent()) {
             return value;
         } else {
             if (isErr()) {
-                throw fun.apply(exception);
+                throw fn.apply(exception);
             } else {
-                throw fun.apply(new NoSuchElementException("No value present"));
+                throw fn.apply(new NoSuchElementException("No value present"));
             }
         }
     }

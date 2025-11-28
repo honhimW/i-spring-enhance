@@ -1,15 +1,15 @@
 spring:
-  datasource:
-    driver-class-name: org.h2.Driver
-    hikari:
-      maximum-pool-size: 50
-      minimum-idle: 2
-      idle-timeout: 30000
 #  datasource:
-#    driver-class-name: org.postgresql.Driver
-#    url: jdbc:postgresql://127.0.0.1:5432/tmp
-#    username: postgres
-#    password: testdb
+#    driver-class-name: org.h2.Driver
+#    hikari:
+#      maximum-pool-size: 50
+#      minimum-idle: 2
+#      idle-timeout: 30000
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/tmp
+    username: postgres
+    password: testdb
   data:
     web:
       pageable:
@@ -17,14 +17,16 @@ spring:
   jpa:
 #    show-sql: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
 
   jimmer:
     foreign-key-enabled-by-default: false
     default-enum-strategy: name
     log:
       enable: true
-      kind: simple
+      kind: default
       pretty: true
       inline-sql-variables: true
-    ddl-auto: create_drop
+      name: "jimmer.dml.sql"
+    ddl-auto: update
+    database-naming-strategy: lower_case

@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.cache.redis;
 
 import io.github.honhimw.spring.cache.TTLCache;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.Duration;

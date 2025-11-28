@@ -3,7 +3,7 @@ package io.github.honhimw.spring.web.mvc;
 import io.github.honhimw.spring.web.common.AbstractFallbackHandler;
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
 import io.github.honhimw.spring.web.common.ExceptionWrappers;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class FallbackHandlerExceptionResolver extends AbstractFallbackHandler im
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public ModelAndView resolveException(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, Object handler, @Nonnull Exception ex) {
+    public ModelAndView resolveException(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, Object handler, @NonNull Exception ex) {
         log(ex);
         try {
             ExceptionWrappers.Pair pair = exceptionWrappers.getWrapper(ex);

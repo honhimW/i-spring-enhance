@@ -2,7 +2,7 @@ package io.github.honhimw.spring.cache.redis.reactive;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
@@ -23,14 +23,14 @@ public interface R2edisJacksonTemplateFactory {
 
     ReactiveRedisTemplate<String, byte[]> bytes();
 
-    <V> ReactiveRedisTemplate<String, V> forType(@Nonnull Type type);
+    <V> ReactiveRedisTemplate<String, V> forType(@NonNull Type type);
 
-    <V> ReactiveRedisTemplate<String, V> forType(@Nonnull Class<V> type);
+    <V> ReactiveRedisTemplate<String, V> forType(@NonNull Class<V> type);
 
-    <V> ReactiveRedisTemplate<String, V> forType(@Nonnull JavaType type);
+    <V> ReactiveRedisTemplate<String, V> forType(@NonNull JavaType type);
 
     @SuppressWarnings("unchecked")
-    default <V> ReactiveRedisTemplate<String, V> forType(@Nonnull V value) {
+    default <V> ReactiveRedisTemplate<String, V> forType(@NonNull V value) {
         return forType((Class<V>) value.getClass());
     }
 

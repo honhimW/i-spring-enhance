@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.support;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.sql.dialect.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ import java.sql.SQLException;
 public interface DialectDetector {
 
     @Nullable
-    Dialect detectDialect(@Nonnull Connection con);
+    Dialect detectDialect(@NonNull Connection con);
 
     DialectDetector INSTANCE = new Impl();
 
@@ -33,7 +33,7 @@ public interface DialectDetector {
 
         @Nullable
         @Override
-        public Dialect detectDialect(@Nonnull Connection con) {
+        public Dialect detectDialect(@NonNull Connection con) {
             try {
                 String productName = JdbcUtils.commonDatabaseName(
                     extractDatabaseMetaData(con, DatabaseMetaData::getDatabaseProductName));
@@ -46,8 +46,8 @@ public interface DialectDetector {
         }
 
         private static <T> T extractDatabaseMetaData(
-            @Nonnull Connection con,
-            @Nonnull DatabaseMetaDataCallback<T> action
+            @NonNull Connection con,
+            @NonNull DatabaseMetaDataCallback<T> action
         ) throws MetaDataAccessException {
             try {
                 DatabaseMetaData metaData = con.getMetaData();
@@ -69,7 +69,7 @@ public interface DialectDetector {
     }
 
     @Nullable
-    static Dialect getDialectFromDriver(@Nonnull DatabaseDriver driver) {
+    static Dialect getDialectFromDriver(@NonNull DatabaseDriver driver) {
         return switch (driver) {
             case POSTGRESQL -> new PostgresDialect();
             case ORACLE -> new OracleDialect();

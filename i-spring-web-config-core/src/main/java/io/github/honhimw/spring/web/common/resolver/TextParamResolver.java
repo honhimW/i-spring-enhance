@@ -66,9 +66,6 @@ public class TextParamResolver extends BaseParamResolver {
         Assert.notNull(servletRequest, "servlet request should not be null.");
         Charset charset = Charset.forName(servletRequest.getCharacterEncoding());
 
-        Class<?> parameterType = parameter.getParameterType();
-        assertBaseType(parameterType);
-
         ObjectNode paramNode = jackson2HttpMessageConverter.getObjectMapper().createObjectNode();
 
         injectParameterMap(paramNode, parameterMap);

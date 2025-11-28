@@ -3,8 +3,8 @@ package io.github.honhimw.spring.web.common.resolver.reactive;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.web.reactive.WebFluxJackson2Encoder;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -29,11 +29,11 @@ public abstract class AbstractFileJackson2Encoder extends WebFluxJackson2Encoder
         super(mapper, mimeTypes);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public DataBuffer encodeValue(@Nonnull Object value,
-                                  @Nonnull DataBufferFactory bufferFactory,
-                                  @Nonnull ResolvableType valueType,
+    public DataBuffer encodeValue(@NonNull Object value,
+                                  @NonNull DataBufferFactory bufferFactory,
+                                  @NonNull ResolvableType valueType,
                                   @Nullable MimeType mimeType,
                                   @Nullable Map<String, Object> hints) {
         DataBuffer valueDataBuffer = null;

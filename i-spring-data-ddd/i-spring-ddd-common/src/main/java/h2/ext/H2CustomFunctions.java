@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.Objects;
 
@@ -57,7 +57,7 @@ public class H2CustomFunctions {
 
     public static Object jsonExtractPath(String json, String pointer) {
         try {
-            pointer = StringUtils.prependIfMissing(pointer, SEPARATOR);
+            pointer = Strings.CS.prependIfMissing(pointer, SEPARATOR);
             JsonNode jsonNode = getMapper().readTree(json);
             JsonNode at = jsonNode.at(pointer);
             if (log.isTraceEnabled()) {

@@ -1,9 +1,8 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
-import jakarta.annotation.Nonnull;
 import lombok.Setter;
-import org.babyfish.jimmer.sql.runtime.EntityManager;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
@@ -23,13 +22,13 @@ public class JimmerRepositoryFactoryBean<R extends Repository<E, ID>, E, ID> ext
         this.setLazyInit(false);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected RepositoryFactorySupport doCreateRepositoryFactory() {
         return createRepositoryFactory(sqlClient);
     }
 
-    protected RepositoryFactorySupport createRepositoryFactory(@Nonnull JSqlClientImplementor sqlClient) {
+    protected RepositoryFactorySupport createRepositoryFactory(@NonNull JSqlClientImplementor sqlClient) {
         return new JimmerRepositoryFactory(sqlClient);
     }
 

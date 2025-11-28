@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.json.JsonParseException;
 import org.springframework.http.HttpStatus;
 
@@ -12,15 +12,15 @@ import org.springframework.http.HttpStatus;
 
 public class SpringJsonParserExceptionWrapper extends SingleExceptionWrapper<JsonParseException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull JsonParseException e) {
+    protected String _wrap(@NonNull JsonParseException e) {
         return "{json.parse.error}";
     }
 
 
     @Override
-    protected int _httpCode(@Nonnull JsonParseException e) {
+    protected int _httpCode(@NonNull JsonParseException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

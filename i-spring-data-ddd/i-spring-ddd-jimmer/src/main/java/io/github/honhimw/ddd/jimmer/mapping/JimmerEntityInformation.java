@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.mapping;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.repository.core.EntityInformation;
 
@@ -18,25 +18,25 @@ public class JimmerEntityInformation<T, ID> implements EntityInformation<T, ID> 
     }
 
     @Override
-    public boolean isNew(@Nonnull T entity) {
+    public boolean isNew(@NonNull T entity) {
         return false;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public ID getId(@Nonnull T entity) {
+    public ID getId(@NonNull T entity) {
         IdentifierAccessor identifierAccessor = persistentEntity.getIdentifierAccessor(entity);
         return (ID) identifierAccessor.getIdentifier();
     }
 
     @SuppressWarnings("unchecked")
-    @Nonnull
+    @NonNull
     @Override
     public Class<ID> getIdType() {
         return (Class<ID>) this.persistentEntity.getIdProp().getReturnClass();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<T> getJavaType() {
         return this.persistentEntity.getType();

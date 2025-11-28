@@ -1,8 +1,8 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
 import io.github.honhimw.ddd.jimmer.mapping.JimmerEntityInformation;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.apache.commons.lang3.ArrayUtils;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.data.querydsl.EntityPathResolver;
@@ -46,9 +46,9 @@ public abstract class ExtendJimmerRepositoryFactoryBean<T extends Repository<S, 
         return null;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected RepositoryFactorySupport createRepositoryFactory(@Nonnull JSqlClientImplementor sqlClient) {
+    protected RepositoryFactorySupport createRepositoryFactory(@NonNull JSqlClientImplementor sqlClient) {
         ExtendConstructorRepositoryFactory jimmerRepositoryFactory = new ExtendConstructorRepositoryFactory(sqlClient, getExtendArgs(), overrideRepositoryBaseClass());
         return jimmerRepositoryFactory;
     }
@@ -70,7 +70,7 @@ public abstract class ExtendJimmerRepositoryFactoryBean<T extends Repository<S, 
             this.baseClass = baseClass;
         }
 
-        @Nonnull
+        @NonNull
         @Override
         protected JimmerRepository<?, ?> getTargetRepository(RepositoryInformation information, JSqlClientImplementor sqlClient) {
             JimmerEntityInformation<?, Object> entityInformation = getEntityInformation(information.getDomainType());
@@ -85,9 +85,9 @@ public abstract class ExtendJimmerRepositoryFactoryBean<T extends Repository<S, 
             return (JimmerRepositoryImplementation<?, ?>) repository;
         }
 
-        @Nonnull
+        @NonNull
         @Override
-        protected Class<?> getRepositoryBaseClass(@Nonnull RepositoryMetadata metadata) {
+        protected Class<?> getRepositoryBaseClass(@NonNull RepositoryMetadata metadata) {
             if (Objects.nonNull(baseClass)) {
                 return baseClass;
             }

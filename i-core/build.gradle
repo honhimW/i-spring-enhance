@@ -1,7 +1,6 @@
 dependencies {
     using platform(project(':i-spring-enhance-bom'))
     compileOnly 'jakarta.validation:jakarta.validation-api'
-    compileOnly 'jakarta.annotation:jakarta.annotation-api'
     compileOnly 'org.springdoc:springdoc-openapi-starter-common'
     compileOnly 'org.springframework:spring-web'
     compileOnly 'io.projectreactor:reactor-core'

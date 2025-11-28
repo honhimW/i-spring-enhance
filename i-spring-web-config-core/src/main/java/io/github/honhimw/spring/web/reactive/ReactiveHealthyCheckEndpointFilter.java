@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.reactive;
 
 import io.github.honhimw.spring.IDataBufferUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,9 +37,9 @@ public class ReactiveHealthyCheckEndpointFilter implements WebFilter, Ordered {
         }
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> filter(@Nonnull ServerWebExchange exchange, @Nonnull WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         RequestPath path = request.getPath();
 

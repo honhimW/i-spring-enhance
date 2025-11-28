@@ -1,6 +1,6 @@
 package io.github.honhimw.util.tool;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -41,7 +41,7 @@ public class NamingThreadFactory extends DelegateThreadFactory {
     }
 
     @Override
-    public Thread newThread(@Nonnull Runnable r) {
+    public Thread newThread(@NonNull Runnable r) {
         Thread thread = super.newThread(r);
         thread.setName(nextThreadName(getCount()));
         return thread;

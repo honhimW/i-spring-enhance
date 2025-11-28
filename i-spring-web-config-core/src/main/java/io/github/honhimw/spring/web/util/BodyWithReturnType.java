@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.util;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 
 /**
@@ -11,18 +11,18 @@ import org.springframework.core.MethodParameter;
 
 public class BodyWithReturnType {
 
-    @Nonnull
+    @NonNull
     private final MethodParameter returnType;
 
     @Nullable
     private final Object body;
 
-    public BodyWithReturnType(@Nonnull MethodParameter returnType, @Nullable Object body) {
+    public BodyWithReturnType(@NonNull MethodParameter returnType, @Nullable Object body) {
         this.returnType = returnType;
         this.body = body;
     }
 
-    @Nonnull
+    @NonNull
     public MethodParameter getReturnType() {
         return returnType;
     }

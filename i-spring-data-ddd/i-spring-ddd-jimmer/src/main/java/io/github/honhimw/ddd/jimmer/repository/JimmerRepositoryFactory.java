@@ -2,7 +2,7 @@ package io.github.honhimw.ddd.jimmer.repository;
 
 import io.github.honhimw.ddd.jimmer.mapping.JimmerEntityInformation;
 import io.github.honhimw.ddd.jimmer.mapping.JimmerPersistentEntityImpl;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -27,15 +27,15 @@ public class JimmerRepositoryFactory extends RepositoryFactorySupport {
         this.sqlClient = sqlClient;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <T, ID> JimmerEntityInformation<T, ID> getEntityInformation(@Nonnull Class<T> domainClass) {
+    public <T, ID> JimmerEntityInformation<T, ID> getEntityInformation(@NonNull Class<T> domainClass) {
         return new JimmerEntityInformation<>(new JimmerPersistentEntityImpl<>(TypeInformation.of(domainClass)));
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected JimmerRepository<?, ?> getTargetRepository(@Nonnull RepositoryInformation metadata) {
+    protected JimmerRepository<?, ?> getTargetRepository(@NonNull RepositoryInformation metadata) {
         return getTargetRepository(metadata, sqlClient);
     }
 
@@ -57,17 +57,17 @@ public class JimmerRepositoryFactory extends RepositoryFactorySupport {
         return getTargetRepositoryViaReflection(information, entityInformation, sqlClient);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected Class<?> getRepositoryBaseClass(@Nonnull RepositoryMetadata metadata) {
+    protected Class<?> getRepositoryBaseClass(@NonNull RepositoryMetadata metadata) {
         return SimpleJimmerRepository.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
         QueryLookupStrategy.Key key,
-        @Nonnull ValueExpressionDelegate valueExpressionDelegate) {
+        @NonNull ValueExpressionDelegate valueExpressionDelegate) {
         return Optional.empty();
     }
 }

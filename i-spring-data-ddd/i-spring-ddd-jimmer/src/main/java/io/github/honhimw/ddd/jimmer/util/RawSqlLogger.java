@@ -3,7 +3,6 @@ package io.github.honhimw.ddd.jimmer.util;
 import org.babyfish.jimmer.sql.runtime.AbstractExecutorProxy;
 import org.babyfish.jimmer.sql.runtime.DefaultExecutor;
 import org.babyfish.jimmer.sql.runtime.Executor;
-import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,7 @@ import java.util.List;
 
 public class RawSqlLogger extends AbstractExecutorProxy {
 
-    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(RawSqlLogger.class);
+    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger("jimmer.sql.raw");
 
     private final Logger log;
 

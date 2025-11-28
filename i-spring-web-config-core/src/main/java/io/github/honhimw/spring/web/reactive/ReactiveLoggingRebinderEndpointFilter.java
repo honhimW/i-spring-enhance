@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.web.util.LoggingSystemUtils;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.core.Ordered;
@@ -57,9 +57,9 @@ public class ReactiveLoggingRebinderEndpointFilter implements WebFilter, Ordered
         }
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> filter(@Nonnull ServerWebExchange exchange, @Nonnull WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
         RequestPath path = request.getPath();

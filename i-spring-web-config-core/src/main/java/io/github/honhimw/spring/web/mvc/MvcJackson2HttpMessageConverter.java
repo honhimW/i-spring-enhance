@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.spring.web.common.i18n.I18nUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConversionException;
@@ -34,7 +34,7 @@ public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
     }
 
     @Override
-    public boolean canWrite(@Nonnull Class<?> clazz, MediaType mediaType) {
+    public boolean canWrite(@NonNull Class<?> clazz, MediaType mediaType) {
         if (String.class.isAssignableFrom(clazz)) {
             return false;
         }
@@ -42,7 +42,7 @@ public class MvcJackson2HttpMessageConverter extends FetcherJacksonConverter {
     }
 
     @Override
-    protected void writeInternal(@Nonnull Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+    protected void writeInternal(@NonNull Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         MediaType contentType = outputMessage.getHeaders().getContentType();
         JsonEncoding encoding = getJsonEncoding(contentType);
 

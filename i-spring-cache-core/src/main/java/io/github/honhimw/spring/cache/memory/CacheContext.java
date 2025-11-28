@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.cache.memory;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Map;

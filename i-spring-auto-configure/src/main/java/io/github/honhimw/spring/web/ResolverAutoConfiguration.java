@@ -9,7 +9,7 @@ import io.github.honhimw.spring.web.common.resolver.reactive.JacksonNodeReactive
 import io.github.honhimw.spring.web.common.resolver.reactive.TextReactiveParamResolver;
 import io.github.honhimw.spring.web.reactive.WebFluxJackson2Decoder;
 import io.github.honhimw.spring.web.reactive.WebFluxJackson2Encoder;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,7 +28,7 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author hon_him
@@ -54,16 +54,16 @@ public class ResolverAutoConfiguration {
         ) {
             return new WebMvcConfigurer() {
                 @Override
-                public void addArgumentResolvers(@Nonnull List<HandlerMethodArgumentResolver> resolvers) {
-                    AbstractJackson2HttpMessageConverter converter = jackson2HttpMessageConverterProvider.getIfAvailable();
-                    if (Objects.nonNull(converter)) {
+                public void addArgumentResolvers(@NonNull List<HandlerMethodArgumentResolver> resolvers) {
+                    Optional<AbstractJackson2HttpMessageConverter> first = jackson2HttpMessageConverterProvider.stream().findFirst();
+                    first.ifPresent(converter -> {
                         TextParamResolver textParamResolver = new TextParamResolver(converter);
                         FormDataParamResolver formDataParamResolver = new FormDataParamResolver(converter);
                         customizers.orderedStream().forEach(textParamResolver::addJacksonNodeCustomizer);
                         customizers.orderedStream().forEach(formDataParamResolver::addJacksonNodeCustomizer);
                         resolvers.add(textParamResolver);
                         resolvers.add(formDataParamResolver);
-                    }
+                    });
                 }
             };
         }
@@ -98,7 +98,7 @@ public class ResolverAutoConfiguration {
             return new WebFluxConfigurer() {
 
                 @Override
-                public void configureArgumentResolvers(@Nonnull ArgumentResolverConfigurer configurer) {
+                public void configureArgumentResolvers(@NonNull ArgumentResolverConfigurer configurer) {
                     TextReactiveParamResolver textReactiveParamResolver = new TextReactiveParamResolver(webFluxJackson2Decoder);
                     customizers.orderedStream().forEach(textReactiveParamResolver::addJacksonNodeCustomizer);
                     configurer.addCustomResolver(textReactiveParamResolver);
@@ -107,7 +107,7 @@ public class ResolverAutoConfiguration {
 
 
                 @Override
-                public void configureHttpMessageCodecs(@Nonnull ServerCodecConfigurer configurer) {
+                public void configureHttpMessageCodecs(@NonNull ServerCodecConfigurer configurer) {
                     ServerCodecConfigurer.ServerDefaultCodecs serverDefaultCodecs = configurer.defaultCodecs();
                     serverDefaultCodecs.jackson2JsonDecoder(webFluxJackson2Decoder);
                     serverDefaultCodecs.jackson2JsonEncoder(webFluxJackson2Encoder);

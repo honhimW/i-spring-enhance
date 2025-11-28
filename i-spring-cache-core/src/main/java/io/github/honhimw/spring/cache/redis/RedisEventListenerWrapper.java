@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.cache.redis;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -59,7 +59,7 @@ public class RedisEventListenerWrapper extends KeyspaceEventMessageListener impl
     private Collection<RedisMessageListenerContainer> nodeContainers;
 
     @Override
-    public void setApplicationEventPublisher(@Nonnull ApplicationEventPublisher applicationEventPublisher) {
+    public void setApplicationEventPublisher(@NonNull ApplicationEventPublisher applicationEventPublisher) {
         this.publisher = applicationEventPublisher;
     }
 

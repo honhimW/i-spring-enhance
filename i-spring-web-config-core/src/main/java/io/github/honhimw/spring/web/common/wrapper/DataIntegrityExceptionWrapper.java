@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -13,9 +13,9 @@ import org.springframework.http.HttpStatus;
 
 public class DataIntegrityExceptionWrapper extends SingleExceptionWrapper<DataIntegrityViolationException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull DataIntegrityViolationException e) {
+    protected String _wrap(@NonNull DataIntegrityViolationException e) {
         if (e instanceof DuplicateKeyException) {
             return "{database.duplicate-key}";
         }
@@ -23,7 +23,7 @@ public class DataIntegrityExceptionWrapper extends SingleExceptionWrapper<DataIn
     }
 
     @Override
-    protected int _httpCode(@Nonnull DataIntegrityViolationException e) {
+    protected int _httpCode(@NonNull DataIntegrityViolationException e) {
         return HttpStatus.CONFLICT.value();
     }
 

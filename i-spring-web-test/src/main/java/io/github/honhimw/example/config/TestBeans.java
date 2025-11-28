@@ -4,8 +4,11 @@ import io.github.honhimw.spring.BuildIn;
 import io.github.honhimw.spring.cache.memory.CacheContext;
 import io.github.honhimw.spring.cache.memory.RefreshableCache;
 import io.github.honhimw.spring.event.ApplicationBeanReadyEvent;
-import jakarta.annotation.Nonnull;
+import io.github.honhimw.spring.web.mvc.MvcHttpLogCondition;
+import io.github.honhimw.spring.web.reactive.ReactiveHttpLogCondition;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Strings;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationListener;
@@ -38,7 +41,7 @@ public class TestBeans {
     @Bean(bootstrap = Bean.Bootstrap.BACKGROUND)
     RefreshableCache testRefreshableCache(Environment environment) {
         return new RefreshableCache() {
-            @Nonnull
+            @NonNull
             @Override
             public String version() {
                 return "";
@@ -73,6 +76,16 @@ public class TestBeans {
                 return "Bar2";
             }
         };
+    }
+
+//    @Bean
+    ReactiveHttpLogCondition disableTestAnyLoggingWebFlux() {
+        return req -> !Strings.CS.equals(req.getPath().toString(), "/test/any");
+    }
+
+//    @Bean
+    MvcHttpLogCondition disableTestAnyLoggingMvc() {
+        return req -> !Strings.CS.equals(req.getRequestURI(), "/test/any");
     }
 
     public interface TestApi {

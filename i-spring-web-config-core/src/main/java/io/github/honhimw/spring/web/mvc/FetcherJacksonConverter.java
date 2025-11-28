@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.web.common.WebConstants;
 import io.github.honhimw.util.JacksonFilterUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
@@ -25,8 +25,8 @@ public class FetcherJacksonConverter extends AbstractJackson2HttpMessageConverte
         super(objectMapper, supportedMediaType);
     }
 
-    @Nonnull
-    protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
+    @NonNull
+    protected JsonGenerator decorateGenerator(@NonNull JsonGenerator generator) {
         return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
             .filter(ServletRequestAttributes.class::isInstance)
             .map(ServletRequestAttributes.class::cast)

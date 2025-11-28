@@ -1,7 +1,7 @@
 package io.github.honhimw.example.domain.jpa.player;
 
 import io.github.honhimw.ddd.jpa.domain.repository.SimpleRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.Optional;
 
@@ -10,7 +10,8 @@ import java.util.Optional;
  * @since 2025-03-18
  */
 
-@Repository
+//@Repository
+@NoRepositoryBean
 public interface PlayerJpaRepository extends SimpleRepository<PlayerDO, String> {
 
     @Override

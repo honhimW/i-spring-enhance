@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.ExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 
 import java.util.NoSuchElementException;
@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
 public class ErrorExceptionWrapper implements ExceptionWrapper.MessageExceptionWrapper {
 
     @Override
-    public boolean support(@Nonnull Throwable e) {
+    public boolean support(@NonNull Throwable e) {
         return e instanceof NoSuchElementException
                || e instanceof IllegalArgumentException
                || e instanceof IllegalStateException

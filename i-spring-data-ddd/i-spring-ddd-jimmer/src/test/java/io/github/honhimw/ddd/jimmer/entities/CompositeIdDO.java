@@ -1,8 +1,8 @@
 package io.github.honhimw.ddd.jimmer.entities;
 
 import io.github.honhimw.ddd.jimmer.domain.BaseAR;
-import io.github.honhimw.ddl.annotations.TableDef;
-import jakarta.annotation.Nullable;
+import io.github.honhimw.jddl.anno.TableDef;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.sql.Entity;
 import org.babyfish.jimmer.sql.Id;
 import org.babyfish.jimmer.sql.Table;

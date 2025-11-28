@@ -2,27 +2,25 @@ package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.core.WrappedException;
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 /**
  * @author hon_him
  * @since 2024-06-17
  */
 
-@Component
 public class WrappedExceptionWrapper extends SingleExceptionWrapper<WrappedException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull WrappedException e) {
+    protected String _wrap(@NonNull WrappedException e) {
         return e.getMessage();
     }
 
 
     @Override
-    protected int _httpCode(@Nonnull WrappedException e) {
+    protected int _httpCode(@NonNull WrappedException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 

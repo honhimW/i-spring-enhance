@@ -49,7 +49,7 @@ public class ThreadNameTest {
     @Test
     @SneakyThrows
     void naming() {
-        BasicThreadFactory.Builder builder = new BasicThreadFactory.Builder();
+        BasicThreadFactory.Builder builder = BasicThreadFactory.builder();
         builder.namingPattern("basic-%x");
         ThreadFactory factory = builder.build();
         factory = new NamingThreadFactory(factory, "test-");

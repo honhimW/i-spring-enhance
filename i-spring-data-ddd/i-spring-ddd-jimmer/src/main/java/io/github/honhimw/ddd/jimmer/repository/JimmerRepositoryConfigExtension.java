@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.Entity;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
@@ -20,39 +20,39 @@ import java.util.Locale;
 
 public class JimmerRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
-    @Nonnull
+    @NonNull
     @Override
     public String getModuleName() {
         return "Jimmer";
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public String getRepositoryFactoryBeanClassName() {
         return JimmerRepositoryFactoryBean.class.getName();
     }
 
     @Deprecated
-    @Nonnull
+    @NonNull
     @Override
     protected String getModulePrefix() {
         return getModuleName().toLowerCase(Locale.US);
     }
 
     @Override
-    public void postProcess(@Nonnull BeanDefinitionBuilder builder, RepositoryConfigurationSource source) {
+    public void postProcess(@NonNull BeanDefinitionBuilder builder, RepositoryConfigurationSource source) {
         source.getAttribute("sqlClientRef") //
             .filter(StringUtils::hasText) //
             .ifPresent(s -> builder.addPropertyReference("sqlClient", s));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
         return Collections.singleton(Entity.class);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Collection<Class<?>> getIdentifyingTypes() {
         return List.of(JimmerRepository.class);

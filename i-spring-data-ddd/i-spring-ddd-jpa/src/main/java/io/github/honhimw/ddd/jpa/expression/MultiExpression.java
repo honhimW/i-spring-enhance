@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jpa.expression;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;

@@ -8,7 +8,7 @@ import io.github.honhimw.ddd.jimmer.domain.Specification;
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.IProps;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;

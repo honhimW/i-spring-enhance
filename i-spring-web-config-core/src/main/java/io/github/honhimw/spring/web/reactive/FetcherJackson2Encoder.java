@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.spring.web.common.WebConstants;
 import io.github.honhimw.util.JacksonFilterUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMessage;
@@ -25,8 +25,8 @@ public class FetcherJackson2Encoder extends AbstractJackson2Encoder {
         super(mapper, mimeTypes);
     }
 
-    @Nonnull
-    protected JsonGenerator decorateGenerator(@Nonnull JsonGenerator generator) {
+    @NonNull
+    protected JsonGenerator decorateGenerator(@NonNull JsonGenerator generator) {
         return Optional.ofNullable(ExchangeHolder.getExchange())
             .map(ServerWebExchange::getRequest)
             .map(HttpMessage::getHeaders)

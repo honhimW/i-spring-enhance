@@ -1,6 +1,7 @@
 package io.github.honhimw.example.domain.jimmer;
 
 import io.github.honhimw.ddd.common.AclDataDomain;
+import io.github.honhimw.ddd.jimmer.Trait;
 import io.github.honhimw.ddd.jimmer.domain.BaseAR;
 import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.*;
@@ -29,5 +30,13 @@ public interface Player extends BaseAR, PlayerDomain {
 
     @Nullable
     Integer age();
+
+    @Nullable
+    Integer bitflags();
+
+    @Trait
+    default void print() {
+        System.out.println(id());
+    }
 
 }

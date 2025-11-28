@@ -1,11 +1,12 @@
 package io.github.honhimw.spring.web.reactive;
 
+import io.github.honhimw.spring.EmptyObjectProvider;
 import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.web.common.HttpLog;
 import io.github.honhimw.spring.web.util.MimeTypeSupports;
-import jakarta.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatusCode;
@@ -32,20 +33,26 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
 
     private final int ordered;
 
+    private final ReactiveHttpLogCondition confition;
+
     public ReactiveHttpLogHandler(HttpHandler httpHandler) {
-        this.httpHandler = httpHandler;
-        this.ordered = DEFAULT_HANDLER_ORDERED;
+        this(httpHandler, DEFAULT_HANDLER_ORDERED, EmptyObjectProvider.getInstance());
     }
 
     public ReactiveHttpLogHandler(HttpHandler httpHandler, int ordered) {
-        this.httpHandler = httpHandler;
-        this.ordered = ordered;
+        this(httpHandler, ordered, EmptyObjectProvider.getInstance());
     }
 
-    @Nonnull
+    public ReactiveHttpLogHandler(HttpHandler httpHandler, int ordered, ObjectProvider<ReactiveHttpLogCondition> conditions) {
+        this.httpHandler = httpHandler;
+        this.ordered = ordered;
+        this.confition = new ReactiveHttpLogCondition.Delegate(conditions.orderedStream().toList());
+    }
+
+    @NonNull
     @Override
-    public Mono<Void> handle(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response) {
-        if (!HttpLog.log.isInfoEnabled()) {
+    public Mono<Void> handle(@NonNull ServerHttpRequest request, @NonNull ServerHttpResponse response) {
+        if (!HttpLog.log.isInfoEnabled() || !confition.support(request)) {
             return httpHandler.handle(request, response);
         }
 
@@ -94,7 +101,7 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
         if (MimeTypeSupports.isRawType(requestType)) {
             ByteArrayOutputStream baops = httpLog.getRawRequestBody();
             return new ServerHttpRequestDecorator(request) {
-                @Nonnull
+                @NonNull
                 @Override
                 public Flux<DataBuffer> getBody() {
                     ServerHttpRequest delegate = getDelegate();
@@ -112,9 +119,9 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
     private ServerHttpResponse enhanceResponse(ServerHttpResponse response, HttpLog httpLog) {
         return new ServerHttpResponseDecorator(response) {
 
-            @Nonnull
+            @NonNull
             @Override
-            public Mono<Void> writeAndFlushWith(@Nonnull Publisher<? extends Publisher<? extends DataBuffer>> body) {
+            public Mono<Void> writeAndFlushWith(@NonNull Publisher<? extends Publisher<? extends DataBuffer>> body) {
                 Charset charset = httpLog.getCharset();
                 if (HttpLog.log.isDebugEnabled()) {
                     if (body instanceof Flux<? extends Publisher<? extends DataBuffer>> flux) {
@@ -141,9 +148,9 @@ public class ReactiveHttpLogHandler implements HttpHandler, Ordered {
                 return super.writeAndFlushWith(body);
             }
 
-            @Nonnull
+            @NonNull
             @Override
-            public Mono<Void> writeWith(@Nonnull Publisher<? extends DataBuffer> body) {
+            public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
                 MediaType responseType = getDelegate().getHeaders().getContentType();
                 if (MimeTypeSupports.isRawType(responseType)) {
                     ByteArrayOutputStream baops = httpLog.getRawResponseBody();

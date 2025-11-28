@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.statemachine;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public abstract class SimpleFSMAdapter<S extends Enum<S>, E extends Enum<E>> ext
 
     protected abstract S[] states();
 
-    protected void publish(@Nonnull Object o) {
+    protected void publish(@NonNull Object o) {
         Optional.ofNullable(publisher).ifPresent(__ -> __.publishEvent(o));
     }
 

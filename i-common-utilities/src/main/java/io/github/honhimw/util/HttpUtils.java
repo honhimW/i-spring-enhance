@@ -2,10 +2,8 @@ package io.github.honhimw.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nullable;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -13,10 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.hc.client5.http.HttpRoute;
 import org.apache.hc.client5.http.classic.HttpClient;
-import org.apache.hc.client5.http.classic.methods.HttpDelete;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.*;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
@@ -31,6 +26,9 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
@@ -42,9 +40,14 @@ import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.WWWFormCodec;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
+import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * apache httpclient5 utils
@@ -97,7 +101,9 @@ public class HttpUtils {
      */
     public static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
 
-    private static final Charset defaultCharset = StandardCharsets.UTF_8;
+    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+    private static final byte[] EMPTY_DATA = new byte[0];
 
     private static HttpUtils INSTANCE;
 
@@ -141,10 +147,23 @@ public class HttpUtils {
             chainBuilder
         );
         customizer.customize(initializer);
+        SSLContext sslContext;
+        try {
+            sslContext = SSLContextBuilder.create()
+                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
+                .build();
+        } catch (Exception e) {
+            sslContext = SSLContexts.createDefault();
+        }
+
         connectionManager = poolingHttpClientConnectionManagerBuilder
-            .setTlsSocketStrategy(DefaultClientTlsStrategy.createDefault())
+            .setTlsSocketStrategy(new DefaultClientTlsStrategy(
+                sslContext,
+                HostnameVerificationPolicy.CLIENT,
+                NoopHostnameVerifier.INSTANCE))
             .setDefaultSocketConfig(socketConfigBuilder.build())
             .setDefaultConnectionConfig(connectionConfigBuilder.build())
+            .setMaxConnPerRoute(MAX_ROUTE_CONNECTIONS)
             .build();
         defaultRequestConfig = requestConfigBuilder.build();
         httpClientBuilder
@@ -218,7 +237,7 @@ public class HttpUtils {
         _assertState(Objects.nonNull(configurer), "String should not be null");
         Consumer<Configurer> _configurer = conf -> conf
             .method(method)
-            .charset(defaultCharset)
+            .charset(DEFAULT_CHARSET)
             .url(url)
             .config(RequestConfig.copy(defaultRequestConfig).build());
         HttpResult httpResult = execute(_configurer.andThen(configurer));
@@ -373,7 +392,7 @@ public class HttpUtils {
         private String url;
 
         @Getter
-        private final Map<String, List<String>> headers = new HashMap<>();
+        private final Map<String, List<String>> headers = new LinkedHashMap<>();
 
         @Getter
         private final List<NameValuePair> params = new ArrayList<>();
@@ -390,6 +409,56 @@ public class HttpUtils {
 
         public Configurer method(String method) {
             this.method = method;
+            return this;
+        }
+
+        /**
+         * GET
+         *
+         * @return this
+         */
+        public Configurer get() {
+            this.method = HttpGet.METHOD_NAME;
+            return this;
+        }
+
+        /**
+         * POST
+         *
+         * @return this
+         */
+        public Configurer post() {
+            this.method = HttpPost.METHOD_NAME;
+            return this;
+        }
+
+        /**
+         * PUT
+         *
+         * @return this
+         */
+        public Configurer put() {
+            this.method = HttpPut.METHOD_NAME;
+            return this;
+        }
+
+        /**
+         * DELETE
+         *
+         * @return this
+         */
+        public Configurer delete() {
+            this.method = HttpDelete.METHOD_NAME;
+            return this;
+        }
+
+        /**
+         * PATCH
+         *
+         * @return this
+         */
+        public Configurer patch() {
+            this.method = HttpPatch.METHOD_NAME;
             return this;
         }
 
@@ -452,11 +521,28 @@ public class HttpUtils {
             AbstractBody<?> body = bodyModel.getBody();
             if (Objects.nonNull(body)) {
                 httpEntity = body.toEntity(this.charset);
-//                if (StringUtils.isNotBlank(body.contentType())) {
-//                    header(HttpHeaders.CONTENT_TYPE, body.contentType());
-//                }
             }
             return this;
+        }
+
+        /**
+         * Alias for most usage cases
+         *
+         * @param json json format raw text
+         * @return this chain
+         */
+        public Configurer json(String json) {
+            return body(body -> body.raw(raw -> raw.json(json)));
+        }
+
+        /**
+         * Alias for most usage cases
+         *
+         * @param obj to be json encoded object
+         * @return this chain
+         */
+        public Configurer json(Object obj) {
+            return body(body -> body.raw(raw -> raw.json(obj)));
         }
 
         private HttpClientContext getContext() {
@@ -574,17 +660,12 @@ public class HttpUtils {
 
         public static class Raw extends AbstractBody<Raw> {
 
-            public static final ContentType TEXT_PLAIN = ContentType.TEXT_PLAIN;
-            public static final ContentType APPLICATION_JSON = ContentType.APPLICATION_JSON;
-            public static final ContentType TEXT_HTML = ContentType.TEXT_HTML;
-            public static final ContentType APPLICATION_XML = ContentType.TEXT_XML;
-
             private final ObjectMapper objectMapper;
             private String raw;
 
             public Raw(ObjectMapper objectMapper) {
                 this.objectMapper = objectMapper;
-                super.contentType = TEXT_PLAIN;
+                super.contentType = ContentType.TEXT_PLAIN;
             }
 
             @Override
@@ -598,7 +679,7 @@ public class HttpUtils {
             public Raw text(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
-                    this.contentType = TEXT_PLAIN;
+                    this.contentType = ContentType.TEXT_PLAIN;
                 }
                 return this;
             }
@@ -606,7 +687,7 @@ public class HttpUtils {
             public Raw json(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
-                    this.contentType = APPLICATION_JSON;
+                    this.contentType = ContentType.APPLICATION_JSON;
                 }
                 return this;
             }
@@ -618,7 +699,7 @@ public class HttpUtils {
                     } catch (JsonProcessingException e) {
                         throw new IllegalArgumentException(e);
                     }
-                    this.contentType = APPLICATION_JSON;
+                    this.contentType = ContentType.APPLICATION_JSON;
                 }
                 return this;
             }
@@ -626,7 +707,7 @@ public class HttpUtils {
             public Raw html(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
-                    this.contentType = TEXT_HTML;
+                    this.contentType = ContentType.TEXT_HTML;
                 }
                 return this;
             }
@@ -634,7 +715,7 @@ public class HttpUtils {
             public Raw xml(String text) {
                 if (Objects.isNull(raw)) {
                     this.raw = text;
-                    this.contentType = APPLICATION_XML;
+                    this.contentType = ContentType.APPLICATION_XML;
                 }
                 return this;
             }
@@ -822,7 +903,7 @@ public class HttpUtils {
             this.self = self;
             this.httpClient = httpClient;
             this.configurer = configurer;
-            this.attributes = new HashMap<>();
+            this.attributes = new LinkedHashMap<>();
         }
 
         @Setter
@@ -970,30 +1051,27 @@ public class HttpUtils {
         @Override
         public void filter(FilterChain chain, FilterContext ctx) throws Exception {
             long startedAt = System.currentTimeMillis();
-            try {
-                ctx.httpResult = ctx.httpClient.execute(ctx.httpRequest, ctx.httpContext, response -> {
-                    HttpResult result = new HttpResult(ctx.self.objectMapper, ctx);
-                    Optional.ofNullable(ctx.httpContext)
-                        .map(HttpClientContext::getCookieStore)
-                        .ifPresent(result::setCookieStore);
-                    result.setStatusCode(response.getCode());
-                    result.setVersion(String.valueOf(response.getVersion()));
-                    result.setReasonPhrase(response.getReasonPhrase());
-                    result.setHeaders(response.getHeaders());
+            ctx.httpResult = ctx.httpClient.execute(ctx.httpRequest, ctx.httpContext, response -> {
+                HttpResult result = new HttpResult(ctx);
+                Optional.ofNullable(ctx.httpContext)
+                    .map(HttpClientContext::getCookieStore)
+                    .ifPresent(result::setCookieStore);
+                result.setStatusCode(response.getCode());
+                result.setVersion(String.valueOf(response.getVersion()));
+                result.setReasonPhrase(response.getReasonPhrase());
+                result.setHeaders(response.getHeaders());
 
-                    if (Objects.nonNull(response.getEntity())) {
-                        HttpEntity entity = response.getEntity();
-                        result.setEntity(entity);
-                        Optional.ofNullable(ctx.configurer.inputConfig)
-                            .ifPresent(result::setInputConfig);
-                        result.read();
-                    }
-                    ctx.httpResponse = response;
-                    return result;
-                });
-            } finally {
-                ctx.httpResult.elapsed = Duration.ofMillis(System.currentTimeMillis() - startedAt);
-            }
+                if (Objects.nonNull(response.getEntity())) {
+                    HttpEntity entity = response.getEntity();
+                    result.setEntity(entity);
+                    Optional.ofNullable(ctx.configurer.inputConfig)
+                        .ifPresent(result::setInputConfig);
+                    result.read();
+                }
+                ctx.httpResponse = response;
+                return result;
+            });
+            ctx.httpResult.elapsed = Duration.ofMillis(System.currentTimeMillis() - startedAt);
         }
     }
 
@@ -1073,12 +1151,10 @@ public class HttpUtils {
     }
 
     public static class HttpResult {
-        private final ObjectMapper objectMapper;
         @Getter
         private final FilterContext filterContext;
 
-        private HttpResult(ObjectMapper objectMapper, FilterContext filterContext) {
-            this.objectMapper = objectMapper;
+        private HttpResult(FilterContext filterContext) {
             this.filterContext = filterContext;
         }
 
@@ -1091,7 +1167,7 @@ public class HttpUtils {
         private final Map<String, List<String>> headers = new LinkedHashMap<>();
         @Getter
         private Charset charset = StandardCharsets.UTF_8;
-        private byte[] content;
+        private byte[] content = EMPTY_DATA;
         private CookieStore cookieStore;
         @Getter
         private Duration elapsed = Duration.ZERO;
@@ -1163,16 +1239,26 @@ public class HttpUtils {
             return headers;
         }
 
-        public String getHeader(String name) {
-            List<String> list = headers.get(name);
-            if (CollectionUtils.isNotEmpty(list)) {
-                return list.get(0);
-            }
-            return null;
+        @NonNull
+        public Optional<String> getHeader(String name) {
+            Stream<String> values = getHeaderCaseInsensitive(name);
+            return values.findFirst();
         }
 
+        @NonNull
         public List<String> getHeaders(String name) {
-            return headers.get(name);
+            return getHeaderCaseInsensitive(name).toList();
+        }
+
+        private Stream<String> getHeaderCaseInsensitive(String name) {
+            Stream<String> stream = Stream.empty();
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                String key = entry.getKey();
+                if (Strings.CI.equals(key, name)) {
+                    stream = Stream.concat(stream, entry.getValue().stream());
+                }
+            }
+            return stream;
         }
 
         private void setHeader(String name, String value) {
@@ -1213,16 +1299,29 @@ public class HttpUtils {
         public <T> T json(Class<T> type) {
             return wrap(bytes -> {
                 try {
-                    return objectMapper.readValue(bytes, type);
+                    return filterContext.getSelf().objectMapper.readValue(bytes, type);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
         }
 
+        @Nullable
         public <T> T wrap(Function<byte[], T> wrapper) {
             Objects.requireNonNull(wrapper, "wrapper should not be null");
             return Optional.ofNullable(content).map(wrapper).orElse(null);
+        }
+
+        public void debug() {
+            log.info(this.getStatusLine());
+            this.getAllHeaders().forEach((k, values) -> values
+                .forEach(v -> log.info("{}: {}", k, v)));
+            getHeader(HttpHeaders.CONTENT_TYPE).ifPresent(contentType -> {
+                MediaType parse = MediaType.parse(contentType);
+                if (parse.isRawType()) {
+                    log.info("{}", this.str());
+                }
+            });
         }
 
     }

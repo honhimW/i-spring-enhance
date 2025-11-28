@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jpa.acl;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 
 /**

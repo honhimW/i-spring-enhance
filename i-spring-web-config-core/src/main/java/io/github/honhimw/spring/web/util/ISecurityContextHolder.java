@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.util;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.context.SecurityContext;
 
 import java.util.Optional;

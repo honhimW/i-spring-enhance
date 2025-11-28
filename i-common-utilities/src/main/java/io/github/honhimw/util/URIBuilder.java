@@ -160,7 +160,7 @@ public final class URIBuilder {
             if (!name.isEmpty()) {
                 list.add(new AbstractMap.SimpleEntry<>(
                     urlDecode(name, charset != null ? charset : StandardCharsets.UTF_8, true),
-                    Objects.requireNonNull(urlDecode(value, charset != null ? charset : StandardCharsets.UTF_8, true))));
+                    urlDecode(value, charset != null ? charset : StandardCharsets.UTF_8, true)));
             }
         }
         return list;

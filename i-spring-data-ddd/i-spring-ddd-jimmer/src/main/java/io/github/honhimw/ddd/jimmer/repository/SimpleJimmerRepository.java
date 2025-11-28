@@ -8,8 +8,6 @@ import io.github.honhimw.ddd.jimmer.support.SpringPageFactory;
 import io.github.honhimw.ddd.jimmer.util.IFetcher;
 import io.github.honhimw.ddd.jimmer.util.IProps;
 import io.github.honhimw.ddd.jimmer.util.Utils;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.Input;
 import org.babyfish.jimmer.View;
@@ -20,12 +18,14 @@ import org.babyfish.jimmer.sql.ast.Predicate;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.Selection;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
-import org.babyfish.jimmer.sql.ast.impl.mutation.Mutations;
 import org.babyfish.jimmer.sql.ast.impl.query.FilterLevel;
 import org.babyfish.jimmer.sql.ast.impl.query.MutableRootQueryImpl;
 import org.babyfish.jimmer.sql.ast.impl.table.FetcherSelectionImpl;
 import org.babyfish.jimmer.sql.ast.impl.table.TableImplementor;
-import org.babyfish.jimmer.sql.ast.mutation.*;
+import org.babyfish.jimmer.sql.ast.mutation.BatchEntitySaveCommand;
+import org.babyfish.jimmer.sql.ast.mutation.DeleteMode;
+import org.babyfish.jimmer.sql.ast.mutation.MutableDelete;
+import org.babyfish.jimmer.sql.ast.mutation.SimpleEntitySaveCommand;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.Order;
@@ -35,13 +35,14 @@ import org.babyfish.jimmer.sql.fetcher.Fetcher;
 import org.babyfish.jimmer.sql.fetcher.impl.FetcherImpl;
 import org.babyfish.jimmer.sql.runtime.ExecutionPurpose;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
-import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.query.FluentQuery;
 
 import java.util.*;
@@ -120,9 +121,9 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         return query.select(iFetcher.toSelection()).fetchOneOrNull();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public List<E> findAllById(@Nonnull Iterable<ID> ids) {
+    public List<E> findAllById(@NonNull Iterable<ID> ids) {
         IFetcher<E> allFields = IFetcher.of(this.table, fetcher).allFields();
         return findAllById(ids, allFields.getDelegate());
     }
@@ -167,7 +168,7 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         return map;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<E> findAll() {
         return createQuery(null, (Function<?, E>) null, null, null).execute();
@@ -183,9 +184,9 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         return createQuery(fetcher, (Function<?, E>) null, sortedProps, null).execute();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public List<E> findAll(@Nonnull Sort sort) {
+    public List<E> findAll(@NonNull Sort sort) {
         return createQuery(null, (Function<?, E>) null, null, null).execute();
     }
 
@@ -230,9 +231,9 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
             .fetchPage(pageIndex, pageSize, SpringPageFactory.getInstance());
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Page<E> findAll(@Nonnull Pageable pageable) {
+    public Page<E> findAll(@NonNull Pageable pageable) {
         return this.<E>createQuery(null, null, null, pageable.getSort())
             .fetchPage(pageable.getPageNumber(), pageable.getPageSize(), SpringPageFactory.getInstance());
     }
@@ -248,21 +249,21 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         return createQuery(null, null, null, null).fetchUnlimitedCount();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public SimpleEntitySaveCommand<E> saveCommand(@Nonnull Input<E> input) {
+    public SimpleEntitySaveCommand<E> saveCommand(@NonNull Input<E> input) {
         return sqlClient.getEntities().saveCommand(input);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> SimpleEntitySaveCommand<S> saveCommand(@Nonnull S entity) {
+    public <S extends E> SimpleEntitySaveCommand<S> saveCommand(@NonNull S entity) {
         return sqlClient.getEntities().saveCommand(entity);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> BatchEntitySaveCommand<S> saveEntitiesCommand(@Nonnull Iterable<S> entities) {
+    public <S extends E> BatchEntitySaveCommand<S> saveEntitiesCommand(@NonNull Iterable<S> entities) {
         return sqlClient
             .getEntities()
             .saveEntitiesCommand(entities);
@@ -270,13 +271,13 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
 
     @SuppressWarnings("unchecked")
     @Override
-    public int delete(@Nonnull E entity, DeleteMode mode) {
+    public int delete(@NonNull E entity, DeleteMode mode) {
         Object id = ImmutableObjects.get(entity, immutableType.getIdProp().getId());
         return deleteById((ID) id, mode);
     }
 
     @Override
-    public int deleteById(@Nonnull ID id, DeleteMode mode) {
+    public int deleteById(@NonNull ID id, DeleteMode mode) {
         MutableDelete delete = sqlClient.createDelete(this.table);
         Predicate eq = this.table.getId().eq(id);
         Predicate predicate = getPredicate(null, IProps.of(this.table), delete);
@@ -291,7 +292,7 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public int deleteAll(@Nonnull Iterable<? extends E> entities, DeleteMode mode) {
+    public int deleteAll(@NonNull Iterable<? extends E> entities, DeleteMode mode) {
         Iterator<? extends E> iterator = entities.iterator();
         Stream.Builder<Object> builder = Stream.builder();
         while (iterator.hasNext()) {
@@ -331,45 +332,45 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
         delete.execute();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> Optional<S> findOne(@Nonnull Example<S> example) {
+    public <S extends E> Optional<S> findOne(@NonNull Example<S> example) {
         return createQuery(example, null).fetchOptional();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> List<S> findAll(@Nonnull Example<S> example) {
+    public <S extends E> List<S> findAll(@NonNull Example<S> example) {
         return createQuery(example, null).execute();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> List<S> findAll(@Nonnull Example<S> example, @Nonnull Sort sort) {
+    public <S extends E> List<S> findAll(@NonNull Example<S> example, @NonNull Sort sort) {
         return createQuery(example, sort).execute();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E> Page<S> findAll(@Nonnull Example<S> example, @Nonnull Pageable pageable) {
+    public <S extends E> Page<S> findAll(@NonNull Example<S> example, @NonNull Pageable pageable) {
         return createQuery(example, pageable.getSort())
             .fetchPage(pageable.getPageNumber(), pageable.getPageSize(), SpringPageFactory.getInstance());
     }
 
     @Override
-    public <S extends E> long count(@Nonnull Example<S> example) {
+    public <S extends E> long count(@NonNull Example<S> example) {
         return createQuery(example, null).fetchUnlimitedCount();
     }
 
     @Override
-    public <S extends E> boolean exists(@Nonnull Example<S> example) {
+    public <S extends E> boolean exists(@NonNull Example<S> example) {
         return createQuery(example, null).exists();
     }
 
     @SuppressWarnings("unchecked")
-    @Nonnull
+    @NonNull
     @Override
-    public <S extends E, R> R findBy(@Nonnull Example<S> example, @Nonnull Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+    public <S extends E, R> R findBy(@NonNull Example<S> example, @NonNull Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
         FetchableFluentQueryBySpecification<E, R> fluent = new FetchableFluentQueryBySpecification<>(new ExampleSpecification<>(example), fetcher, Sort.unsorted(), entityType, (Class<R>) entityType, table, sqlClient, getProjectionFactory());
         return queryFunction.apply((FluentQuery.FetchableFluentQuery<S>) fluent);
     }
@@ -383,12 +384,12 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
     protected <X> ConfigurableRootQuery<?, X> createQuery(
         @Nullable Fetcher<?> fetcher,
         @Nullable Function<?, X> converter,
-        @Nullable TypedProp.Scalar<?, ?>[] sortedProps,
+        TypedProp.@Nullable Scalar<?, ?>[] sortedProps,
         @Nullable Sort sort
     ) {
         MutableRootQueryImpl<TableProxy<E>> query =
             new MutableRootQueryImpl<>(sqlClient, immutableType, ExecutionPurpose.QUERY, FilterLevel.DEFAULT);
-        TableImplementor<?> table = query.getTableImplementor();
+        TableImplementor<?> table = (TableImplementor<?>) query.getTableLikeImplementor();
         if (sortedProps != null) {
             for (TypedProp.Scalar<?, ?> sortedProp : sortedProps) {
                 if (sortedProp == null) {
@@ -594,7 +595,7 @@ public class SimpleJimmerRepository<E, ID> implements JimmerRepositoryImplementa
     }
 
     @Nullable
-    protected Predicate getPredicate(@Nullable Specification.Query spec, IProps root, MutableRootQuery<?> query, IFetcher<?> fetcher) {
+    protected Predicate getPredicate(Specification.@Nullable Query spec, IProps root, MutableRootQuery<?> query, IFetcher<?> fetcher) {
         if (spec != null) {
             return spec.toPredicate(root, query, fetcher);
         } else {

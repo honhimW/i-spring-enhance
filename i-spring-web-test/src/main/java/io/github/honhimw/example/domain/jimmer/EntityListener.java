@@ -1,6 +1,5 @@
 package io.github.honhimw.example.domain.jimmer;
 
-import io.github.honhimw.ddd.common.DomainEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.babyfish.jimmer.sql.event.EntityEvent;
 import org.springframework.beans.factory.annotation.Autowired;

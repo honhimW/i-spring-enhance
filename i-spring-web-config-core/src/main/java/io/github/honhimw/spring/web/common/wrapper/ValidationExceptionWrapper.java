@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 
@@ -12,14 +12,14 @@ import org.springframework.http.HttpStatus;
 
 public class ValidationExceptionWrapper extends SingleExceptionWrapper<ValidationException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull ValidationException e) {
+    protected String _wrap(@NonNull ValidationException e) {
         return e.getMessage();
     }
 
     @Override
-    protected int _httpCode(@Nonnull ValidationException e) {
+    protected int _httpCode(@NonNull ValidationException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 }

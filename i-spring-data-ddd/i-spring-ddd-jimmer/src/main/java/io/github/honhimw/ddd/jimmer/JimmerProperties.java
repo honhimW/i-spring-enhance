@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.babyfish.jimmer.sql.EnumType;
 import org.babyfish.jimmer.sql.JSqlClient;
+import io.github.honhimw.jddl.DDLAuto;
 import org.babyfish.jimmer.sql.dialect.Dialect;
 import org.babyfish.jimmer.sql.event.TriggerType;
 import org.babyfish.jimmer.sql.runtime.DatabaseValidationMode;
@@ -47,7 +48,7 @@ public class JimmerProperties {
 
     private boolean defaultDissociationActionCheckable = true;
 
-    private DatabaseNamingStrategy databaseNamingStrategy = DatabaseNamingStrategy.LOWER_CASE;
+    private DatabaseNamingStrategy databaseNamingStrategy = DatabaseNamingStrategy.UPPER_CASE;
 
     private IdOnlyTargetCheckingLevel idOnlyTargetCheckingLevel = IdOnlyTargetCheckingLevel.NONE;
 
@@ -76,8 +77,6 @@ public class JimmerProperties {
     private boolean dumbBatchAcceptable = false;
 
     private Collection<String> executorContextPrefixes = null;
-
-    private String microServiceName = "";
 
     private ErrorTranslator errorTranslator = new ErrorTranslator();
 
@@ -140,23 +139,4 @@ public class JimmerProperties {
         UPPER_CASE,
     }
 
-    public enum DDLAuto {
-        /**
-         * Create the schema.
-         */
-        CREATE,
-        /**
-         * Create and then destroy the schema at the end of the session.
-         */
-        CREATE_DROP,
-        /**
-         * Drop the schema at the end of the session.
-         */
-        DROP,
-        /**
-         * Disable DDL handling.
-         */
-        NONE,
-    }
-    
 }

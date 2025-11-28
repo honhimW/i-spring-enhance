@@ -4,7 +4,6 @@ import io.github.honhimw.ddd.common.DomainEvent;
 import io.github.honhimw.ddd.common.DomainListenerSupports;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 /**
  * @author honhimW
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Slf4j
-@Component
+//@Component
 public class PlayerJpaListener extends DomainListenerSupports {
 
     @EventListener

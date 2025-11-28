@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.resolver;
 
 import io.github.honhimw.spring.web.mvc.AbstractFileMessageConverterProcessor;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.converter.HttpMessageConverter;
 
@@ -20,13 +20,13 @@ public class CsvPartMessageConverterProcessor extends AbstractFileMessageConvert
     }
 
     @Override
-    public boolean supportsParameter(@Nonnull MethodParameter parameter) {
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
         return super.supportsParameter(parameter) &&
                Collection.class.isAssignableFrom(parameter.getParameterType());
     }
 
     @Override
-    public boolean supportsReturnType(@Nonnull MethodParameter returnType) {
+    public boolean supportsReturnType(@NonNull MethodParameter returnType) {
         return super.supportsReturnType(returnType) &&
                Collection.class.isAssignableFrom(returnType.getParameterType());
     }

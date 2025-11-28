@@ -7,7 +7,6 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.ListQueryByExampleExecutor;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**

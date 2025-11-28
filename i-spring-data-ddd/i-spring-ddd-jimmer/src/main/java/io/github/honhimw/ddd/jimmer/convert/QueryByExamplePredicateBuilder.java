@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.convert;
 
 import io.github.honhimw.ddd.jimmer.util.IProps;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.ImmutableObjects;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.TargetLevel;

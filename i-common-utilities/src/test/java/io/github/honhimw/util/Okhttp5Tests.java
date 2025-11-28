@@ -38,7 +38,7 @@ public class Okhttp5Tests {
             .build();
 
         Request.Builder builder = new Request.Builder();
-        RequestBody body = RequestBody.create("hello", MediaType.parse("text/plain"));
+        RequestBody body = RequestBody.create("hello", okhttp3.MediaType.parse("text/plain"));
         builder.url("http://127.0.0.1:11451").post(body);
         Request request = builder.build();
         try (Response response = client.newCall(request).execute()) {

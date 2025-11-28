@@ -1,10 +1,11 @@
 package io.github.honhimw.spring;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * @author hon_him
@@ -45,4 +46,8 @@ public class EmptyObjectProvider<T> implements ObjectProvider<T> {
         // do nothing
     }
 
+    @Override
+    public Stream<T> stream() {
+        return Stream.empty();
+    }
 }

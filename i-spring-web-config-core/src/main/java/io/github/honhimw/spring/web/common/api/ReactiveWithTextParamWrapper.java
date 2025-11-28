@@ -4,7 +4,7 @@ import io.github.honhimw.core.*;
 import io.github.honhimw.core.api.DefaultCRUD;
 import io.github.honhimw.core.api.ReactiveDefaultCRUD;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -19,16 +19,16 @@ import java.util.List;
 
 public abstract class ReactiveWithTextParamWrapper<C, U, ID, E> implements ReactiveDefaultCRUD<C, U, ID, E> {
 
-    @Nonnull
+    @NonNull
     protected abstract DefaultCRUD<C, U, ID, E> getDelegate();
 
-    @Nonnull
-    protected <R> Mono<R> decorate(@Nonnull Mono<R> mono) {
+    @NonNull
+    protected <R> Mono<R> decorate(@NonNull Mono<R> mono) {
         return mono.subscribeOn(Schedulers.boundedElastic());
     }
 
-    @Nonnull
-    protected <R> Flux<R> decorate(@Nonnull Flux<R> flux) {
+    @NonNull
+    protected <R> Flux<R> decorate(@NonNull Flux<R> flux) {
         return flux.subscribeOn(Schedulers.boundedElastic());
     }
 

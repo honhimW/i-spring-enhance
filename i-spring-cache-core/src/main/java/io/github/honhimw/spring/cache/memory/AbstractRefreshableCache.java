@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.cache.memory;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import org.springframework.context.ApplicationEvent;
@@ -30,7 +30,7 @@ public abstract class AbstractRefreshableCache implements RefreshableCache {
         return false;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public final String version() {
         return _version;

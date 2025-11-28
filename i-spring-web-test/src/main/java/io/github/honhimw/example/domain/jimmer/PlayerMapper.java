@@ -1,8 +1,9 @@
 package io.github.honhimw.example.domain.jimmer;
 
 import io.github.honhimw.ddd.jimmer.domain.JimmerEntityMapping;
-import org.babyfish.jimmer.ImmutableObjects;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 /**

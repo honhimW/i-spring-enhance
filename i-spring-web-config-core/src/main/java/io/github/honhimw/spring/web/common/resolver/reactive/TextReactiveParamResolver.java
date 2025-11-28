@@ -8,7 +8,7 @@ import io.github.honhimw.spring.IDataBufferUtils;
 import io.github.honhimw.spring.ResolvableTypes;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.GZipUtils;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.apache.commons.lang3.Strings;
 import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.MethodParameter;
@@ -53,10 +53,10 @@ public class TextReactiveParamResolver extends BaseReactiveParamResolver {
         return parameter.hasParameterAnnotation(TextParam.class);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Object> resolveArgument(@Nonnull MethodParameter parameter,
-                                        @Nonnull BindingContext bindingContext,
+    public Mono<Object> resolveArgument(@NonNull MethodParameter parameter,
+                                        @NonNull BindingContext bindingContext,
                                         ServerWebExchange exchange) {
         TextParam parameterAnnotation = parameter.getParameterAnnotation(TextParam.class);
         Assert.notNull(parameterAnnotation, "argument resolver annotation should not be null.");

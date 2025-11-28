@@ -1,6 +1,7 @@
 package io.github.honhimw.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11,6 +12,7 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,7 +54,7 @@ public class ReactorUtils {
      * @return result set
      */
     public static <T, R> List<R> block(Executor executor, int parallel, Collection<T> tList,
-                                       Duration timeout,
+                                       @Nullable Duration timeout,
                                        Function<T, Stream<R>> mapper) {
         ParallelFlux<T> parallelFlux = Flux
             .fromIterable(tList)
@@ -66,7 +68,7 @@ public class ReactorUtils {
         if (timeout != null && !timeout.equals(Duration.ZERO)) {
             mono = mono.timeout(timeout, Mono.empty());
         }
-        return mono.block();
+        return Objects.requireNonNull(mono.block());
     }
 
     public static void execute(int parallel, int times, Consumer<Integer> consumer) {
@@ -80,7 +82,7 @@ public class ReactorUtils {
         }
     }
 
-    public static void execute(Executor executor, int parallel, int times, Duration timeout, Consumer<Integer> consumer) {
+    public static void execute(Executor executor, int parallel, int times, @Nullable Duration timeout, Consumer<Integer> consumer) {
         if (times < 1) {
             return;
         }
@@ -111,7 +113,7 @@ public class ReactorUtils {
         }
     }
 
-    public static <T> void execute(Executor executor, int parallel, List<T> tList, Duration timeout, Consumer<T> consumer) {
+    public static <T> void execute(Executor executor, int parallel, List<T> tList, @Nullable Duration timeout, Consumer<T> consumer) {
         ParallelFlux<T> parallelFlux = Flux
             .fromIterable(tList)
             .parallel(parallel)
@@ -163,9 +165,6 @@ public class ReactorUtils {
     public static <T, R> R retry(int retryCount, T param, Fun<T, R> mapper, Predicate<R> predicate,
                                  Stream<Class<? extends Throwable>> throwables) {
         AtomicInteger count = new AtomicInteger(0);
-        if (throwables == null) {
-            throwables = Stream.empty();
-        }
         List<Class<? extends Throwable>> causes = throwables.toList();
 
         if (retryCount < 0) {
@@ -196,7 +195,7 @@ public class ReactorUtils {
                     return flag;
                 }));
             }
-            return mono.block();
+            return Objects.requireNonNull(mono.block());
         } catch (Exception e) {
             String msg;
             if (count.get() > 0) {

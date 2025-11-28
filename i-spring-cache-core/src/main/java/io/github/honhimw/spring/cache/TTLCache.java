@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.cache;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Map;

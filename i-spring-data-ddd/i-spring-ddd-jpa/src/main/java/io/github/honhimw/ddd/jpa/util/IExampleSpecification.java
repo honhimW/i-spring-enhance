@@ -3,7 +3,7 @@ package io.github.honhimw.ddd.jpa.util;
 import io.github.honhimw.core.ConditionColumn;
 import io.github.honhimw.core.IPageRequest;
 import io.github.honhimw.core.MatchingType;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.criteria.CriteriaBuilder.In;
 import jakarta.persistence.metamodel.*;
@@ -60,7 +60,7 @@ public class IExampleSpecification<T> implements Specification<T> {
     }
 
     @Override
-    public Predicate toPredicate(@Nonnull Root<T> root, @Nullable CriteriaQuery<?> query, @Nonnull CriteriaBuilder cb) {
+    public Predicate toPredicate(@NonNull Root<T> root, @Nullable CriteriaQuery<?> query, @NonNull CriteriaBuilder cb) {
         Assert.notNull(root, "Root must not be null!");
         Assert.notNull(cb, "CriteriaBuilder must not be null!");
         Assert.notNull(iPageRequest, "iPageRequest must not be null!");

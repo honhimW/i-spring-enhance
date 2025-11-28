@@ -10,10 +10,8 @@ import io.github.honhimw.example.domain.jimmer.*;
 import io.github.honhimw.spring.annotation.resolver.TextParam;
 import io.github.honhimw.util.SnowflakeUtils;
 import org.babyfish.jimmer.sql.JSqlClient;
-import org.babyfish.jimmer.sql.ast.Expression;
 import org.babyfish.jimmer.sql.ast.PropExpression;
 import org.babyfish.jimmer.sql.ast.impl.Expr;
-import org.babyfish.jimmer.sql.ast.mutation.DeleteResult;
 import org.babyfish.jimmer.sql.ast.query.ConfigurableRootQuery;
 import org.babyfish.jimmer.sql.ast.query.MutableRootQuery;
 import org.babyfish.jimmer.sql.ast.tuple.Tuple6;
@@ -65,7 +63,7 @@ public class JimmerController {
     public IResult<Object> bitwise() {
 
         ConfigurableRootQuery<PlayerTable, Tuple6<Integer, Integer, Integer, Integer, Integer, Integer>> select = sqlClient.createQuery(PlayerTable.$)
-            .where()
+            .where(Expr.eq(Expr.bitwiseAnd(PlayerTable.$.bitflags(), 0b010), 0b010))
             .select(
                 Expr.bitwiseXor(PlayerTable.$.age(), 100),
                 Expr.bitwiseAnd(PlayerTable.$.age(), 100),

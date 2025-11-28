@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.cache.redis.reactive;
 
 import io.github.honhimw.spring.cache.redis.RedisMessageEvent;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -25,7 +25,7 @@ public class RedisEventListener extends ReactiveKeyspaceEventMessageListener imp
     }
 
     @Override
-    public void setApplicationEventPublisher(@Nonnull ApplicationEventPublisher applicationEventPublisher) {
+    public void setApplicationEventPublisher(@NonNull ApplicationEventPublisher applicationEventPublisher) {
         this.publisher = applicationEventPublisher;
     }
 

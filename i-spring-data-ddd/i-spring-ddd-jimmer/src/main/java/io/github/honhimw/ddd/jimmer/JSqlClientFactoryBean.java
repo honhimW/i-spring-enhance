@@ -4,17 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.ddd.jimmer.event.Callback;
 import io.github.honhimw.ddd.jimmer.event.CallbackInitializer;
 import io.github.honhimw.ddd.jimmer.event.CallbackInterceptor;
+import io.github.honhimw.ddd.jimmer.persist.PersistenceManagedTypes;
 import io.github.honhimw.ddd.jimmer.support.DialectDetector;
 import io.github.honhimw.ddd.jimmer.util.RawSqlLogger;
 import io.github.honhimw.ddd.jimmer.util.RuntimeDialect;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.babyfish.jimmer.meta.ImmutableType;
 import org.babyfish.jimmer.sql.DraftInterceptor;
 import org.babyfish.jimmer.sql.DraftPreProcessor;
 import org.babyfish.jimmer.sql.JSqlClient;
 import org.babyfish.jimmer.sql.cache.CacheAbandonedCallback;
 import org.babyfish.jimmer.sql.cache.CacheFactory;
 import org.babyfish.jimmer.sql.cache.CacheOperator;
+import io.github.honhimw.jddl.DDLAuto;
+import io.github.honhimw.jddl.DDLAutoRunner;
 import org.babyfish.jimmer.sql.di.AopProxyProvider;
 import org.babyfish.jimmer.sql.dialect.Dialect;
 import org.babyfish.jimmer.sql.filter.Filter;
@@ -22,24 +24,36 @@ import org.babyfish.jimmer.sql.meta.DatabaseNamingStrategy;
 import org.babyfish.jimmer.sql.meta.MetaStringResolver;
 import org.babyfish.jimmer.sql.meta.UserIdGenerator;
 import org.babyfish.jimmer.sql.runtime.*;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author hon_him
  * @since 2025-03-05
  */
 
-public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, InitializingBean, ApplicationEventPublisherAware, SmartInitializingSingleton {
+public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>,
+    InitializingBean,
+    ApplicationContextAware,
+    SmartInitializingSingleton,
+    DisposableBean
+{
 
     protected final JimmerProperties properties;
 
@@ -100,9 +114,13 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
 
     protected final Callback callback;
 
+    protected final PersistenceManagedTypes persistenceManagedTypes;
+
     private JSqlClient jSqlClient;
 
-    private ApplicationEventPublisher publisher;
+    private Environment environment;
+
+    private DDLAutoRunner ddlAutoRunner;
 
     public JSqlClientFactoryBean(
         JimmerProperties properties,
@@ -129,8 +147,8 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         Collection<Filter<?>> filters,
         Collection<Customizer> customizers,
         Collection<Initializer> initializers,
-        Callback callback
-    ) {
+        Callback callback,
+        PersistenceManagedTypes persistenceManagedTypes) {
         this.properties = properties;
         this.dataSource = dataSource;
         this.aopProxyProvider = aopProxyProvider;
@@ -156,6 +174,7 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
         this.customizers = customizers;
         this.initializers = initializers;
         this.callback = callback;
+        this.persistenceManagedTypes = persistenceManagedTypes;
         this.builder = JSqlClient.newBuilder();
     }
 
@@ -170,8 +189,8 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
     }
 
     @Override
-    public void setApplicationEventPublisher(@Nonnull ApplicationEventPublisher publisher) {
-        this.publisher = publisher;
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        this.environment = applicationContext.getEnvironment();
     }
 
     @Override
@@ -217,10 +236,25 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
             builder.setIdGenerator(userIdGenerator);
         }
         if (microServiceExchange != null) {
-            builder.setMicroServiceName(properties.getMicroServiceName());
             builder.setMicroServiceExchange(microServiceExchange);
         }
         this.jSqlClient = doBuild(builder);
+        DDLAuto ddlAuto = environment.getProperty("spring.jimmer.ddl-auto", DDLAuto.class, DDLAuto.NONE);
+        if (ddlAuto != DDLAuto.NONE) {
+            List<String> managedClassNames = this.persistenceManagedTypes.getManagedClassNames();
+            if (!managedClassNames.isEmpty()) {
+                final List<ImmutableType> immutableTypes = new ArrayList<>(managedClassNames.size());
+                for (String managedClassName : managedClassNames) {
+                    ImmutableType immutableType = ImmutableType.tryGet(Class.forName(managedClassName));
+                    if (immutableType.isEntity()) {
+                        immutableTypes.add(immutableType);
+                    }
+                }
+                this.ddlAutoRunner = new DDLAutoRunner(((JSqlClientImplementor) this.jSqlClient), ddlAuto, immutableTypes);
+                this.ddlAutoRunner.init();
+                this.ddlAutoRunner.create();
+            }
+        }
     }
 
     protected JSqlClient doBuild(JSqlClient.Builder builder) {
@@ -229,6 +263,13 @@ public class JSqlClientFactoryBean implements FactoryBean<JSqlClient>, Initializ
 
     @Override
     public void afterSingletonsInstantiated() {
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        if (this.jSqlClient != null && this.ddlAutoRunner != null) {
+            this.ddlAutoRunner.drop();
+        }
     }
 
     protected void configureLogging() {

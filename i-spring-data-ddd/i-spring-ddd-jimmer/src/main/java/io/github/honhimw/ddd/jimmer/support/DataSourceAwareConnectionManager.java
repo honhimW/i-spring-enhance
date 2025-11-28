@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.support;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.runtime.ConnectionManager;
 
 import javax.sql.DataSource;
@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 
 public interface DataSourceAwareConnectionManager extends ConnectionManager {
 
-    @Nonnull
+    @NonNull
     DataSource getDataSource();
 
 }

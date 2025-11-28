@@ -10,8 +10,8 @@ import io.github.honhimw.ddd.common.SudoSupports;
 import io.github.honhimw.ddd.jpa.util.IExampleSpecification;
 import io.github.honhimw.ddd.jpa.util.Specifications;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
 
     private final Map<String, EntityType<?>> entityTypeMap = new ConcurrentHashMap<>();
 
-    public AbstractAclExecutor(@Nonnull ResourceMod defaultMod, @Nonnull JpaEntityInformation<T, ?> ei, @Nonnull EntityManager em, @Nonnull String dataDomain) {
+    public AbstractAclExecutor(@NonNull ResourceMod defaultMod, @NonNull JpaEntityInformation<T, ?> ei, @NonNull EntityManager em, @NonNull String dataDomain) {
         this.defaultMod = defaultMod;
         this.ei = ei;
         this.em = em;
@@ -69,10 +69,10 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor<T> {
         return SudoSupports.isSudo();
     }
 
-    @Nonnull
+    @NonNull
     protected abstract Map<String, Object> getAttributes();
 
-    @Nonnull
+    @NonNull
     protected abstract List<? extends Ace> getAcl();
 
     @Nullable

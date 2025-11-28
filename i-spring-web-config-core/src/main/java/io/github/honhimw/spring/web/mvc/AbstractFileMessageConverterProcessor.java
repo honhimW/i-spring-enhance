@@ -3,8 +3,8 @@ package io.github.honhimw.spring.web.mvc;
 import io.github.honhimw.spring.ValidatorUtils;
 import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.annotation.resolver.PartParam;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
@@ -53,20 +53,20 @@ public abstract class AbstractFileMessageConverterProcessor extends AbstractMess
     }
 
     @Override
-    public boolean supportsParameter(@Nonnull MethodParameter parameter) {
+    public boolean supportsParameter(@NonNull MethodParameter parameter) {
         return parameter.hasParameterAnnotation(PartParam.class);
     }
 
     @Override
-    public boolean supportsReturnType(@Nonnull MethodParameter returnType) {
+    public boolean supportsReturnType(@NonNull MethodParameter returnType) {
         return returnType.hasMethodAnnotation(FileReturn.class);
     }
 
     @Nullable
     @Override
-    public Object resolveArgument(@Nonnull MethodParameter parameter,
+    public Object resolveArgument(@NonNull MethodParameter parameter,
                                   @Nullable ModelAndViewContainer mavContainer,
-                                  @Nonnull NativeWebRequest webRequest,
+                                  @NonNull NativeWebRequest webRequest,
                                   @Nullable WebDataBinderFactory binderFactory) throws Exception {
         parameter = parameter.nestedIfOptional();
         Object arg = readWithMessageConverters(webRequest, parameter, parameter.getNestedGenericParameterType());
@@ -91,9 +91,9 @@ public abstract class AbstractFileMessageConverterProcessor extends AbstractMess
 
     @Override
     public void handleReturnValue(@Nullable Object returnValue,
-                                  @Nonnull MethodParameter returnType,
-                                  @Nonnull ModelAndViewContainer mavContainer,
-                                  @Nonnull NativeWebRequest webRequest) throws Exception {
+                                  @NonNull MethodParameter returnType,
+                                  @NonNull ModelAndViewContainer mavContainer,
+                                  @NonNull NativeWebRequest webRequest) throws Exception {
 
         FileReturn fileReturn = returnType.getMethodAnnotation(FileReturn.class);
         Assert.notNull(fileReturn, "return value resolver annotation should not be null.");
@@ -139,9 +139,9 @@ public abstract class AbstractFileMessageConverterProcessor extends AbstractMess
 
     @Override
     @Nullable
-    protected Object readWithMessageConverters(@Nonnull NativeWebRequest webRequest,
-                                               @Nonnull MethodParameter parameter,
-                                               @Nonnull Type paramType) throws IOException, HttpMediaTypeNotSupportedException, HttpMessageNotReadableException {
+    protected Object readWithMessageConverters(@NonNull NativeWebRequest webRequest,
+                                               @NonNull MethodParameter parameter,
+                                               @NonNull Type paramType) throws IOException, HttpMediaTypeNotSupportedException, HttpMessageNotReadableException {
         PartParam partParam = parameter.getParameterAnnotation(PartParam.class);
         Assert.notNull(partParam, "argument resolver annotation should not be null.");
         HttpServletRequest servletRequest = webRequest.getNativeRequest(HttpServletRequest.class);
@@ -162,8 +162,8 @@ public abstract class AbstractFileMessageConverterProcessor extends AbstractMess
         return arg;
     }
 
-    @Nonnull
-    protected ServletServerHttpRequest createInputMessage(@Nonnull NativeWebRequest webRequest, String partName) {
+    @NonNull
+    protected ServletServerHttpRequest createInputMessage(@NonNull NativeWebRequest webRequest, String partName) {
         MultipartHttpServletRequest multipartHttpServletRequest = webRequest
             .getNativeRequest(MultipartHttpServletRequest.class);
         Assert.state(multipartHttpServletRequest != null, "No MultipartHttpServletRequest found");

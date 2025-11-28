@@ -2,7 +2,7 @@ package io.github.honhimw.spring.cache.redis.reactive;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -93,18 +93,18 @@ public class R2edisJacksonTemplateFactoryImpl implements R2edisJacksonTemplateFa
     }
 
     @Override
-    public <V> ReactiveRedisTemplate<String, V> forType(@Nonnull Type type) {
+    public <V> ReactiveRedisTemplate<String, V> forType(@NonNull Type type) {
         JavaType javaType = getMapper().constructType(type);
         return forType(javaType);
     }
 
-    public <T> ReactiveRedisTemplate<String, T> forType(@Nonnull Class<T> type) {
+    public <T> ReactiveRedisTemplate<String, T> forType(@NonNull Class<T> type) {
         JavaType javaType = getMapper().constructType(type);
         return forType(javaType);
     }
 
     @Override
-    public <V> ReactiveRedisTemplate<String, V> forType(@Nonnull JavaType javaType) {
+    public <V> ReactiveRedisTemplate<String, V> forType(@NonNull JavaType javaType) {
         if (!this.redisTemplateMap.containsKey(javaType)) {
             ReactiveRedisTemplate<String, V> template = buildTemplate(javaType);
             this.redisTemplateMap.put(javaType, template);

@@ -1,5 +1,30 @@
 plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'distribution'
+    id 'groovy'
+    id 'com.gradle.plugin-publish' version '2.0.0'
 }
+
+gradlePlugin {
+    plugins {
+        create('usingPlugin') {
+            id 'i.spring.using'
+            implementationClass 'i.spring.UsingPlugin'
+        }
+        create('libraryPlugin') {
+            id 'i.spring.library'
+            implementationClass 'i.spring.LibraryPlugin'
+        }
+        create('publishPlugin') {
+            id 'i.spring.publishing'
+            implementationClass 'i.spring.PublishingPlugin'
+        }
+        create('repositoryPlugin') {
+            id 'i.spring.repository'
+            implementationClass 'i.spring.RepositoryPlugin'
+        }
+        create('miscPlugin') {
+            id 'i.spring.misc'
+            implementationClass 'i.spring.MiscPlugin'
+        }
+    }
+}
+

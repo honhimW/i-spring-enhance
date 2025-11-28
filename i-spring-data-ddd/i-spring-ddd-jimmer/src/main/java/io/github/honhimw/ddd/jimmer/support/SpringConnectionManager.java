@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.support;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;
@@ -21,7 +21,7 @@ public class SpringConnectionManager implements DataSourceAwareConnectionManager
         this.dataSource = dataSource;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public DataSource getDataSource() {
         return dataSource;

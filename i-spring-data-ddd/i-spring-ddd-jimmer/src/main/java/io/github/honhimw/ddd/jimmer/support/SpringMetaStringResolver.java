@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.support;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.sql.meta.MetaStringResolver;
 import org.springframework.util.StringValueResolver;
 
@@ -20,7 +20,7 @@ public class SpringMetaStringResolver implements MetaStringResolver {
 
     @Override
     @Nullable
-    public String resolve(@Nonnull String value) {
+    public String resolve(@NonNull String value) {
         return stringValueResolver.resolveStringValue(value);
     }
 }

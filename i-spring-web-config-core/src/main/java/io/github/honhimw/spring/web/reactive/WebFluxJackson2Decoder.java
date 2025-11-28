@@ -2,7 +2,7 @@ package io.github.honhimw.spring.web.reactive;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.IResolvableTypeSupports;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.codec.json.AbstractJackson2Decoder;
@@ -21,9 +21,9 @@ public class WebFluxJackson2Decoder extends AbstractJackson2Decoder {
         super(mapper, mimeTypes);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    protected ObjectReader customizeReader(ObjectReader reader, @Nonnull ResolvableType elementType, Map<String, Object> hints) {
+    protected ObjectReader customizeReader(ObjectReader reader, @NonNull ResolvableType elementType, Map<String, Object> hints) {
         return reader.forType(IResolvableTypeSupports.resolve(elementType).getType());
     }
 

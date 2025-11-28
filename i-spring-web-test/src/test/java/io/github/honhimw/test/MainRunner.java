@@ -20,11 +20,14 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.github.honhimw.core.IResult;
 import io.github.honhimw.example.domain.jimmer.PlayerTable;
 import io.github.honhimw.spring.cache.redis.RedisMessageEvent;
+import io.github.honhimw.util.tool.ErrorStack;
 import io.github.honhimw.test.jacksonfilter.PointerFilteringGenerator;
 import io.github.honhimw.util.JsonUtils;
 import io.github.honhimw.util.ReactiveHttpUtils;
 import jakarta.validation.*;
 import jakarta.validation.bootstrap.GenericBootstrap;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -41,6 +44,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.*;
@@ -71,9 +75,7 @@ public class MainRunner {
         );
         hello.response().block();
         ReactorClientHttpConnector reactorClientHttpConnector = new ReactorClientHttpConnector();
-        Mono<ClientHttpResponse> connect = reactorClientHttpConnector.connect(HttpMethod.POST, URI.create("http://127.0.0.1:11451/hello"), clientHttpRequest -> {
-            return clientHttpRequest.writeWith(Mono.just(clientHttpRequest.bufferFactory().wrap("hello".getBytes())));
-        });
+        Mono<ClientHttpResponse> connect = reactorClientHttpConnector.connect(HttpMethod.POST, URI.create("http://127.0.0.1:11451/hello"), clientHttpRequest -> clientHttpRequest.writeWith(Mono.just(clientHttpRequest.bufferFactory().wrap("hello".getBytes()))));
         ClientHttpResponse block = connect.block();
     }
 
@@ -177,9 +179,7 @@ public class MainRunner {
 
         CsvSchema schema = CsvSchema.emptySchema().withHeader();
         try (MappingIterator<ObjectNode> iterator = csvMapper.reader().forType(ObjectNode.class).with(columns).readValues(csvContent)) {
-            iterator.forEachRemaining(o -> {
-                System.out.println(o);
-            });
+            iterator.forEachRemaining(System.out::println);
         }
 
         System.out.println(csvMapper.writer().with(csvMapper.schemaFor(Person.class).withHeader()).writeValueAsString(person));
@@ -195,9 +195,7 @@ public class MainRunner {
     @Test
     public void file() {
         File file = new File("E:\\temp");
-        String[] list = file.list((dir, name) -> {
-            return true;
-        });
+        String[] list = file.list((dir, name) -> true);
         for (String s : list) {
             System.out.println(s);
         }
@@ -358,6 +356,8 @@ public class MainRunner {
         return entity;
     }
 
+    @Setter
+    @Getter
     public static class Entity implements Serializable {
 
         private String id;
@@ -366,67 +366,27 @@ public class MainRunner {
         private SubEntity sub;
         private SubEntity[] ss;
 
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public Integer getAge() {
-            return age;
-        }
-
-        public void setAge(Integer age) {
-            this.age = age;
-        }
-
-        public Boolean getGender() {
-            return gender;
-        }
-
-        public void setGender(Boolean gender) {
-            this.gender = gender;
-        }
-
-        public SubEntity getSub() {
-            return sub;
-        }
-
-        public void setSub(SubEntity sub) {
-            this.sub = sub;
-        }
-
-        public SubEntity[] getSs() {
-            return ss;
-        }
-
-        public void setSs(SubEntity[] ss) {
-            this.ss = ss;
-        }
-
+        @Setter
+        @Getter
         public static class SubEntity implements Serializable {
             private String title;
             private String firstName;
 
-            public String getTitle() {
-                return title;
-            }
-
-            public void setTitle(String title) {
-                this.title = title;
-            }
-
-            public String getFirstName() {
-                return firstName;
-            }
-
-            public void setFirstName(String firstName) {
-                this.firstName = firstName;
-            }
         }
 
+    }
+
+    @Test
+    @SneakyThrows
+    void exceptionMessageCollector() {
+        Exception e = new Exception("foo");
+        Exception iae = new IllegalArgumentException("bar", e);
+        e.initCause(iae);
+        e = new IOException("io", e);
+        ErrorStack errorStack = new ErrorStack(e, 4);
+        String message = errorStack.toString();
+        System.out.println(message);
+        log.error(message);
     }
 
 }

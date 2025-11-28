@@ -1,14 +1,9 @@
 package io.github.honhimw.ddd.jimmer.mapping;
 
-import jakarta.annotation.Nonnull;
 import org.babyfish.jimmer.meta.ImmutableProp;
-import org.babyfish.jimmer.meta.TargetLevel;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
-import org.springframework.data.mapping.model.Property;
-import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
 import java.lang.annotation.Annotation;
@@ -37,31 +32,31 @@ public class JimmerPersistentPropertyImpl implements JimmerPersistentProperty {
         return this.prop;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public JimmerPersistentEntity<?> getOwner() {
         return this.entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public String getName() {
         return prop.getName();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<?> getType() {
         return prop.getReturnClass();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public TypeInformation<?> getTypeInformation() {
         return TypeInformation.of(getType());
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Iterable<? extends TypeInformation<?>> getPersistentEntityTypeInformation() {
         return Collections.emptyList();
@@ -157,7 +152,7 @@ public class JimmerPersistentPropertyImpl implements JimmerPersistentProperty {
         return null;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<?> getRawType() {
         return this.prop.getReturnClass();
@@ -168,24 +163,24 @@ public class JimmerPersistentPropertyImpl implements JimmerPersistentProperty {
         return null;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<?> getActualType() {
         return this.prop.getReturnClass();
     }
 
     @Override
-    public <A extends Annotation> A findAnnotation(@Nonnull Class<A> annotationType) {
+    public <A extends Annotation> A findAnnotation(@NonNull Class<A> annotationType) {
         return this.prop.getAnnotation(annotationType);
     }
 
     @Override
-    public <A extends Annotation> A findPropertyOrOwnerAnnotation(@Nonnull Class<A> annotationType) {
+    public <A extends Annotation> A findPropertyOrOwnerAnnotation(@NonNull Class<A> annotationType) {
         return this.prop.getAnnotation(annotationType);
     }
 
     @Override
-    public boolean isAnnotationPresent(@Nonnull Class<? extends Annotation> annotationType) {
+    public boolean isAnnotationPresent(@NonNull Class<? extends Annotation> annotationType) {
         Annotation annotation = this.prop.getAnnotation(annotationType);
         return annotation != null;
     }

@@ -1,6 +1,6 @@
 package io.github.honhimw.util;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -233,7 +233,7 @@ public class IDataSize implements Serializable, Comparable<IDataSize> {
         return new IDataSize(this.bytes.multiply(other.bytes));
     }
 
-    public BigInteger sizeOf(@Nonnull Unit unit) {
+    public BigInteger sizeOf(@NonNull Unit unit) {
         return unit.sizeOf(this);
     }
 

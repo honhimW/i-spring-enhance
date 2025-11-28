@@ -3,7 +3,7 @@ package io.github.honhimw.spring.cache.redis;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.honhimw.util.JsonUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -37,12 +37,12 @@ public class RedisConfig {
 
     @Bean
     StringRedisSerializer keySerializer() {
-        final String _prefix = StringUtils.appendIfMissing(prefix, ":");
+        final String _prefix = Strings.CS.appendIfMissing(prefix, ":");
         return new StringRedisSerializer() {
             @Override
             public String deserialize(byte[] bytes) {
                 String saveKey = super.deserialize(bytes);
-                int indexOf = StringUtils.indexOf(saveKey, _prefix);
+                int indexOf = Strings.CS.indexOf(saveKey, _prefix);
                 if (indexOf > 0) {
                     saveKey = saveKey.substring(indexOf);
                 }

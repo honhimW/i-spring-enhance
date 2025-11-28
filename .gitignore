@@ -6,7 +6,7 @@ buildSrc/maven-repository.gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-buildSrc/rewrite.gradle
+rewrite.gradle
 rewrite.yaml
 
 ### STS ###

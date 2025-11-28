@@ -1,13 +1,18 @@
 package io.github.honhimw.util;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.HttpHeaders;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
 
+import java.io.File;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -43,9 +48,7 @@ public class ReactiveHttpUtilsTest {
                 ]
                 """)))
         );
-        Flux<ByteBuf> response = responseReceiver.response((httpClientResponse, byteBufFlux) -> {
-            return byteBufFlux;
-        });
+        Flux<ByteBuf> response = responseReceiver.response((httpClientResponse, byteBufFlux) -> byteBufFlux);
         response.map(byteBuf -> {
                 String string = byteBuf.toString(StandardCharsets.UTF_8);
                 System.out.println(string);
@@ -71,6 +74,50 @@ public class ReactiveHttpUtilsTest {
                 .json(Map.of("foo", "bar")))
             ));
         System.out.println(post.str());
+    }
+
+    @Test
+    @SneakyThrows
+    void socks5() {
+        ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance();
+        ReactiveHttpUtils.HttpResult get = instance.request(configurer -> configurer
+            .method("GET").url("https://www.google.com")
+            .config(builder -> builder.customize(httpClient -> httpClient
+                    .proxy(typeSpec -> typeSpec
+                        .type(ProxyProvider.Proxy.SOCKS5)
+                        .host("192.168.0.126").port(10808)
+                    )
+                )
+            )
+        );
+        System.out.println(get.str());
+
+    }
+
+    @Test
+    @SneakyThrows
+    void formData() {
+        ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance();
+        ReactiveHttpUtils.HttpResult post = instance.post("http://127.0.0.1:11451/form", configurer -> configurer
+
+            .body(payload -> payload.formData(formData -> formData
+                .text("foo", "bar")
+                .text("json", "{\"foo\": \"bar\"}", "application/json")
+                .file("files", new File("E:\\temp\\video\\files.txt"), "application/json")
+            ))
+        );
+        System.out.println(post.str());
+    }
+
+    @Test
+    @SneakyThrows
+    void reactive() {
+        ReactiveHttpUtils instance = ReactiveHttpUtils.getInstance();
+        Mono<Object> objectMono = instance.rGet("http://127.0.0.1:11451/test").responseSingle((response, byteBufMono) -> {
+            HttpHeaders entries = response.responseHeaders();
+            return Mono.empty();
+        });
+        objectMono.block();
     }
 
 }

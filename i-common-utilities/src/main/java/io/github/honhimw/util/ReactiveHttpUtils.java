@@ -27,14 +27,13 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProtocols;
 import io.netty.resolver.AddressResolverGroup;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import lombok.*;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +66,7 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * <table>
@@ -147,9 +147,9 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         static final NoopConnectProvider INSTANCE = new NoopConnectProvider();
 
-        @Nonnull
+        @NonNull
         @Override
-        public Mono<? extends Connection> acquire(@Nonnull TransportConfig config, @Nonnull ConnectionObserver connectionObserver, Supplier<? extends SocketAddress> remoteAddress, AddressResolverGroup<?> resolverGroup) {
+        public Mono<? extends Connection> acquire(@NonNull TransportConfig config, @NonNull ConnectionObserver connectionObserver, Supplier<? extends SocketAddress> remoteAddress, AddressResolverGroup<?> resolverGroup) {
             return Mono.error(() -> new IllegalStateException("http-client already closed."));
         }
 
@@ -667,8 +667,11 @@ public class ReactiveHttpUtils implements AutoCloseable {
         configurer.accept(requestConfigurer);
         _assertState(StringUtils.isNotBlank(requestConfigurer.method()), "Method should not be blank");
         _assertState(StringUtils.isNotBlank(requestConfigurer.url()), "URL should not be blank");
+        HttpClient client = Optional.ofNullable(requestConfigurer.config)
+            .map(requestConfig -> requestConfig.config(httpClient))
+            .orElse(httpClient);
         try {
-            FilterContext filterContext = new FilterContext(this, httpClient, requestConfigurer);
+            FilterContext filterContext = new FilterContext(this, client, requestConfigurer);
             FilterChain filterChain = chainBuilder.build();
             return filterChain.doFilter(filterContext);
         } catch (Exception e) {
@@ -1020,7 +1023,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
 
         private String url;
 
-        private final Map<CharSequence, List<CharSequence>> headers = new HashMap<>();
+        private final Map<CharSequence, List<CharSequence>> headers = new LinkedHashMap<>();
 
         private final List<Entry<String, String>> params = new ArrayList<>();
 
@@ -1217,6 +1220,26 @@ public class ReactiveHttpUtils implements AutoCloseable {
         public Configurer body(Consumer<Payload> configurer) {
             bodyConfigurer = configurer;
             return this;
+        }
+
+        /**
+         * Alias for most usage cases
+         *
+         * @param json json format raw text
+         * @return this chain
+         */
+        public Configurer json(String json) {
+            return body(payload -> payload.raw(raw -> raw.json(json)));
+        }
+
+        /**
+         * Alias for most usage cases
+         *
+         * @param obj to be json encoded object
+         * @return this chain
+         */
+        public Configurer json(Object obj) {
+            return body(payload -> payload.raw(raw -> raw.json(obj)));
         }
 
         /**
@@ -1678,10 +1701,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          */
         public static class FormData extends AbstractBody<FormData> {
 
-            /**
-             * multipart/form-data content-type
-             */
-            public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+            public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
 
             private final List<Function<HttpClientForm, HttpClientForm>> parts = new ArrayList<>();
 
@@ -1713,6 +1733,19 @@ public class ReactiveHttpUtils implements AutoCloseable {
             }
 
             /**
+             * Text data with content-type
+             *
+             * @param name        property name
+             * @param value       property value
+             * @param contentType text type
+             * @return this
+             */
+            public FormData text(String name, String value, String contentType) {
+                parts.add(form -> form.textFile(name, new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)), contentType));
+                return this;
+            }
+
+            /**
              * File data
              *
              * @param name property name
@@ -1720,7 +1753,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData file(String name, File file) {
-                return file(name, name, file, MULTIPART_FORM_DATA);
+                return file(name, file.getName(), file, APPLICATION_OCTET_STREAM);
             }
 
             /**
@@ -1731,7 +1764,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData bytes(String name, byte[] bytes) {
-                return bytes(name, name, bytes, MULTIPART_FORM_DATA);
+                return bytes(name, name, bytes, APPLICATION_OCTET_STREAM);
             }
 
             /**
@@ -1742,7 +1775,40 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData inputStream(String name, InputStream ips) {
-                return inputStream(name, name, ips, MULTIPART_FORM_DATA);
+                return inputStream(name, name, ips, APPLICATION_OCTET_STREAM);
+            }
+
+            /**
+             * File data
+             *
+             * @param name property name
+             * @param file property content
+             * @return this
+             */
+            public FormData file(String name, File file, String contentType) {
+                return file(name, file.getName(), file, contentType);
+            }
+
+            /**
+             * Bytes array data
+             *
+             * @param name  property name
+             * @param bytes property content
+             * @return this
+             */
+            public FormData bytes(String name, byte[] bytes, String contentType) {
+                return bytes(name, name, bytes, contentType);
+            }
+
+            /**
+             * InputStream data
+             *
+             * @param name property name
+             * @param ips  property content
+             * @return this
+             */
+            public FormData inputStream(String name, InputStream ips, String contentType) {
+                return inputStream(name, name, ips, contentType);
             }
 
             /**
@@ -1783,7 +1849,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
              * @return this
              */
             public FormData inputStream(String name, String fileName, InputStream ips, String contentType) {
-                parts.add(form -> form.file(name, fileName, ips, MULTIPART_FORM_DATA));
+                parts.add(form -> form.file(name, fileName, ips, APPLICATION_OCTET_STREAM));
                 return this;
             }
 
@@ -1848,6 +1914,19 @@ public class ReactiveHttpUtils implements AutoCloseable {
     }
 
     /**
+     * Convert HttpClientResponse to HttpResult for useful api.
+     *
+     * @param response http response(without body)
+     * @return meta-data only http result(without body)
+     */
+    public static HttpResult asResult(HttpClientResponse response) {
+        HttpResult httpResult = new HttpResult();
+        httpResult.setHttpClientResponse(response);
+        httpResult.init();
+        return httpResult;
+    }
+
+    /**
      * Blocking http result keeper
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -1886,20 +1965,15 @@ public class ReactiveHttpUtils implements AutoCloseable {
             this.reasonPhrase = status.reasonPhrase();
             HttpHeaders entries = httpClientResponse.responseHeaders();
             setHeaders(entries);
-            Optional.ofNullable(getHeader(HttpHeaderNames.CONTENT_TYPE.toString()))
+            getHeader(HttpHeaderNames.CONTENT_TYPE.toString())
                 .ifPresent(contentType -> {
                     setContentType(contentType);
                     if (StringUtils.isNotBlank(contentType)) {
-                        String[] split = contentType.split(";");
-                        Arrays.stream(split).map(String::trim)
-                            .filter(StringUtils::isNotBlank)
-                            .filter(s -> Strings.CI.startsWith(s, "charset"))
-                            .map(s -> Strings.CI.removeStart(s, "charset="))
-                            .findFirst()
-                            .ifPresent(this::setCharset);
+                        MediaType parse = MediaType.parse(contentType);
+                        this.charset = parse.charset();
                     }
                 });
-            Optional.ofNullable(getHeader(HttpHeaderNames.CONTENT_LENGTH.toString()))
+            getHeader(HttpHeaderNames.CONTENT_LENGTH.toString())
                 .ifPresent(HttpResult.this::setContentLength);
             cookies = httpClientResponse.cookies();
         }
@@ -1923,13 +1997,6 @@ public class ReactiveHttpUtils implements AutoCloseable {
             return 200 <= this.statusCode && this.statusCode < 300;
         }
 
-        private void setCharset(String charset) {
-            try {
-                this.charset = Charset.forName(charset);
-            } catch (Exception ignored) {
-            }
-        }
-
         /**
          * Get all http response headers
          *
@@ -1945,12 +2012,10 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param name header name
          * @return first result
          */
-        public String getHeader(String name) {
-            List<String> list = getAllHeaders().get(name);
-            if (CollectionUtils.isNotEmpty(list)) {
-                return list.get(0);
-            }
-            return null;
+        @NonNull
+        public Optional<String> getHeader(String name) {
+            Stream<String> values = getHeaderCaseInsensitive(name);
+            return values.findFirst();
         }
 
         /**
@@ -1959,8 +2024,21 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param name header name
          * @return header values with name
          */
+        @NonNull
         public List<String> getHeaders(String name) {
-            return headers.get(name);
+            return getHeaderCaseInsensitive(name).toList();
+        }
+
+        @NonNull
+        private Stream<String> getHeaderCaseInsensitive(String name) {
+            Stream<String> stream = Stream.empty();
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                String key = entry.getKey();
+                if (Strings.CI.equals(key, name)) {
+                    stream = Stream.concat(stream, entry.getValue().stream());
+                }
+            }
+            return stream;
         }
 
         private void setHeader(String name, String value) {
@@ -1988,6 +2066,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param name cookie name
          * @return cookies
          */
+        @Nullable
         public Set<Cookie> getCookie(String name) {
             return Optional.ofNullable(cookies).map(_map -> _map.get(name)).orElse(Collections.emptySet());
         }
@@ -1997,7 +2076,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          *
          * @return content payload
          */
-        public byte[] content() {
+        public byte @Nullable [] content() {
             return wrap(bytes -> bytes);
         }
 
@@ -2006,6 +2085,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          *
          * @return plain response content
          */
+        @Nullable
         public String str() {
             return wrap(bytes -> new String(bytes, charset));
         }
@@ -2017,6 +2097,7 @@ public class ReactiveHttpUtils implements AutoCloseable {
          * @param <T>     resolved type
          * @return resolved value
          */
+        @Nullable
         public <T> T wrap(Function<byte[], T> wrapper) {
             Objects.requireNonNull(wrapper, "wrapper should not be null");
             return Optional.ofNullable(content).map(wrapper).orElse(null);
@@ -2039,14 +2120,9 @@ public class ReactiveHttpUtils implements AutoCloseable {
     public static Charset getCharset(HttpClientResponse httpClientResponse) {
         HttpHeaders entries = httpClientResponse.responseHeaders();
         return Optional.ofNullable(entries.get(HttpHeaderNames.CONTENT_TYPE.toString()))
-            .flatMap(contentType -> {
-                String[] split = contentType.split(";");
-                return Arrays.stream(split).map(String::trim)
-                    .filter(StringUtils::isNotBlank)
-                    .filter(s -> Strings.CI.startsWith(s, "charset"))
-                    .map(s -> Strings.CI.removeStart(s, "charset="))
-                    .findFirst()
-                    .map(Charset::forName);
+            .map(contentType -> {
+                MediaType parse = MediaType.parse(contentType);
+                return parse.charset();
             })
             .orElse(StandardCharsets.UTF_8);
     }

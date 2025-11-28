@@ -14,8 +14,8 @@ import io.github.honhimw.spring.annotation.resolver.FileReturn;
 import io.github.honhimw.spring.web.mvc.FetcherJacksonConverter;
 import io.github.honhimw.spring.web.util.BodyWithReturnType;
 import io.github.honhimw.spring.web.util.MimeTypeSupports;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpInputMessage;
@@ -65,18 +65,18 @@ public class CsvHttpMessageConverter extends FetcherJacksonConverter {
     }
 
     @Override
-    public boolean canRead(@Nonnull Type type, Class<?> contextClass, MediaType mediaType) {
+    public boolean canRead(@NonNull Type type, Class<?> contextClass, MediaType mediaType) {
         return MimeTypeSupports.TEXT_CSV.isCompatibleWith(mediaType) && ResolvableTypes.COLLECTION_TYPE.isAssignableFrom(ResolvableType.forType(type));
     }
 
     @Override
-    public boolean canWrite(@Nullable Type type, @Nonnull Class<?> clazz, MediaType mediaType) {
+    public boolean canWrite(@Nullable Type type, @NonNull Class<?> clazz, MediaType mediaType) {
         return canWrite(mediaType) && ResolvableTypes.COLLECTION_TYPE.isAssignableFrom(ResolvableType.forType(type));
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Object read(@Nonnull Type type, @Nullable Class<?> contextClass, HttpInputMessage inputMessage)
+    public Object read(@NonNull Type type, @Nullable Class<?> contextClass, HttpInputMessage inputMessage)
         throws IOException, HttpMessageNotReadableException {
         JavaType javaType = getJavaType(type, contextClass);
         MediaType contentType = inputMessage.getHeaders().getContentType();
@@ -111,7 +111,7 @@ public class CsvHttpMessageConverter extends FetcherJacksonConverter {
     }
 
     @Override
-    protected void writeInternal(@Nonnull Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+    protected void writeInternal(@NonNull Object object, Type type, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         MediaType contentType = outputMessage.getHeaders().getContentType();
         Charset charset = getCharset(contentType);
         byte[] prefix = {};
@@ -174,13 +174,13 @@ public class CsvHttpMessageConverter extends FetcherJacksonConverter {
         }
     }
 
-    @Nonnull
-    protected ObjectWriter customizeWriter(@Nonnull ObjectWriter writer, Type type, Object object) {
+    @NonNull
+    protected ObjectWriter customizeWriter(@NonNull ObjectWriter writer, Type type, Object object) {
         CsvSchema schema = getSchema(ResolvableType.forType(type).getGeneric(0), (Collection<?>) object);
         return writer.with(schema);
     }
 
-    @Nonnull
+    @NonNull
     protected Charset getCharset(MediaType contentType, byte[] bytes) {
         if (contentType != null && contentType.getCharset() != null) {
             return contentType.getCharset();

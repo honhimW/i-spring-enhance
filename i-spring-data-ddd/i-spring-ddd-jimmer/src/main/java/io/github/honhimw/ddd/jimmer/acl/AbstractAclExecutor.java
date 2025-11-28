@@ -10,8 +10,6 @@ import io.github.honhimw.ddd.jimmer.convert.IExampleSpecification;
 import io.github.honhimw.ddd.jimmer.domain.Specification;
 import io.github.honhimw.ddd.jimmer.util.Utils;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -19,6 +17,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,14 +56,14 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor {
         return SudoSupports.isSudo();
     }
 
-    @Nonnull
+    @NonNull
     protected abstract Map<String, Object> getAttributes();
 
-    @Nonnull
+    @NonNull
     protected abstract List<? extends Ace> getAcl();
 
     @Override
-    public @Nullable Specification.Query read() {
+    public Specification.@Nullable Query read() {
         if (!guard()) {
             return null;
         }
@@ -143,13 +143,12 @@ public abstract class AbstractAclExecutor<T> implements AclExecutor {
     }
 
     @Override
-    public @Nullable Specification.Delete delete() {
+    public Specification.@Nullable Delete delete() {
         // TODO using readability and writability for delete check instead
         return null;
     }
 
-    @Nullable
-    protected <S extends T> Specification.Query buildSpecification(Ace ace, String parameterName, Map<String, Object> attributes) {
+    protected <S extends T> Specification.@Nullable Query buildSpecification(Ace ace, String parameterName, Map<String, Object> attributes) {
         if (StringUtils.isBlank(parameterName)) {
             if (ace.getMod().canRead()) {
                 return Specification.Query._true();

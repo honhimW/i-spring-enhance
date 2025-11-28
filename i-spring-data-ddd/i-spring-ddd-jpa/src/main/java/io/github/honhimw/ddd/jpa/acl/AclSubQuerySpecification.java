@@ -5,8 +5,8 @@ import io.github.honhimw.core.ConditionColumn;
 import io.github.honhimw.core.MatchingType;
 import io.github.honhimw.ddd.jpa.util.IExampleSpecification;
 import io.github.honhimw.util.JsonUtils;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.metamodel.EntityType;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public class AclSubQuerySpecification<T, S extends T> implements Specification<S
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public Predicate toPredicate(@Nonnull Root<S> root, @Nullable CriteriaQuery<?> query, @Nonnull CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(@NonNull Root<S> root, @Nullable CriteriaQuery<?> query, @NonNull CriteriaBuilder criteriaBuilder) {
         if (Objects.isNull(query)) {
             return null;
         }

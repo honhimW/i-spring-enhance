@@ -1,7 +1,8 @@
 package io.github.honhimw.ddd.jimmer.domain;
 
-import jakarta.annotation.Nullable;
 import org.babyfish.jimmer.sql.MappedSuperclass;
+//import org.jspecify.annotations.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author hon_him

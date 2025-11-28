@@ -2,8 +2,8 @@ package io.github.honhimw.spring.web.reactive;
 
 import io.micrometer.context.ContextRegistry;
 import io.micrometer.context.ThreadLocalAccessor;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Hooks;
 import reactor.util.context.Context;
@@ -65,7 +65,7 @@ public class ReactorThreadLocalConfig {
 
     private <T> ThreadLocalAccessor<T> buildThreadLocalAccessor(String key, Accessor<T> accessor) {
         return new ThreadLocalAccessor<>() {
-            @Nonnull
+            @NonNull
             public Object key() {
                 return key;
             }
@@ -78,7 +78,7 @@ public class ReactorThreadLocalConfig {
                 return null;
             }
 
-            public void setValue(@Nonnull T value) {
+            public void setValue(@NonNull T value) {
                 accessor.set(value);
             }
 

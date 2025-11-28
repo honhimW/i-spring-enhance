@@ -15,6 +15,8 @@ dependencies {
 
     compileOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     compileOnly 'com.github.pemistahl:lingua:1.2.2'
+    compileOnly 'software.amazon.awssdk:s3'
+    compileOnly 'com.squareup.okhttp3:okhttp'
 
     compileOnly 'ch.qos.logback:logback-classic'
     compileOnly 'org.apache.logging.log4j:log4j-core'
@@ -26,6 +28,7 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:okhttp'
     testRuntimeOnly 'com.github.luben:zstd-jni'
     testRuntimeOnly 'org.tukaani:xz'
+    testImplementation 'software.amazon.awssdk:s3'
 
     testImplementation 'org.openjdk.jmh:jmh-core'
     testAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess'

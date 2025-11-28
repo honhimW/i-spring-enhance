@@ -1,21 +1,11 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
 import io.github.honhimw.ddd.jimmer.EnableJimmerRepositories;
-import jakarta.annotation.Nonnull;
-import org.babyfish.jimmer.meta.ImmutableType;
-import org.springframework.beans.factory.parsing.BeanComponentDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.data.repository.config.*;
-import org.springframework.util.Assert;
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport;
+import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author hon_him
@@ -24,13 +14,13 @@ import java.util.List;
 
 public class JimmerRepositoriesRegistrarForAnnotation extends RepositoryBeanDefinitionRegistrarSupport {
 
-    @Nonnull
+    @NonNull
     @Override
     protected Class<? extends Annotation> getAnnotation() {
         return EnableJimmerRepositories.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected RepositoryConfigurationExtension getExtension() {
         return new JimmerRepositoryConfigExtension();
@@ -40,19 +30,19 @@ public class JimmerRepositoriesRegistrarForAnnotation extends RepositoryBeanDefi
 //    private Environment environment;
 //
 //    @Override
-//    public void setResourceLoader(@Nonnull ResourceLoader resourceLoader) {
+//    public void setResourceLoader(@NonNull ResourceLoader resourceLoader) {
 //        super.setResourceLoader(resourceLoader);
 //        this.resourceLoader = resourceLoader;
 //    }
 //
 //    @Override
-//    public void setEnvironment(@Nonnull Environment environment) {
+//    public void setEnvironment(@NonNull Environment environment) {
 //        super.setEnvironment(environment);
 //        this.environment = environment;
 //    }
 //
 //    @Override
-//    public void registerBeanDefinitions(@Nonnull AnnotationMetadata metadata, @Nonnull BeanDefinitionRegistry registry, @Nonnull BeanNameGenerator generator) {
+//    public void registerBeanDefinitions(@NonNull AnnotationMetadata metadata, @NonNull BeanDefinitionRegistry registry, @NonNull BeanNameGenerator generator) {
 //        Assert.notNull(metadata, "AnnotationMetadata must not be null");
 //        Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 //        Assert.notNull(resourceLoader, "ResourceLoader must not be null");

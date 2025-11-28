@@ -1,6 +1,6 @@
 package io.github.honhimw.spring;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
@@ -21,7 +21,7 @@ public interface BuildIn extends Ordered, Comparable<BuildIn> {
     }
 
     @Override
-    default int compareTo(@Nonnull BuildIn o) {
+    default int compareTo(@NonNull BuildIn o) {
         int thisOrder = this.getOrder();
         int otherOrder = o.getOrder();
         if (this.getClass().isAnnotationPresent(Order.class)) {

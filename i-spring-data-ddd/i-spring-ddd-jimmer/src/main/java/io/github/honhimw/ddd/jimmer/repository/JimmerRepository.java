@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.repository;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.babyfish.jimmer.Input;
 import org.babyfish.jimmer.View;
 import org.babyfish.jimmer.impl.util.CollectionUtils;
@@ -46,20 +46,20 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
     @Nullable
     E findNullable(ID id, Fetcher<E> fetcher);
 
-    @Nonnull
+    @NonNull
     @Override
-    default Optional<E> findById(@Nonnull ID id) {
+    default Optional<E> findById(@NonNull ID id) {
         return Optional.ofNullable(findNullable(id));
     }
 
-    @Nonnull
+    @NonNull
     default Optional<E> findById(ID id, Fetcher<E> fetcher) {
         return Optional.ofNullable(findNullable(id, fetcher));
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    List<E> findAllById(@Nonnull Iterable<ID> ids);
+    List<E> findAllById(@NonNull Iterable<ID> ids);
 
     List<E> findAllById(Iterable<ID> ids, Fetcher<E> fetcher);
 
@@ -67,7 +67,7 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
 
     Map<ID, E> findMapByIds(Iterable<ID> ids, Fetcher<E> fetcher);
 
-    @Nonnull
+    @NonNull
     @Override
     List<E> findAll();
 
@@ -75,9 +75,9 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
 
     List<E> findAll(Fetcher<E> fetcher, TypedProp.Scalar<?, ?> ... sortedProps);
 
-    @Nonnull
+    @NonNull
     @Override
-    List<E> findAll(@Nonnull Sort sort);
+    List<E> findAll(@NonNull Sort sort);
 
     List<E> findAll(Fetcher<E> fetcher, Sort sort);
 
@@ -93,166 +93,166 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
 
     Page<E> findAll(int pageIndex, int pageSize, Fetcher<E> fetcher, Sort sort);
 
-    @Nonnull
+    @NonNull
     @Override
-    Page<E> findAll(@Nonnull Pageable pageable);
+    Page<E> findAll(@NonNull Pageable pageable);
 
     Page<E> findAll(Pageable pageable, Fetcher<E> fetcher);
 
     @Override
-    default boolean existsById(@Nonnull ID id) {
+    default boolean existsById(@NonNull ID id) {
         return findNullable(id) != null;
     }
 
     @Override
     long count();
 
-    @Nonnull
+    @NonNull
     @Override
-    default <S extends E> S save(@Nonnull S entity) {
+    default <S extends E> S save(@NonNull S entity) {
         return saveCommand(entity).execute().getModifiedEntity();
     }
 
-    @Nonnull
-    default <S extends E> SimpleSaveResult<S> save(@Nonnull S entity, SaveMode mode) {
+    @NonNull
+    default <S extends E> SimpleSaveResult<S> save(@NonNull S entity, SaveMode mode) {
         return saveCommand(entity).setMode(mode).execute();
     }
 
-    @Nonnull
-    default <S extends E> SimpleSaveResult<S> save(@Nonnull S entity, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default <S extends E> SimpleSaveResult<S> save(@NonNull S entity, AssociatedSaveMode associatedMode) {
         return saveCommand(entity).setAssociatedModeAll(associatedMode).execute();
     }
 
-    @Nonnull
-    default <S extends E> SimpleSaveResult<S> save(@Nonnull S entity, SaveMode mode, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default <S extends E> SimpleSaveResult<S> save(@NonNull S entity, SaveMode mode, AssociatedSaveMode associatedMode) {
         return saveCommand(entity).setMode(mode).setAssociatedModeAll(associatedMode).execute();
     }
 
-    @Nonnull
-    default E save(@Nonnull Input<E> input) {
+    @NonNull
+    default E save(@NonNull Input<E> input) {
         return saveCommand(input.toEntity()).execute().getModifiedEntity();
     }
 
-    @Nonnull
-    default SimpleSaveResult<E> save(@Nonnull Input<E> input, SaveMode mode) {
+    @NonNull
+    default SimpleSaveResult<E> save(@NonNull Input<E> input, SaveMode mode) {
         return saveCommand(input.toEntity()).setMode(mode).execute();
     }
 
-    @Nonnull
-    default SimpleSaveResult<E> save(@Nonnull Input<E> input, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default SimpleSaveResult<E> save(@NonNull Input<E> input, AssociatedSaveMode associatedMode) {
         return saveCommand(input.toEntity()).setAssociatedModeAll(associatedMode).execute();
     }
 
-    @Nonnull
-    default SimpleSaveResult<E> save(@Nonnull Input<E> input, SaveMode mode, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default SimpleSaveResult<E> save(@NonNull Input<E> input, SaveMode mode, AssociatedSaveMode associatedMode) {
         return saveCommand(input.toEntity()).setMode(mode).setAssociatedModeAll(associatedMode).execute();
     }
 
-    @Nonnull
-    default E insert(@Nonnull E entity) {
+    @NonNull
+    default E insert(@NonNull E entity) {
         return save(entity, SaveMode.INSERT_ONLY, AssociatedSaveMode.APPEND).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insert(@Nonnull E entity, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E insert(@NonNull E entity, AssociatedSaveMode associatedMode) {
         return save(entity, SaveMode.INSERT_ONLY, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insert(@Nonnull Input<E> input) {
+    @NonNull
+    default E insert(@NonNull Input<E> input) {
         return save(input.toEntity(), SaveMode.INSERT_ONLY, AssociatedSaveMode.APPEND_IF_ABSENT).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insert(@Nonnull Input<E> input, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E insert(@NonNull Input<E> input, AssociatedSaveMode associatedMode) {
         return save(input.toEntity(), SaveMode.INSERT_ONLY, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insertIfAbsent(@Nonnull E entity) {
+    @NonNull
+    default E insertIfAbsent(@NonNull E entity) {
         return save(entity, SaveMode.INSERT_IF_ABSENT, AssociatedSaveMode.APPEND_IF_ABSENT).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insertIfAbsent(@Nonnull E entity, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E insertIfAbsent(@NonNull E entity, AssociatedSaveMode associatedMode) {
         return save(entity, SaveMode.INSERT_IF_ABSENT, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insertIfAbsent(@Nonnull Input<E> input) {
+    @NonNull
+    default E insertIfAbsent(@NonNull Input<E> input) {
         return save(input.toEntity(), SaveMode.INSERT_IF_ABSENT, AssociatedSaveMode.APPEND_IF_ABSENT).getModifiedEntity();
     }
 
-    @Nonnull
-    default E insertIfAbsent(@Nonnull Input<E> input, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E insertIfAbsent(@NonNull Input<E> input, AssociatedSaveMode associatedMode) {
         return save(input.toEntity(), SaveMode.INSERT_IF_ABSENT, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E update(@Nonnull E entity) {
+    @NonNull
+    default E update(@NonNull E entity) {
         return save(entity, SaveMode.UPDATE_ONLY, AssociatedSaveMode.UPDATE).getModifiedEntity();
     }
 
-    @Nonnull
-    default E update(@Nonnull E entity, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E update(@NonNull E entity, AssociatedSaveMode associatedMode) {
         return save(entity, SaveMode.UPDATE_ONLY, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E update(@Nonnull Input<E> input) {
+    @NonNull
+    default E update(@NonNull Input<E> input) {
         return save(input.toEntity(), SaveMode.UPDATE_ONLY, AssociatedSaveMode.UPDATE).getModifiedEntity();
     }
 
-    @Nonnull
-    default E update(@Nonnull Input<E> input, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E update(@NonNull Input<E> input, AssociatedSaveMode associatedMode) {
         return save(input.toEntity(), SaveMode.UPDATE_ONLY, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E merge(@Nonnull E entity) {
+    @NonNull
+    default E merge(@NonNull E entity) {
         return save(entity, SaveMode.UPSERT, AssociatedSaveMode.MERGE).getModifiedEntity();
     }
 
-    @Nonnull
-    default E merge(@Nonnull E entity, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E merge(@NonNull E entity, AssociatedSaveMode associatedMode) {
         return save(entity, SaveMode.UPSERT, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    default E merge(@Nonnull Input<E> input) {
+    @NonNull
+    default E merge(@NonNull Input<E> input) {
         return save(input.toEntity(), SaveMode.UPSERT, AssociatedSaveMode.MERGE).getModifiedEntity();
     }
 
-    @Nonnull
-    default E merge(@Nonnull Input<E> input, AssociatedSaveMode associatedMode) {
+    @NonNull
+    default E merge(@NonNull Input<E> input, AssociatedSaveMode associatedMode) {
         return save(input.toEntity(), SaveMode.UPSERT, associatedMode).getModifiedEntity();
     }
 
-    @Nonnull
-    SimpleEntitySaveCommand<E> saveCommand(@Nonnull Input<E> input);
+    @NonNull
+    SimpleEntitySaveCommand<E> saveCommand(@NonNull Input<E> input);
 
-    @Nonnull
-    <S extends E> SimpleEntitySaveCommand<S> saveCommand(@Nonnull S entity);
+    @NonNull
+    <S extends E> SimpleEntitySaveCommand<S> saveCommand(@NonNull S entity);
 
-    @Nonnull
+    @NonNull
     @Override
-    default <S extends E> List<S> saveAll(@Nonnull Iterable<S> entities) {
+    default <S extends E> List<S> saveAll(@NonNull Iterable<S> entities) {
         return saveAll(entities, null, null);
     }
 
-    @Nonnull
-    default <S extends E> List<S> saveAll(@Nonnull Iterable<S> entities, SaveMode mode) {
+    @NonNull
+    default <S extends E> List<S> saveAll(@NonNull Iterable<S> entities, SaveMode mode) {
         return saveAll(entities, mode, null);
     }
 
-    @Nonnull
-    default <S extends E> List<S> saveAll(@Nonnull Iterable<S> entities, AssociatedSaveMode mode) {
+    @NonNull
+    default <S extends E> List<S> saveAll(@NonNull Iterable<S> entities, AssociatedSaveMode mode) {
         return saveAll(entities, null, mode);
     }
 
-    @Nonnull
+    @NonNull
     default <S extends E> List<S> saveAll(
-        @Nonnull Iterable<S> entities,
+        @NonNull Iterable<S> entities,
         @Nullable SaveMode mode,
         @Nullable AssociatedSaveMode associatedMode
     ) {
@@ -266,24 +266,24 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
             .toList();
     }
 
-    @Nonnull
-    default <S extends E> Iterable<S> saveInputs(@Nonnull Iterable<? extends Input<S>> entities) {
+    @NonNull
+    default <S extends E> Iterable<S> saveInputs(@NonNull Iterable<? extends Input<S>> entities) {
         return saveInputs(entities, null, null);
     }
 
-    @Nonnull
-    default <S extends E> Iterable<S> saveInputs(@Nonnull Iterable<? extends Input<S>> entities, SaveMode mode) {
+    @NonNull
+    default <S extends E> Iterable<S> saveInputs(@NonNull Iterable<? extends Input<S>> entities, SaveMode mode) {
         return saveInputs(entities, mode, null);
     }
 
-    @Nonnull
-    default <S extends E> Iterable<S> saveInputs(@Nonnull Iterable<? extends Input<S>> entities, AssociatedSaveMode mode) {
+    @NonNull
+    default <S extends E> Iterable<S> saveInputs(@NonNull Iterable<? extends Input<S>> entities, AssociatedSaveMode mode) {
         return saveInputs(entities, null, mode);
     }
 
-    @Nonnull
+    @NonNull
     default <S extends E> Iterable<S> saveInputs(
-        @Nonnull Iterable<? extends Input<S>> entities,
+        @NonNull Iterable<? extends Input<S>> entities,
         SaveMode mode,
         AssociatedSaveMode associatedMode
     ) {
@@ -297,37 +297,37 @@ public interface JimmerRepository<E, ID> extends ListCrudRepository<E, ID>, List
             .toList();
     }
 
-    @Nonnull
-    <S extends E> BatchEntitySaveCommand<S> saveEntitiesCommand(@Nonnull Iterable<S> entities);
+    @NonNull
+    <S extends E> BatchEntitySaveCommand<S> saveEntitiesCommand(@NonNull Iterable<S> entities);
 
-    @Nonnull
-    default <S extends E> BatchEntitySaveCommand<S> saveInputsCommand(@Nonnull Iterable<? extends Input<S>> inputs) {
+    @NonNull
+    default <S extends E> BatchEntitySaveCommand<S> saveInputsCommand(@NonNull Iterable<? extends Input<S>> inputs) {
         return saveEntitiesCommand(CollectionUtils.map(inputs, Input::toEntity));
     }
 
     @Override
-    default void delete(@Nonnull E entity) {
+    default void delete(@NonNull E entity) {
         delete(entity, DeleteMode.PHYSICAL);
     }
 
-    int delete(@Nonnull E entity, DeleteMode mode);
+    int delete(@NonNull E entity, DeleteMode mode);
 
     @Override
-    default void deleteAll(@Nonnull Iterable<? extends E> entities) {
+    default void deleteAll(@NonNull Iterable<? extends E> entities) {
         deleteAll(entities, DeleteMode.PHYSICAL);
     }
 
-    int deleteAll(@Nonnull Iterable<? extends E> entities, DeleteMode mode);
+    int deleteAll(@NonNull Iterable<? extends E> entities, DeleteMode mode);
 
     @Override
-    default void deleteById(@Nonnull ID id) {
+    default void deleteById(@NonNull ID id) {
         deleteById(id, DeleteMode.PHYSICAL);
     }
 
-    int deleteById(@Nonnull ID id, DeleteMode mode);
+    int deleteById(@NonNull ID id, DeleteMode mode);
 
     @Override
-    default void deleteAllById(@Nonnull Iterable<? extends ID> ids) {
+    default void deleteAllById(@NonNull Iterable<? extends ID> ids) {
         deleteAllById(ids, DeleteMode.PHYSICAL);
     }
 

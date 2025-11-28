@@ -1,44 +1,12 @@
 plugins {
+    id 'i.spring.misc'
     id("org.openrewrite.rewrite").version("6.29.3")
 }
 
-import org.gradle.api.internal.artifacts.dependencies.DefaultImmutableVersionConstraint
-import org.gradle.api.internal.catalog.DependencyModel
-import groovy.xml.XmlParser
-
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-
-group = 'io.github.honhimw'
-version = libs.versions.version.get()
-
 allprojects {
-    configurations {
-        using {
-            visible false
-            canBeResolved false
-            canBeConsumed false
-            canBeDeclared true
-        }
-    }
-    afterEvaluate {
-        plugins.withType(JavaPlugin).every {
-            configurations {
-                compileClasspath { extendsFrom using }
-                runtimeClasspath { extendsFrom using }
-                annotationProcessor { extendsFrom using }
-                testCompileClasspath { extendsFrom using }
-                testRuntimeClasspath { extendsFrom using }
-                testAnnotationProcessor { extendsFrom using }
-            }
-        }
-        plugins.withType(JavaLibraryPlugin).every {
-            configurations {
-                compileOnly { extendsFrom annotationProcessor }
-                testCompileOnly { extendsFrom testAnnotationProcessor }
-            }
-        }
-    }
+    group = 'io.github.honhimw'
+    version = libs.versions.version.get()
+    pluginManager.apply 'i.spring.using'
 }
 
 def modules = subprojects.findAll {
@@ -48,8 +16,14 @@ def modules = subprojects.findAll {
 def bom = project(':i-spring-enhance-bom')
 def libraries = modules - bom - project(':i-spring-web-test')
 
+configure(modules) {
+    pluginManager.apply 'i.spring.repository'
+}
+
 configure(libraries) {
-    apply from: rootProject.file('buildSrc/library.gradle')
+    pluginManager.apply 'i.spring.publishing'
+    pluginManager.apply 'i.spring.library'
+
     dependencies {
         using platform(bom)
     }
@@ -59,89 +33,6 @@ configure(libraries) {
     }
 }
 
-tasks.register('deployAll') {
-    group 'deploy'
-    dependsOn ':i-common-utilities:publishToMavenLocal'
-    dependsOn ':i-core:publishToMavenLocal'
-    dependsOn ':i-spring-enhance-bom:publishToMavenLocal'
-    dependsOn ':i-spring-auto-configure:publishToMavenLocal'
-    dependsOn ':i-spring-extend:publishToMavenLocal'
-    dependsOn ':i-spring-boot-project:publishToMavenLocal'
-    dependsOn ':i-spring-web-config-core:publishToMavenLocal'
-    dependsOn ':i-spring-web-config-starter:publishToMavenLocal'
-    dependsOn ':i-spring-cache-core:publishToMavenLocal'
-    dependsOn ':i-spring-cache-starter:publishToMavenLocal'
-
-    dependsOn ':i-spring-data-ddd:i-spring-ddd-common:publishToMavenLocal'
-    dependsOn ':i-spring-data-ddd:i-spring-ddd-jpa:publishToMavenLocal'
-    dependsOn ':i-spring-data-ddd:i-spring-ddd-starter:publishToMavenLocal'
-}
-
-if (rootProject.file('buildSrc/rewrite.gradle').exists()) {
-    apply from: rootProject.file('buildSrc/rewrite.gradle')
-}
-
-
-tasks.register('checkLibrariesUpdate') {
-    def pool = Executors.newFixedThreadPool(4)
-    def libsDef = [
-            'spring-boot-dependencies'         : buildModel('org.springframework.boot', 'spring-boot-dependencies', 'spring-boot-dependencies', libs.versions.spring.boot.dependencies.get()),
-            'spring-cloud-dependencies'        : buildModel('org.springframework.cloud', 'spring-cloud-dependencies', 'spring-cloud-dependencies', libs.versions.spring.cloud.dependencies.get()),
-            'spring-cloud-alibaba-dependencies': buildModel('com.alibaba.cloud', 'spring-cloud-alibaba-dependencies', 'spring-cloud-alibaba-dependencies', libs.versions.spring.cloud.alibaba.dependencies.get()),
-            'springdoc-openapi'                : buildModel('org.springdoc', 'springdoc-openapi-bom', 'springdoc-openapi-bom', libs.versions.springdoc.openapi.get()),
-            'spring-ai-bom'                    : buildModel('org.springframework.ai', 'spring-ai-bom', 'spring-ai-bom', libs.versions.spring.ai.bom.get()),
-            'junit-bom'                        : buildModel('org.junit', 'junit-bom', 'junit-bom', libs.versions.junit.bom.get()),
-    ]
-
-    libsDef.putAll(defInLibs())
-    def countDownLatch = new CountDownLatch(libsDef.size())
-
-    def red = '\u001B[31m'
-    def green = '\u001B[32m'
-    def magenta = '\u001B[35m'
-    def cyan = '\u001B[36m'
-    def stop = '\u001B[0m'
-
-    println "$cyan### Start check libraries update, libraries count: ${libsDef.size()} ###$stop"
-    libsDef.each {
-        def dependency = it.value
-        pool.execute {
-            def latestVersion = getLatestVersion(dependency.group, dependency.name)
-            if (dependency.version.requiredVersion != latestVersion) {
-                def versionRef = dependency.versionRef.replace '.', '-'
-                println """$magenta# $dependency.group:$dependency.name$stop
-$red- $versionRef = "${dependency.version.requiredVersion}"$stop
-$green+ $versionRef = "$latestVersion"$stop"""
-            }
-            countDownLatch.countDown()
-        }
-    }
-    countDownLatch.await()
-    println "$cyan### Finish check libraries update ###$stop"
-    pool.shutdown()
-}
-
-Map<String, DependencyModel> defInLibs() {
-    def versionCatalogsExtension = project.extensions.getByType(VersionCatalogsExtension)
-    for (final def versionCatalog in versionCatalogsExtension) {
-        return versionCatalog.config.libraries as Map<String, DependencyModel>
-    }
-    return [:]
-}
-
-DependencyModel buildModel(String group, String name, String versionRef, String version) {
-    return new DependencyModel(
-            group, name, versionRef, new DefaultImmutableVersionConstraint(version), null
-    )
-}
-
-String getLatestVersion(String groupId, String artifactId) {
-    def baseUrl = "https://repo1.maven.org/maven2"
-    def groupPath = groupId.replace('.', '/')
-    def url = "${baseUrl}/${groupPath}/${artifactId}/maven-metadata.xml"
-
-    def response = uri(url).toURL().openStream().withCloseable { stream -> return stream.bytes }
-    def xmlContent = new XmlParser().parseText(new String(response, 'UTF-8'))
-    def latestVersion = xmlContent?.versioning?.latest?.text()
-    return latestVersion
+if (rootProject.file('rewrite.gradle').exists()) {
+    apply from: rootProject.file('rewrite.gradle')
 }

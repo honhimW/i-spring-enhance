@@ -2,12 +2,13 @@ package io.github.honhimw.spring.web.mvc;
 
 import io.github.honhimw.spring.web.common.HttpLog;
 import io.github.honhimw.spring.web.util.MimeTypeSupports;
-import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
@@ -30,9 +31,15 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
 
     public static final int DEFAULT_FILTER_ORDERED = -1000;
 
+    private final MvcHttpLogCondition condition;
+
+    public MvcHttpLogFilter(@NonNull ObjectProvider<MvcHttpLogCondition> conditions) {
+        this.condition = new MvcHttpLogCondition.Delegate(conditions.orderedStream().toList());
+    }
+
     @Override
-    protected void doFilterInternal(@Nonnull HttpServletRequest request, @Nonnull HttpServletResponse response, @Nonnull FilterChain filterChain) throws ServletException, IOException {
-        if (!HttpLog.log.isInfoEnabled()) {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+        if (!HttpLog.log.isInfoEnabled() || !condition.support(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -65,7 +72,7 @@ public class MvcHttpLogFilter extends OncePerRequestFilter implements Ordered {
         ContentCachingResponseWrapper cachingResponse = new ContentCachingResponseWrapper(response);
 
         // do filter
-        doFilter(request, response, filterChain, logHolder);
+        doFilter(cachingRequest, cachingResponse, filterChain, logHolder);
         httpLog = logHolder.get();
 
         // only raw-type request content will be recorded

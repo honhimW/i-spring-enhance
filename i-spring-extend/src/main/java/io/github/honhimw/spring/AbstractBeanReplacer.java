@@ -1,8 +1,8 @@
 package io.github.honhimw.spring;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -56,7 +56,7 @@ public abstract class AbstractBeanReplacer<T> implements BeanDefinitionRegistryP
     }
 
     @SuppressWarnings("unchecked")
-    @Nonnull
+    @NonNull
     protected Class<T> beanType() {
         ParameterizedType parameterizedType =
             (ParameterizedType) this.getClass().getGenericSuperclass();
@@ -75,7 +75,7 @@ public abstract class AbstractBeanReplacer<T> implements BeanDefinitionRegistryP
     }
 
     @Override
-    public void postProcessBeanDefinitionRegistry(@Nonnull BeanDefinitionRegistry registry) throws BeansException {
+    public void postProcessBeanDefinitionRegistry(@NonNull BeanDefinitionRegistry registry) throws BeansException {
         if (registry.containsBeanDefinition(beanName)) {
             log.warn("replacing found bean: [{}]", beanName);
             registry.removeBeanDefinition(beanName);
@@ -96,7 +96,7 @@ public abstract class AbstractBeanReplacer<T> implements BeanDefinitionRegistryP
     }
 
     @Override
-    public void postProcessBeanFactory(@Nonnull ConfigurableListableBeanFactory beanFactory) throws BeansException {
+    public void postProcessBeanFactory(@NonNull ConfigurableListableBeanFactory beanFactory) throws BeansException {
 
     }
 

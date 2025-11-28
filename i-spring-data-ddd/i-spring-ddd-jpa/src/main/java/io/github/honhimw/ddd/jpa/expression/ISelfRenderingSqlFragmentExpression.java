@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jpa.expression;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;

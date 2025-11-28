@@ -1,7 +1,7 @@
 package io.github.honhimw.ddd.jimmer.acl;
 
 import io.github.honhimw.ddd.common.ResourceMod;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.sql.ast.table.spi.TableProxy;
 import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 
@@ -12,7 +12,7 @@ import org.babyfish.jimmer.sql.runtime.JSqlClientImplementor;
 
 public interface AclProvider {
 
-    @Nonnull
+    @NonNull
     AclExecutor getExecutor(JSqlClientImplementor sqlClient, TableProxy<?> tableProxy, String dataDomain, ResourceMod defaultMod);
 
 }

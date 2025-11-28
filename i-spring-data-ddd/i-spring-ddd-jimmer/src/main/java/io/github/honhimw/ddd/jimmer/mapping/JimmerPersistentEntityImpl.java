@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.mapping;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.babyfish.jimmer.meta.ImmutableProp;
 import org.babyfish.jimmer.meta.ImmutableType;
 import org.springframework.data.mapping.IdentifierAccessor;
@@ -45,9 +45,9 @@ public class JimmerPersistentEntityImpl<T> extends BasicPersistentEntity<T, Jimm
         return property.isIdProperty() ? property : null;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public IdentifierAccessor getIdentifierAccessor(@Nonnull Object bean) {
+    public IdentifierAccessor getIdentifierAccessor(@NonNull Object bean) {
         return new JimmerIdentifierAccessor(bean, immutableType.getIdProp());
     }
 

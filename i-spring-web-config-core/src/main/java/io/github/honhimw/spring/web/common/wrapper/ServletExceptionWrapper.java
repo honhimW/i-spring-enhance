@@ -1,7 +1,7 @@
 package io.github.honhimw.spring.web.common.wrapper;
 
 import io.github.honhimw.spring.web.common.SingleExceptionWrapper;
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import jakarta.servlet.ServletException;
 import org.springframework.http.HttpStatus;
 
@@ -12,14 +12,14 @@ import org.springframework.http.HttpStatus;
 
 public class ServletExceptionWrapper extends SingleExceptionWrapper<ServletException> {
 
-    @Nonnull
+    @NonNull
     @Override
-    protected String _wrap(@Nonnull ServletException e) {
+    protected String _wrap(@NonNull ServletException e) {
         return e.getMessage();
     }
 
     @Override
-    protected int _httpCode(@Nonnull ServletException e) {
+    protected int _httpCode(@NonNull ServletException e) {
         return HttpStatus.BAD_REQUEST.value();
     }
 }

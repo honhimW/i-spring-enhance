@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.reactive;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.reactive.ServerWebExchangeContextFilter;
 import org.springframework.web.server.ServerWebExchange;
@@ -33,9 +33,9 @@ public class ExchangeContextFilter extends AbstractThreadLocalWebFilter<ServerWe
         super(key);
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Mono<Void> filter(@Nonnull ServerWebExchange exchange, @Nonnull WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         return chain.filter(exchange)
             .contextWrite(context -> contextWriter.apply(context, exchange));
     }
@@ -45,19 +45,19 @@ public class ExchangeContextFilter extends AbstractThreadLocalWebFilter<ServerWe
         return Ordered.HIGHEST_PRECEDENCE;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Supplier<ServerWebExchange> doGet() {
         return ExchangeHolder::getExchange;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Consumer<ServerWebExchange> doSet() {
         return ExchangeHolder::setExchange;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     protected Runnable doRemove() {
         return ExchangeHolder::resetExchange;

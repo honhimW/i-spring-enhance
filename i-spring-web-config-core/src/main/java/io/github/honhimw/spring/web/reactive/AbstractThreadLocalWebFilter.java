@@ -1,6 +1,6 @@
 package io.github.honhimw.spring.web.reactive;
 
-import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.server.WebFilter;
 import reactor.util.context.Context;
 
@@ -55,13 +55,13 @@ public abstract class AbstractThreadLocalWebFilter<T> implements WebFilter {
         this.contextWriter = ReactorThreadLocalConfig.addAccessor(key, o -> Objects.nonNull(doGet().get()), doGet(), doSet(), doRemove());
     }
 
-    @Nonnull
+    @NonNull
     protected abstract Supplier<T> doGet();
 
-    @Nonnull
+    @NonNull
     protected abstract Consumer<T> doSet();
 
-    @Nonnull
+    @NonNull
     protected abstract Runnable doRemove();
 
 }

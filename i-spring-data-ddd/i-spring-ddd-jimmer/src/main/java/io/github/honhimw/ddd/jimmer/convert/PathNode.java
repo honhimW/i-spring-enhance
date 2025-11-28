@@ -1,6 +1,6 @@
 package io.github.honhimw.ddd.jimmer.convert;
 
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
